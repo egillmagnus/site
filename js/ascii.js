@@ -25,6 +25,9 @@ function getAspectRatio() {
 function adjustVideoSize() {
     videoReady = false;
     videoWidth = 140
+    if(aspectRatio == 0) {
+        aspectRatio = 1;
+    }
     videoHeight = Math.floor(videoWidth * aspectRatio);
 
     // Optional: Set minimum and maximum sizes to prevent too small or too large videos// Maximum video width
