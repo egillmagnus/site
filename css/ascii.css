@@ -18,16 +18,18 @@ body {
     margin-bottom: 2rem;
     justify-content: center;
     padding: 10rem 9%;
+    flex-shrink: 0;
 }
 
 .ascii-art {
     display: flex;
+    flex-shrink: 0;
     justify-content: center;
     font-family: 'Courier';
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-size: 6pt;
-    line-height: 5.5pt;
+    font-size: .8vw;
+    line-height: .6vw;
     border: .1rem solid var(--main-color);
     box-shadow: 0 0 2rem var(--main-color);
 }

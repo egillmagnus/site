@@ -1,6 +1,6 @@
 const density = 'NNNN@#W$9876543210?!abc;:+=-,._     ';
 
-let video, asciiDiv, videoWidth = 200, videoHeight = 80, aspectRatio;
+let video, asciiDiv, videoWidth = 200, videoHeight = 80, aspectRatio=2;
 let count = 0;
 let videoReady = false;
 
@@ -13,29 +13,25 @@ function setup() {
     asciiDiv.classList.add("ascii-art");
 
     getAspectRatio();
-
-    document.getElementById("log").innerText = aspectRatio;
 }
 
 function getAspectRatio() {
-    aspectRatio = video.height / video.width;
+    aspectRatio = video.width / video.height;
     adjustVideoSize();
 }
 
 function adjustVideoSize() {
     videoReady = false;
-    videoWidth = Math.floor((window.innerWidth*0.15));
-    videoHeight = min(Math.floor(videoWidth * aspectRatio), window.innerHeight*0.12);
+    //videoWidth = Math.floor((window.innerWidth*0.1));
+    //videoHeight = Math.floor((videoWidth / aspectRatio) *0.8)
 
-    // Optional: Set minimum and maximum sizes to prevent too small or too large videos// Maximum video width
-    // Corresponding maximum height
+    videoWidth = 140;
+    videoHeight = floor((videoWidth / aspectRatio));
 
-    // Clamp values to minimum and maximum
     video.size(videoWidth, videoHeight);
 
     console.log("Resizing...")
     console.log(videoWidth + "x" + videoHeight);
-    document.getElementById("log").innerText = videoHeight;
     videoReady = true;
 }
 
@@ -77,7 +73,6 @@ function generateAsciiArt() {
             const b = video.pixels[pI + 2];
             const avg = (0.299*r + 0.587*g + 0.114*b);
 
-
             if (avg == 0) {
                 c = '-'
             } else {
@@ -86,15 +81,13 @@ function generateAsciiArt() {
 
             if (c == undefined) {
                 drawEmpty();
+                return;
             }
-            
             img += c === ' ' ? '&nbsp;' : c;
-    
         }
         img += '<br/>';
     }
     asciiDiv.innerHTML = img;
-    document.getElementById("log").innerText = count++;
 
 }
 }
