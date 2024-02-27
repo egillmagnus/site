@@ -16,7 +16,7 @@
   --bg-color: #1f242d;
   --second-bg-color: #323946;
   --text-color: #FFF;
-  --main-color: #0ef;
+  --main-color: #00ff33;
   --footer-text-color: #6b7078;
 }
 
@@ -256,7 +256,7 @@ span {
   transition: .5s;
 }
 
-.portfolio-box img:hover {
+.portfolio-box:hover img {
   transform: scale(1.1);
   transition: .5s;
 }
