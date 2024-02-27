@@ -17,6 +17,7 @@
   --second-bg-color: #323946;
   --text-color: #FFF;
   --main-color: #0ef;
+  --footer-text-color: #6b7078;
 }
 
 body {
@@ -363,7 +364,7 @@ span {
 
 .footer-text p {
   font-size: 1.5rem;
-  color: var(--bg-color);
+  color: var(--footer-text-color);
 }
 
 .footer-iconTop a {

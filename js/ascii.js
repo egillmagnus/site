@@ -1,6 +1,6 @@
 const density = 'NNNN@#W$9876543210?!abc;:+=-,._     ';
 
-let video, asciiDiv, videoWidth = 200, videoHeight = 80, aspectRatio;
+let video, asciiDiv, videoWidth = 200, videoHeight = 80, aspectRatio = 0.5;
 let count = 0;
 let videoReady = false;
 

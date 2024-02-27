@@ -6,6 +6,7 @@
     --second-bg-color: #323946;
     --text-color: #FFF;
     --main-color: #0ef;
+    --footer-text-color: #6b7078;
 }
 
 body {
@@ -32,4 +33,16 @@ body {
     line-height: .6vw;
     border: .1rem solid var(--main-color);
     box-shadow: 0 0 2rem var(--main-color);
+}
+
+.about {
+    flex-direction: column;
+}
+
+.about-image img {
+    width: 70vw;
+}
+
+.footer{
+    background-color: var(--bg-color);
 }
