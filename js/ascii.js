@@ -26,7 +26,11 @@ function adjustVideoSize() {
     videoReady = false;
     videoWidth = 140
     if(aspectRatio == 0) {
-        aspectRatio = 1;
+        if(window.innerWidth < 1000) {
+            aspectRatio = 2;
+        } else {
+            aspectRatio = 0.5;
+        }
     }
     videoHeight = Math.floor(videoWidth * aspectRatio);
 
