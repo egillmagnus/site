@@ -31,8 +31,3 @@ body {
     border: .1rem solid var(--main-color);
     box-shadow: 0 0 2rem var(--main-color);
 }
-
-
-
-
-@media (max-width: 1)
