@@ -27,16 +27,11 @@ function adjustVideoSize() {
     videoReady = false;
     videoWidth = 140
     if(aspectRatio == 0) {
-        //if(window.innerWidth < 1000) {
-        //    aspectRatio = 15/9;
-        //} else {
-        //    aspectRatio = 0.5;
-        //}
-        
-        video = createCapture(VIDEO, getAspectRatio);
-        capture.elt.setAttribute('playsinline', '');
-        video.hide();
-        adjustVideoSize()
+        if(window.innerWidth < 1000) {
+            aspectRatio = 15/9;
+        } else {
+            aspectRatio = 0.5;
+        }
     }
     videoHeight = Math.floor(videoWidth * aspectRatio);
 
