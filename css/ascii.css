@@ -37,6 +37,7 @@ body {
 
 .about {
     flex-direction: column;
+    padding: 10rem 9% 2rem;
 }
 
 .about-image img {
