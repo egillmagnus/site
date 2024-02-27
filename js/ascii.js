@@ -7,7 +7,7 @@ let videoReady = false;
 function setup() {
     noCanvas();
     video = createCapture(VIDEO, getAspectRatio);
-    capture.elt.setAttribute('playsinline', '');
+    video.elt.setAttribute('playsinline', '');
     video.hide();
 
     asciiDiv = document.getElementById("ascii-div");
@@ -61,7 +61,7 @@ function generateAsciiArt() {
         console.log("Loading pixels failed");
         if (count > 60) {
             video = createCapture(VIDEO, getAspectRatio);
-            capture.elt.setAttribute('playsinline', '');
+            video.elt.setAttribute('playsinline', '');
             video.hide();
             adjustVideoSize()
             count = 0;
