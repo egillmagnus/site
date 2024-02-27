@@ -15,7 +15,7 @@ function setup() {
 
     getAspectRatio();
 
-    document.getElementById("log").innerText = aspectRatio;
+
 }
 
 function getAspectRatio() {
@@ -43,7 +43,6 @@ function adjustVideoSize() {
 
     console.log("Resizing...")
     console.log(videoWidth + "x" + videoHeight);
-    document.getElementById("log").innerText = aspectRatio;
     videoReady = true;
 }
 
@@ -103,8 +102,6 @@ function generateAsciiArt() {
         img += '<br/>';
     }
     asciiDiv.innerHTML = img;
-    document.getElementById("log").innerText = count++;
-
 }
 }
 
