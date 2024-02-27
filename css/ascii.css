@@ -1,0 +1,38 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+
+:root{
+    --bg-color: #1f242d;
+    --second-bg-color: #323946;
+    --text-color: #FFF;
+    --main-color: #0ef;
+}
+
+body {
+    position: relative;
+}
+
+.ascii-container {
+    display: flex;
+    z-index: 100;
+    margin-bottom: 2rem;
+    justify-content: center;
+    padding: 10rem 9%;
+}
+
+.ascii-art {
+    display: flex;
+    justify-content: center;
+    font-family: 'Courier';
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 6pt;
+    line-height: 5.5pt;
+    border: .1rem solid var(--main-color);
+    box-shadow: 0 0 2rem var(--main-color);
+}
+
+
+
+
+@media (max-width: 1)
