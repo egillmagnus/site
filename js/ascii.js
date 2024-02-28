@@ -1,4 +1,4 @@
-const density = 'NNNN@#W$9876543210?!abc;:+=-,._     ';
+const density = 'N@#W$9876543210?!abc;:+=-,._     ';
 
 let video, asciiDiv, videoWidth = 200, videoHeight = 80, aspectRatio = 0.5;
 let count = 0;
