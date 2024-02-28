@@ -37,7 +37,7 @@ html {
 
 section {
   min-height: 80vh;
-  padding: 10rem 9% 2rem;
+  padding: 10rem 9%;
 }
 
 span {
@@ -324,14 +324,18 @@ span {
   margin-bottom: 3rem;
 }
 
-.contact form .input-box {
+form .input-box {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
 }
 
-.contact form .input-box input,
-.contact form textarea {
+
+.input-box .input-field {
+  width: 48.5%;
+}
+
+.field .item {
   width: 100%;
   padding: 1.5rem;
   font-size: 1.6rem;
@@ -341,12 +345,20 @@ span {
   margin: .7rem 0;
 }
 
-.contact form .input-box input {
-  width: 49%;
-}
-
 .contact form textarea {
   resize: none;
+}
+
+.field .error-msg {
+  font-size: 1.4rem;
+  color: #d93025;
+  text-align: left;
+  margin: -.5rem 0 1rem;
+  display: none;
+}
+
+.text-area .field {
+  margin-top: -.4rem;
 }
 
 .contact form .btn {
@@ -409,7 +421,7 @@ span {
 }
 
 /*BREAKPOINTS*/
-@media (max-width: 1200px) {
+@media (max-width: 1200px) {s
   html {
     font-size: 55%;
   }
@@ -421,15 +433,7 @@ span {
   }
 
   section {
-    padding: 10rem 3%;
-  }
-
-  .portfolio {
-    padding-bottom: 7rem;
-  }
-
-  .projects {
-    padding-bottom: 7rem;
+    padding: 8rem 3%;
   }
 
   .contact {
@@ -487,7 +491,6 @@ span {
     flex-direction: column-reverse;
   }
 
-
   .about-image img {
     width: 70vw;
     margin-top: 4rem;
@@ -521,7 +524,7 @@ span {
     font-size: 50%;
   }
 
-  .contact form .input-box input {
+  .input-box .input-field {
     width: 100%;
   }
 }
