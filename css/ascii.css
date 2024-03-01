@@ -54,11 +54,35 @@ body {
     background-color: var(--bg-color);
 }
 
+@media (max-width: 1000px) {
 
-@media (max-width: 365px) {
+    .ascii-art {
+        font-size: 1.1vw;
+        line-height: .85vw;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .ascii-art {
+        font-size: 1.4vw;
+        line-height: 1.1vw;
+    }
+
+}
+
+
+@media (max-width: 500px) {
 
     .about-image img {
         width: 90vw;
+    }
+
+    .ascii-art {
+        font-size: 1.8vw;
+        line-height: 1.4vw;
     }
 
 }

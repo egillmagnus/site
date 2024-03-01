@@ -25,10 +25,20 @@ function getAspectRatio() {
 
 function adjustVideoSize() {
     videoReady = false;
-    videoWidth = 140
+
+    if (window.innerWidth <= 500) {
+        videoWidth = 60;
+    }else if(window.innerWidth <= 700) {
+        videoWidth = 90;
+    } else if (window.innerWidth <= 1000) {
+        videoWidth = 110;
+    } else {
+        videoWidth = 140;
+    }
+    
     if(aspectRatio == 0) {
         if(window.innerWidth < 1000) {
-            aspectRatio = 15/9;
+            aspectRatio = 14/9;
         } else {
             aspectRatio = 0.5;
         }
@@ -69,6 +79,8 @@ function generateAsciiArt() {
         count++;
         return;
     }
+
+    document.getElementById("log").innerText = window.innerWidth;
 
     drawHeight = videoHeight;
     drawWidth = videoWidth;
