@@ -80,7 +80,6 @@ function generateAsciiArt() {
         return;
     }
 
-    document.getElementById("log").innerText = window.innerWidth;
 
     drawHeight = videoHeight;
     drawWidth = videoWidth;

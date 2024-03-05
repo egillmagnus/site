@@ -22,6 +22,7 @@ body {
     flex-shrink: 0;
 }
 
+
 .ascii-art {
     display: flex;
     flex-shrink: 0;

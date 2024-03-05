@@ -10,12 +10,12 @@
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/ascii.css">
+    <link rel="stylesheet" href="/css/worley.css">
     <script src="/p5/p5.min.js"></script>
 </head>
   <body>
     <header class="header">
-      <a href="#" class="logo" id="log">Video í ASCII</a>
+      <a href="#" class="logo" id="log">Worley Noise</a>
       <i class='bx bx-menu' id="menu-icon"></i>
       <nav class="navbar">
         <a href="/#heim">Heim</a>
@@ -23,23 +23,25 @@
         <a href="/#verkefni">Verkefni</a>
       </nav>
     </header>
-
-    <div class="ascii-container">
-      <div class="ascii-art" id="ascii-div">
-      </div>
-      <script src="/js/ascii.js"></script>
+    <div id="top">
     </div>
+    <section class="project-container">
+      <div class="worley-container" id="worley">
+        <script src="/js/worley.js"></script>
+      </div>
+      <button id="liturButton" class="btn">Kveikja á lit</button>
+    </section>
 
     <section class="about-project">
       <div class="about-content">
-        <h2 class="heading">Frá Video í <span>ASCII</span></h2>
-        <p>Þetta er fyrsta verkefnið sem ég gerði á þessari síðu. 
-          Nýttist vel í að kynnast JavaScript í fyrsta skipti og var 
-          líka góð æfing í CSS. Notaði <span>p5.js</span> safnið, til að sjá um aðgang að vefmyndavél, og teikni loop-u. </br>Leyfa þarf aðgang að myndavél!</p>
+        <h2 class="heading"><span>Worley</span> Noise</h2>
+        <p>Mín tilraun á útfærslu af Worley Noise. Þetta er worley noise í þrívídd, 
+          þar sem við skönnum í gegnum rúm með punktum á slembnum stöðum. 
+          Litir og birtustig eru háð fjarlægð til næsta slembipúnkts.</p>
       </div>
-
-      <div class="about-image">
-        <img src="/images/ascii.png">
+      <div class="about-images">
+        <img src="/images/worley1.png">
+        <img src="/images/worley2.png">
       </div>
     </section>
 
@@ -48,7 +50,7 @@
         <p>&copy; 2024 Egill Magnússon | Vefsíða í vinnslu</p>
       </div>
       <div class="footer-iconTop">
-        <a href="#heim"><i class='bx bx-up-arrow-alt' ></i></a>
+        <a href="#top"><i class='bx bx-up-arrow-alt' ></i></a>
       </div>
     </footer>
   </body>
