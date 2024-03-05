@@ -9,13 +9,10 @@ let redOffset;
 function setup() {
     windowWidth = window.innerWidth;
     windowHeight = window.innerHeight;
-    if (windowWidth < 500) {
-        canvas = createCanvas(floor(window.innerWidth*0.9), floor(window.innerHeight*0.9));
-    } else {
-        canvas = createCanvas(floor(window.innerWidth*0.5), floor(window.innerHeight*0.5));
-    }
+    canvas = createCanvas(floor(window.innerWidth*0.9), floor(window.innerHeight*0.7));
+    adjustVideoSize();
     pixelDensity(1);
-    canvas.parent("worley")
+    canvas.parent("worley");
     console.log("Canvas size: ", width, height);
     loadPixels();
     console.log("Pixels array length: ", pixels.length);
@@ -32,6 +29,8 @@ function setup() {
         litur = !litur; // Toggle the color mode
         liturButton.textContent = litur ? 'Slökkva á lit' : 'Kveikja á lit';
   });
+
+  window.addEventListener('resize', adjustVideoSize);
 }
 
 
@@ -78,6 +77,14 @@ function draw() {
         } else {
             points[i].z -= 1;
         }
+    }
+}
+
+function adjustVideoSize() {
+    if (windowWidth < 800) {
+        resizeCanvas(floor(window.innerWidth*0.9), floor(window.innerHeight*0.7));
+    } else {
+        resizeCanvas(floor(window.innerWidth*0.7), floor(window.innerHeight*0.7));
     }
 }
 
