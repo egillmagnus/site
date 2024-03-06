@@ -35,15 +35,16 @@ body {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    width: 70%;
-    gap: 2rem;
+    width: 70vw;
+    gap: 7vw;
+    padding: 0rem 3vw;
 }
 
 .btn {
     flex: 1 1 10rem;
     width: fit-content;
     max-height: 5rem;
-    min-width: 16rem;
+    min-width: 26vw;
 }
 
 .about-images {
@@ -97,6 +98,18 @@ body {
     }
     .about-images img {
         width: 70vw;
+    }
+
+}
+
+@media (max-width: 650px) {
+
+    .buttons-container {
+        gap: 4vw;
+    }
+
+    .btn {
+        min-width: 60vw;
     }
 
 }

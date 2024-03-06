@@ -29,6 +29,9 @@ function setup() {
     liturButton.addEventListener('click', function() {
         litur = !litur; // Toggle the color mode
         liturButton.textContent = litur ? 'Slökkva á lit' : 'Kveikja á lit';
+        if(stopp) {
+            draw();
+        }
     });
     const stoppButton = document.getElementById('stoppButton');
     stoppButton.addEventListener('click', function() {
@@ -38,7 +41,7 @@ function setup() {
             noLoop();
         }
         stopp = !stopp; // Toggle the color mode
-        stoppButton.textContent = stopp ? 'Start' : 'Stopp';
+        stoppButton.textContent = stopp ? 'Spila' : 'Stoppa';
     });
 
 
@@ -83,12 +86,13 @@ function draw() {
         }
     }
     updatePixels();
-
-    for (let i = 0; i < npoints; i++) {
-        if (points[i].z <= 0) {
-            points.splice(i, 1, createVector(random(width), random(height), debth)); 
-        } else {
-            points[i].z -= 1;
+    if(!stopp) {
+        for (let i = 0; i < npoints; i++) {
+            if (points[i].z <= 0) {
+                points.splice(i, 1, createVector(random(width), random(height), debth)); 
+            } else {
+                points[i].z -= 1;
+            }
         }
     }
 }
