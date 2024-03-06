@@ -6,6 +6,7 @@ let halfdebth;
 let maxDist;
 let litur = false;
 let redOffset;
+let stopp = false;
 function setup() {
     windowWidth = window.innerWidth;
     windowHeight = window.innerHeight;
@@ -28,7 +29,19 @@ function setup() {
     liturButton.addEventListener('click', function() {
         litur = !litur; // Toggle the color mode
         liturButton.textContent = litur ? 'Slökkva á lit' : 'Kveikja á lit';
-  });
+    });
+    const stoppButton = document.getElementById('stoppButton');
+    stoppButton.addEventListener('click', function() {
+        if(stopp) {
+            loop();
+        } else {
+            noLoop();
+        }
+        stopp = !stopp; // Toggle the color mode
+        stoppButton.textContent = stopp ? 'Start' : 'Stopp';
+    });
+
+
 
   window.addEventListener('resize', adjustVideoSize);
 }
