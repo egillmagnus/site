@@ -1,6 +1,6 @@
 var canvas;
 let points = []
-let npoints = 20;
+let npoints = 15;
 let debth;
 let halfdebth;
 let maxDist;
@@ -55,12 +55,12 @@ function draw() {
             let b;
             if(litur) {
                 r = map(dist1, 0, ((maxDist-redOffset)/2), 255, 10);
-                g = constrain(map(dist1, 0, maxDist/2, 10, 255), 0, 255);;
-                b = map(dist1, 0, maxDist-1, 255, 10);
+                g = constrain(map(dist1, 0, maxDist/2, 10, 150), 0, 255);;
+                b = map(dist1, 0, maxDist*0.8, 255, 10);
             } else {
-                r = map(dist1, 0, maxDist-1, 15, 255);
-                g = map(dist1, 0, maxDist-1, 15, 255);
-                b = map(dist1, 0, maxDist-1, 15, 255);
+                r = constrain(map(dist1, 0, maxDist, 15, 255), 0, 255);
+                g = constrain(map(dist1, 0, maxDist, 15, 255), 0, 255);
+                b = constrain(map(dist1, 0, maxDist, 15, 255), 0, 255);
             }
             let index = (x + y * width) * 4; // *4 for every pixel's RGBA values
             pixels[index] = r; // R
@@ -86,6 +86,10 @@ function adjustVideoSize() {
     } else {
         resizeCanvas(floor(window.innerWidth*0.7), floor(window.innerHeight*0.7));
     }
+    debth = height;
+    halfdebth = (debth/2);
+    maxDist = (halfdebth*halfdebth)*0.8;
+    redOffset = maxDist*0.5;
 }
 
 let menuicon = document.querySelector("#menu-icon");
