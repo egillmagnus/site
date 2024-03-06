@@ -12,7 +12,7 @@ window.onscroll = () => {
             navlinks.forEach(link => {
                 link.classList.remove("active")
                 document.querySelector("header nav a[href*="+ id +"]").classList.add("active");
-        });
+            });
         }
     });
 

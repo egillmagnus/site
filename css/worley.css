@@ -18,6 +18,7 @@ body {
     line-height: .6vw;
     border: .1rem solid var(--main-color);
     box-shadow: 0 0 2rem var(--main-color);
+    border-radius: 1rem;
 }
 
 .project-container {
