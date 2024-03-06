@@ -208,6 +208,7 @@ span {
   text-align: center;
   border: .2rem solid var(--bg-color);
   transition: 0.5s;
+  min-height: 10rem;
 } 
 
 
