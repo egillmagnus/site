@@ -74,9 +74,9 @@ function draw() {
                 g = constrain(map(dist1, 0, maxDist/2, 10, 150), 0, 255);;
                 b = map(dist1, 0, maxDist*0.8, 255, 10);
             } else {
-                r = constrain(map(dist1, 0, maxDist, 15, 255), 0, 255);
-                g = constrain(map(dist1, 0, maxDist, 15, 255), 0, 255);
-                b = constrain(map(dist1, 0, maxDist, 15, 255), 0, 255);
+                r = constrain(map(dist1, 0, maxDist, 20, 255), 0, 255);
+                g = constrain(map(dist1, 0, maxDist, 20, 255), 0, 255);
+                b = constrain(map(dist1, 0, maxDist, 20, 255), 0, 255);
             }
             let index = (x + y * width) * 4; // *4 for every pixel's RGBA values
             pixels[index] = r; // R
