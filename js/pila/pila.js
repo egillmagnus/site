@@ -1,3 +1,6 @@
+import { Game } from './Game.js';
+import { Board } from './Board.js';
+
 let playerCount = 0;
 const maxPlayers = 4;
 const players = [];
@@ -140,8 +143,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const board = new Board('dartboard');
+        const game = new Game(players, board);
+
+        game.startGame();
+
         // Hide player setup and show the game section
-        document.getElementById('player-setup').style.display = 'none';
         gameSection.style.display = 'block';
 
         // Display player stats
