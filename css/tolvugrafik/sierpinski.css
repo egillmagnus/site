@@ -1,0 +1,26 @@
+
+
+.slider-container {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    width: 100%;
+    margin-top: 20px;
+}
+
+
+a.link {
+    color: var(--main-color);
+}
+
+a.link:visited {
+    color: #ff69b4;
+}
+
+a.link:hover {
+    color: #ffcc00;
+}
+
+a.link:active {
+    color: #ff4500;
+}
