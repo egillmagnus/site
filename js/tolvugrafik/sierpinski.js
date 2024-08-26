@@ -8,12 +8,29 @@ window.onload = function init() {
     var canvas = document.getElementById("gl-canvas");
 
     let menuicon = document.querySelector("#menu-icon");
-    let navbar = document.querySelector(".navbar")
+    let navbar = document.querySelector(".navbar");
 
     menuicon.onclick = () => {
         menuicon.classList.toggle("bx-x");
         navbar.classList.toggle("active");
-    }
+    };
+
+    const checkbox1 = document.getElementById('checkbox1');
+    const checkbox2 = document.getElementById('checkbox2');
+
+    checkbox1.addEventListener('change', () => {
+        if (checkbox1.checked) {
+            checkbox2.checked = false;
+        }
+        recalculatePoints();
+    });
+
+    checkbox2.addEventListener('change', () => {
+        if (checkbox2.checked) {
+            checkbox1.checked = false;
+        }
+        recalculatePoints();
+    });
 
     // Set the initial canvas size and keep it square (based on window width)
     setCanvasSize(canvas);
@@ -59,15 +76,39 @@ function recalculatePoints() {
     ];
 
     // Specify a starting point p for our iterations
-    var u = add(vertices[0], vertices[1]);
-    var v = add(vertices[0], vertices[2]);
-    var p = scale(0.25, add(u, v));
+    var p;
+
+    // Check which checkbox is selected and apply the corresponding logic
+    if (document.getElementById('checkbox1').checked) {
+        // If Checkbox 1 is selected, set the starting point to (100, 100)
+        p = vec2(100, 100);
+    } else if (document.getElementById('checkbox2').checked) {
+        // If Checkbox 2 is selected, use normal starting point, but modify the point selection with 90% chance for vertices[0]
+        p = vec2(0, 0);
+    } else {
+        // Default case
+        var u = add(vertices[0], vertices[1]);
+        var v = add(vertices[0], vertices[2]);
+        p = scale(0.25, add(u, v));
+    }
 
     points = [p];  // Reset points
 
     // Compute new points
     for (var i = 0; points.length < NumPoints; ++i) {
-        var j = Math.floor(Math.random() * 3);
+        var j;
+
+        if (document.getElementById('checkbox2').checked) {
+            // With 90% chance, select vertices[0]
+            if (Math.random() < 0.9) {
+                j = 0;
+            } else {
+                j = Math.floor(Math.random() * 2) + 1;  // Randomly select another vertex
+            }
+        } else {
+            j = Math.floor(Math.random() * 3);  // Normal random selection
+        }
+
         p = add(points[i], vertices[j]);
         p = scale(0.5, p);
         points.push(p);

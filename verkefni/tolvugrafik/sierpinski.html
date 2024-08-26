@@ -2,17 +2,17 @@
 <html lang="is">
 
 <head>
-    <meta name="description" content="Heimasíða Egils" />
-    <meta charset="utf-8">
-    <title>Heimasíða Egils</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="Egill Magnússon" content="">
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/verkefni.css">
-    <link rel="stylesheet" href="/css/tolvugrafik/sierpinski.css">
-    <script id="vertex-shader" type="x-shader/x-vertex">
+  <meta name="description" content="Heimasíða Egils" />
+  <meta charset="utf-8">
+  <title>Heimasíða Egils</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="Egill Magnússon" content="">
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/verkefni.css">
+  <link rel="stylesheet" href="/css/tolvugrafik/sierpinski.css">
+  <script id="vertex-shader" type="x-shader/x-vertex">
         attribute vec4 vPosition;
         
         void
@@ -22,8 +22,8 @@
             gl_Position = vPosition;
         }
         </script>
-        
-        <script id="fragment-shader" type="x-shader/x-fragment">
+
+  <script id="fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
         
         void
@@ -32,49 +32,57 @@
             gl_FragColor = vec4( 0.0, 1.0, 0.20392156862, 1.0 );
         }
         </script>
-        <script type="text/javascript" src="/js/tolvugrafik/Common/MV.js"></script>
-        <script type="text/javascript" src="/js/tolvugrafik/Common/webgl-utils.js"></script>
-        <script type="text/javascript" src="/js/tolvugrafik/Common/initShaders.js"></script>
-        <script src="/js/tolvugrafik/sierpinski.js"></script>
+  <script type="text/javascript" src="/js/tolvugrafik/Common/MV.js"></script>
+  <script type="text/javascript" src="/js/tolvugrafik/Common/webgl-utils.js"></script>
+  <script type="text/javascript" src="/js/tolvugrafik/Common/initShaders.js"></script>
+  <script src="/js/tolvugrafik/sierpinski.js"></script>
 </head>
-  <body>
-    <header class="header">
-      <a href="#" class="logo" id="log"><span>Sierpinski's</span> Gasket</a>
-      <i class='bx bx-menu' id="menu-icon"></i>
-      <nav class="navbar">
-        <a href="/#heim">Heim</a>
-        <a href="/#um-mig">Um mig</a>
-        <a href="/#verkefni">Verkefni</a>
-      </nav>
-    </header>
-    <div id="top">
-    </div>
-    <div class="project-container">
-      <div class="fractal-container" id="worley">
-        <canvas id="gl-canvas" width="512" height="512"></canvas>
-      </div>
-      <div class="slider-container" id="controls-container">
-        <input type="range" id="point-slider" min="0" max="100000" value="5000">
-      </div>
-    </div>
 
-    <section class="about-project">
-      <div class="about-content">
-        <h2 class="heading"><span>Sierpinski's</span> Gasket</h2>
-        <p>Útfærsla á <span>Sierpinski's</span> gasket. Ekki mín útfærsla, kóðinn tekin beint <a class="link" href="https://www.cs.unm.edu/~angel/BOOK/INTERACTIVE_COMPUTER_GRAPHICS/SEVENTH_EDITION/CODE/02/gasket1.html" target="_blank" class="link">héðan</a>. Smávegis breytingar voru gerðar, t.d. bæta við slider.</p>
+<body>
+  <header class="header">
+    <a href="#" class="logo" id="log"><span>Sierpinski's</span> Gasket</a>
+    <i class='bx bx-menu' id="menu-icon"></i>
+    <nav class="navbar">
+      <a href="/#heim">Heim</a>
+      <a href="/#um-mig">Um mig</a>
+      <a href="/#verkefni">Verkefni</a>
+    </nav>
+  </header>
+  <div id="top">
+  </div>
+  <div class="project-container">
+    <div class="fractal-container" id="worley">
+      <canvas id="gl-canvas" width="512" height="512"></canvas>
+    </div>
+    <div class="slider-container" id="controls-container">
+      <div class="checkbox-container" id="checkbox-container">
+        <input type="checkbox" id="checkbox1"> 1. a)
+        <input type="checkbox" id="checkbox2"> 1. b)
       </div>
-      <div class="about-images">
-        <img src="/images/sierpinski.png">
-      </div>
-    </section>
+      <input type="range" id="point-slider" min="0" max="100000" value="5000">
+    </div>
+  </div>
 
-    <footer class="footer">
-      <div class="footer-text">
-        <p>&copy; 2024 Egill Magnússon | Vefsíða í vinnslu</p>
-      </div>
-      <div class="footer-iconTop">
-        <a href="#top"><i class='bx bx-up-arrow-alt' ></i></a>
-      </div>
-    </footer>
-  </body>
+  <section class="about-project">
+    <div class="about-content">
+      <h2 class="heading"><span>Sierpinski's</span> Gasket</h2>
+      <p>Útfærsla á <span>Sierpinski's</span> gasket. Ekki mín útfærsla, kóðinn tekin beint <a class="link"
+          href="https://www.cs.unm.edu/~angel/BOOK/INTERACTIVE_COMPUTER_GRAPHICS/SEVENTH_EDITION/CODE/02/gasket1.html"
+          target="_blank" class="link">héðan</a>. Smávegis breytingar voru gerðar, t.d. bæta við slider.</p>
+    </div>
+    <div class="about-images">
+      <img src="/images/sierpinski.png">
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-text">
+      <p>&copy; 2024 Egill Magnússon | Vefsíða í vinnslu</p>
+    </div>
+    <div class="footer-iconTop">
+      <a href="#top"><i class='bx bx-up-arrow-alt'></i></a>
+    </div>
+  </footer>
+</body>
+
 </html>
