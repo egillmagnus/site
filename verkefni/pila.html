@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="is">
+
+<head>
+  <meta name="description" content="Heimasíða Egils" />
+  <meta charset="utf-8">
+  <title>Heimasíða Egils</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="Egill Magnússon" content="">
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/pila.css">
+</head>
+
+<body>
+  <header class="header">
+    <a href="#" class="logo" id="log">Píla</a>
+    <i class='bx bx-menu' id="menu-icon"></i>
+    <nav class="navbar">
+      <a href="/#heim">Heim</a>
+      <a href="/#um-mig">Um mig</a>
+      <a href="/#verkefni">Verkefni</a>
+    </nav>
+  </header>
+  <div id="top">
+  </div>
+  <section class="project-container">
+    <!-- Player Setup Section -->
+    <div class="player-container" id="player-container">
+      <!-- Container for adding players -->
+      <div class="player-box" id="add-player-button-container">
+        <button id="add-player-button" class="btn">Bæta við leikmanni</button>
+      </div>
+    </div>
+
+    <!-- Start Game Button -->
+    <button id="start-game-button">Start Game</button>
+
+    <!-- Game Section (Hidden initially) -->
+
+    <div class="dartboard-container">
+      <canvas id="dartboard" width="500" height="500"></canvas>
+    </div>
+    <div class="dartboard-container">
+
+      <div id="game-section" style="display:none;">
+        <div id="message">Click on the dartboard to register your throw!</div>
+        <div id="player-stats"></div>
+      </div>
+      <script type="module" src="../js/pila/pila.js"></script>
+  </section>
+
+  <section class="about-project">
+    <div class="about-content">
+      <h2 class="heading"><span>Píla</span></h2>
+      <p>Skemmtileg útfærsla á stigateljara fyrir pílu. Hægt er að smella á þann stað á píluspjaldinu, þar sem pílan
+        lenti.</p>
+    </div>
+    <div class="about-images">
+      <img src="/images/worley1.png">
+      <img src="/images/worley2.png">
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-text">
+      <p>&copy; 2024 Egill Magnússon | Vefsíða í vinnslu</p>
+    </div>
+    <div class="footer-iconTop">
+      <a href="#top"><i class='bx bx-up-arrow-alt'></i></a>
+    </div>
+  </footer>
+</body>
+
+</html>
