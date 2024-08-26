@@ -11,14 +11,13 @@
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/verkefni.css">
-  <link rel="stylesheet" href="/css/tolvugrafik/sierpinski.css">
+  <link rel="stylesheet" href="/css/tolvugrafik/main.css">
   <script id="vertex-shader" type="x-shader/x-vertex">
         attribute vec4 vPosition;
         
         void
         main()
         {
-            gl_PointSize = 1.0;
             gl_Position = vPosition;
         }
         </script>
@@ -35,12 +34,12 @@
   <script type="text/javascript" src="/js/tolvugrafik/Common/MV.js"></script>
   <script type="text/javascript" src="/js/tolvugrafik/Common/webgl-utils.js"></script>
   <script type="text/javascript" src="/js/tolvugrafik/Common/initShaders.js"></script>
-  <script src="/js/tolvugrafik/sierpinski.js"></script>
+  <script src="/js/tolvugrafik/circlefan.js"></script>
 </head>
 
 <body>
   <header class="header">
-    <a href="#" class="logo" id="log"><span>Sierpinski's</span> Gasket</a>
+    <a href="#" class="logo" id="log"><span>Circle</span> fan</a>
     <i class='bx bx-menu' id="menu-icon"></i>
     <nav class="navbar">
       <a href="/#heim">Heim</a>
@@ -55,25 +54,9 @@
       <canvas id="gl-canvas" width="512" height="512"></canvas>
     </div>
     <div class="slider-container" id="controls-container">
-      <div class="checkbox-container" id="checkbox-container">
-        <input type="checkbox" id="checkbox1"> 1. a)
-        <input type="checkbox" id="checkbox2"> 1. b)
-      </div>
-      <input type="range" id="point-slider" min="0" max="100000" value="5000">
+      <input type="range" id="point-slider" min="3" max="50" value="3">
     </div>
   </div>
-
-  <section class="about-project">
-    <div class="about-content">
-      <h2 class="heading"><span>Sierpinski's</span> Gasket</h2>
-      <p>Útfærsla á <span>Sierpinski's</span> gasket. Ekki mín útfærsla, kóðinn tekin beint <a class="link"
-          href="https://www.cs.unm.edu/~angel/BOOK/INTERACTIVE_COMPUTER_GRAPHICS/SEVENTH_EDITION/CODE/02/gasket1.html"
-          target="_blank" class="link">héðan</a>. Smávegis breytingar voru gerðar, t.d. bæta við slider.</p>
-    </div>
-    <div class="about-images">
-      <img src="/images/sierpinski.png">
-    </div>
-  </section>
 
   <footer class="footer">
     <div class="footer-text">
