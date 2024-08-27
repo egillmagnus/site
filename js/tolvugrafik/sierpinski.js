@@ -32,7 +32,6 @@ window.onload = function init() {
         recalculatePoints();
     });
 
-    // Set the initial canvas size and keep it square (based on window width)
     setCanvasSize(canvas);
 
     gl = WebGLUtils.setupWebGL(canvas);
@@ -40,26 +39,26 @@ window.onload = function init() {
         alert("WebGL isn't available");
     }
 
-    // Setup the slider with width equal to canvas width
     var pointSlider = document.getElementById("point-slider");
     pointSlider.style.width = canvas.width + "px";
 
     pointSlider.addEventListener("input", function (event) {
         NumPoints = parseInt(event.target.value);
-        recalculatePoints();  // Recalculate and re-render based on the new NumPoints
+        recalculatePoints();
     });
 
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
-        pointSlider.style.width = canvas.width + "px";  // Adjust slider width with the canvas
-        recalculatePoints();  // Recalculate and re-render after resize
+        pointSlider.style.width = canvas.width + "px";
+        recalculatePoints(); 
     });
+    gl.clearColor(50/255, 57/255, 70/255, 1.0);
 
-    recalculatePoints();  // Initial calculation and rendering
+    recalculatePoints();
 };
 
 function setCanvasSize(canvas) {
-    var size = Math.min(window.innerWidth, window.innerHeight);  // Make canvas size based on window size
+    var size = Math.min(window.innerWidth, window.innerHeight);
     canvas.width = size * 0.6;
     canvas.height = size * 0.6;
     if (gl) {
@@ -68,22 +67,17 @@ function setCanvasSize(canvas) {
 }
 
 function recalculatePoints() {
-    // Initialize our data for the Sierpinski Gasket
     var vertices = [
         vec2(-1, -1),
         vec2(0, 1),
         vec2(1, -1)
     ];
 
-    // Specify a starting point p for our iterations
     var p;
 
-    // Check which checkbox is selected and apply the corresponding logic
     if (document.getElementById('checkbox1').checked) {
-        // If Checkbox 1 is selected, set the starting point to (100, 100)
         p = vec2(100, 100);
     } else if (document.getElementById('checkbox2').checked) {
-        // If Checkbox 2 is selected, use normal starting point, but modify the point selection with 90% chance for vertices[0]
         p = vec2(0, 0);
     } else {
         // Default case
@@ -92,21 +86,19 @@ function recalculatePoints() {
         p = scale(0.25, add(u, v));
     }
 
-    points = [p];  // Reset points
+    points = [p];
 
-    // Compute new points
     for (var i = 0; points.length < NumPoints; ++i) {
         var j;
 
         if (document.getElementById('checkbox2').checked) {
-            // With 90% chance, select vertices[0]
             if (Math.random() < 0.9) {
                 j = 0;
             } else {
-                j = Math.floor(Math.random() * 2) + 1;  // Randomly select another vertex
+                j = Math.floor(Math.random() * 2) + 1;
             }
         } else {
-            j = Math.floor(Math.random() * 3);  // Normal random selection
+            j = Math.floor(Math.random() * 3); 
         }
 
         p = add(points[i], vertices[j]);
@@ -114,19 +106,17 @@ function recalculatePoints() {
         points.push(p);
     }
 
-    // Re-upload the points to the GPU
     var bufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
 
-    // Associate shader variables with our data buffer
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
     var vPosition = gl.getAttribLocation(program, "vPosition");
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
-    render();  // Render the updated points
+    render();
 }
 
 function render() {
