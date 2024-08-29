@@ -25,7 +25,9 @@ window.onload = function init() {
     if (!gl) { alert("WebGL isn't available"); }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    //gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clearColor(31 / 255, 36 / 255, 45 / 255, 1.0);
+
+
 
     var pointSlider = document.getElementById("point-slider");
     pointSlider.style.width = canvas.width + "px";

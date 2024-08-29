@@ -39,6 +39,9 @@ window.onload = function init() {
         alert("WebGL isn't available");
     }
 
+    gl.clearColor(31 / 255, 36 / 255, 45 / 255, 1.0);
+
+
     var pointSlider = document.getElementById("point-slider");
     pointSlider.style.width = canvas.width + "px";
 
@@ -52,7 +55,6 @@ window.onload = function init() {
         pointSlider.style.width = canvas.width + "px";
         recalculatePoints(); 
     });
-    gl.clearColor(50/255, 57/255, 70/255, 1.0);
 
     recalculatePoints();
 };
@@ -68,9 +70,9 @@ function setCanvasSize(canvas) {
 
 function recalculatePoints() {
     var vertices = [
-        vec2(-1, -1),
-        vec2(0, 1),
-        vec2(1, -1)
+        vec2( -0.9, -0.9 ),
+        vec2(    0,  0.9 ),
+        vec2(  0.9, -0.9 )
     ];
 
     var p;

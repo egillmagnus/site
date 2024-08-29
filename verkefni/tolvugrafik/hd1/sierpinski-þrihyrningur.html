@@ -18,7 +18,7 @@
         void
         main()
         {
-            gl_PointSize = 4.0;
+            gl_PointSize = 1.0;
             gl_Position = vPosition;
         }
         </script>
@@ -35,12 +35,12 @@
   <script type="text/javascript" src="/js/tolvugrafik/Common/MV.js"></script>
   <script type="text/javascript" src="/js/tolvugrafik/Common/webgl-utils.js"></script>
   <script type="text/javascript" src="/js/tolvugrafik/Common/initShaders.js"></script>
-  <script src="/js/tolvugrafik/click-circles.js"></script>
+  <script src="/js/tolvugrafik/hd1/sierpinski.js"></script>
 </head>
 
 <body>
   <header class="header">
-    <a href="#" class="logo" id="log">Click <span>Circles</span></a>
+    <a href="#" class="logo" id="log"><span>Sierpinski's</span> Gasket</a>
     <i class='bx bx-menu' id="menu-icon"></i>
     <nav class="navbar">
       <a href="/#heim">Heim</a>
@@ -54,7 +54,22 @@
     <div class="fractal-container" id="worley">
       <canvas id="gl-canvas" width="512" height="512"></canvas>
     </div>
+    <div class="slider-container" id="controls-container">
+      <input type="range" id="point-slider" min="0" max="100000" value="5000">
+    </div>
   </div>
+
+  <!-- <section class="about-project">
+    <div class="about-content">
+      <h2 class="heading"><span>Sierpinski's</span> Gasket</h2>
+      <p>Útfærsla á <span>Sierpinski's</span> gasket. Ekki mín útfærsla, kóðinn tekin beint <a class="link"
+          href="https://www.cs.unm.edu/~angel/BOOK/INTERACTIVE_COMPUTER_GRAPHICS/SEVENTH_EDITION/CODE/02/gasket1.html"
+          target="_blank" class="link">héðan</a>. Smávegis breytingar voru gerðar, t.d. bæta við slider.</p>
+    </div>
+    <div class="about-images">
+      <img src="/images/sierpinski.png">
+    </div>
+  </section> -->
 
   <footer class="footer">
     <div class="footer-text">

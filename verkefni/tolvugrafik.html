@@ -2,69 +2,108 @@
 <html lang="is">
 
 <head>
-    <meta name="description" content="Heimasíða Egils" />
-    <meta charset="utf-8">
-    <title>Heimasíða Egils</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="Egill Magnússon" content="">
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="https://smtpjs.com/v3/smtp.js"></script>
-    <link rel="stylesheet" href="/css/style.css">
+  <meta name="description" content="Heimasíða Egils" />
+  <meta charset="utf-8">
+  <title>Heimasíða Egils</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="Egill Magnússon" content="">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <script src="https://smtpjs.com/v3/smtp.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/tolvugrafik/main.css">
 </head>
-  <body>
-    <header class="header">
-      <a href="#" class="logo" id="log">Heimasíða Egils</a>
-      <i class='bx bx-menu' id="menu-icon"></i>
-      <nav class="navbar">
-        <a href="#heim" class="active">Heim</a>
-        <a href="#um-mig">Um mig</a>
-        <a href="#verkefni">Verkefni</a>
-      </nav>
-    </header>
-    <main>
+
+<body>
+  <header class="header">
+    <a href="#" class="logo" id="log">Heimasíða Egils</a>
+    <i class='bx bx-menu' id="menu-icon"></i>
+    <nav class="navbar">
+      <a href="/#heim" class="active">Heim</a>
+      <a href="/#um-mig">Um mig</a>
+      <a href="/#verkefni">Verkefni</a>
+    </nav>
+  </header>
+  <main>
 
     <section class="projects" id="verkefni">
-      <h2 class="heading"> Verkefni </h2>
-
-      <div class="projects-container">
+      <h2 class="heading"> Tölvugrafík verkefni </h2>
+      <h3 class="sub-heading"> Heimadæmi 1 </h3>
+      <div class="projects-container hd-section">
         <div class="project-box">
-          <i class='bx bx-shape-triangle'></i>
           <h3>Sierpinski's Gasket</h3>
-          <p><span>Sierpinski</span> þríhyrningur </p>
+          <p><span>Sierpinski</span> þríhyrningur</p>
           <div class="button-container">
-            <a href="tolvugrafik/sierpinski-þrihyrningur" class="btn">Skoða Verkefni</a>
+            <a href="tolvugrafik/hd1/sierpinski-þrihyrningur" class="btn">Skoða Verkefni</a>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub-heading"> Heimadæmi 2 </h3>
+      <div class="projects-container hd-section">
+        <div class="project-box">
+          <h3>Sierpinski's Gasket</h3>
+          <p>Viðbætur við <span>Sierpinski</span> þríhyrningin</p>
+          <div class="button-container">
+            <a href="tolvugrafik/hd2/sierpinski-þrihyrningur" class="btn">Skoða Verkefni</a>
           </div>
         </div>
 
-        <!-- <div class="project-box">
-          <i class='bx bxs-color'></i>
-          <h3>Worley Noise</h3>
-          <p>Mín útfærsla á <span>Worley</span> Noise</p>
+        <div class="project-box">
+          <h3>Circle fan</h3>
+          <p><span>Hringur</span> teiknaður með circle fan</p>
           <div class="button-container">
-            <a href="verkefni/worley-noise" class="btn">Skoða Verkefni</a>
+            <a href="tolvugrafik/hd2/circlefan" class="btn">Skoða Verkefni</a>
           </div>
-        </div> -->
+        </div>
+        
+        <div class="project-box">
+          <h3>L shaped strip</h3>
+          <p>Stafurinn <span>L</span> teiknaður með triangle strip</p>
+          <div class="button-container">
+            <a href="tolvugrafik/hd2/L-shaped-strip" class="btn">Skoða Verkefni</a>
+          </div>
+        </div>
 
-        <!-- <div class="project-box">
+        <div class="project-box">
+          <h3>Click circles</h3>
+          <p>Teiknar hringi þar sem er klikkað</p>
+          <div class="button-container">
+            <a href="tolvugrafik/hd2/click-circles" class="btn">Skoða Verkefni</a>
+          </div>
+        </div>
+
+        <div class="project-box">
+          <h3>Sierpinski's Carpet</h3>
+          <p><span>Sierpinski</span> ferningur</p>
+          <div class="button-container">
+            <a href="tolvugrafik/hd2/sierpinski-ferningur" class="btn">Skoða Verkefni</a>
+          </div>
+        </div>
+        
+
+      </div>
+
+
+      <!-- <div class="project-box">
           <i class='bx bx-code-alt'></i>
           <h3>Tölvugrafík</h3>
           <p>Verkefni gerð fyrir áfangan tölvugrafík í HÍ</p>
           <div class="button-container">
             <a href="verkefni/tolvugrafik" class="btn">Skoða Verkefni</a>
           </div> -->
-        </div>
       </div>
     </section>
-    </main>
-    <footer class="footer">
-      <div class="footer-text">
-        <p>&copy; 2024 Egill Magnússon | Vefsíða í vinnslu</p>
-      </div>
-      <div class="footer-iconTop">
-        <a href="#heim"><i class='bx bx-up-arrow-alt' ></i></a>
-      </div>
-    </footer>
-  </body>
-  <script src="js/index.js"></script>
+  </main>
+  <footer class="footer">
+    <div class="footer-text">
+      <p>&copy; 2024 Egill Magnússon | Vefsíða í vinnslu</p>
+    </div>
+    <div class="footer-iconTop">
+      <a href="#heim"><i class='bx bx-up-arrow-alt'></i></a>
+    </div>
+  </footer>
+</body>
+<script src="js/index.js"></script>
+
 </html>
