@@ -16,8 +16,16 @@ window.onload = function init()
         menuicon.classList.toggle("bx-x");
         navbar.classList.toggle("active");
     };
+    
 
     var canvas = document.getElementById( "gl-canvas" );
+
+    window.addEventListener("resize", function () {
+        setCanvasSize(canvas);
+        pointSlider.style.width = canvas.width + "px";
+        recalculatePoints();
+    });
+    setCanvasSize(canvas);
     
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
@@ -55,4 +63,13 @@ window.onload = function init()
 function render() {
     gl.clear( gl.COLOR_BUFFER_BIT );
     gl.drawArrays( gl.TRIANGLE_STRIP, 0, 7 );
+}
+
+function setCanvasSize(canvas) {
+    var size = Math.min(window.innerWidth, window.innerHeight);
+    canvas.width = size * 0.6;
+    canvas.height = size * 0.6;
+    if (gl) {
+        gl.viewport(0, 0, canvas.width, canvas.height);
+    }
 }

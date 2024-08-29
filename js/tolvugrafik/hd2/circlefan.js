@@ -95,3 +95,11 @@ function render() {
     window.requestAnimFrame(render);
 }
 
+function setCanvasSize(canvas) {
+    var size = Math.min(window.innerWidth, window.innerHeight);
+    canvas.width = size * 0.6;
+    canvas.height = size * 0.6;
+    if (gl) {
+        gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+}

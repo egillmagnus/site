@@ -36,6 +36,13 @@ window.onload = function init() {
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
+    window.addEventListener("resize", function () {
+        setCanvasSize(canvas);
+        pointSlider.style.width = canvas.width + "px";
+        recalculatePoints();
+    });
+    setCanvasSize(canvas);
+
     canvas.addEventListener("mousedown", function (e) {
 
         var t = vec2(2 * e.offsetX / canvas.width - 1, 2 * (canvas.height - e.offsetY) / canvas.height - 1);
@@ -83,4 +90,14 @@ function render() {
     }
 
     window.requestAnimFrame(render);
+}
+
+
+function setCanvasSize(canvas) {
+    var size = Math.min(window.innerWidth, window.innerHeight);
+    canvas.width = size * 0.6;
+    canvas.height = size * 0.6;
+    if (gl) {
+        gl.viewport(0, 0, canvas.width, canvas.height);
+    }
 }
