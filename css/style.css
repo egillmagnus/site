@@ -224,7 +224,7 @@ span {
   border: .2rem solid var(--bg-color);
   transition: 0.5s;
   min-height: 15rem;
-  max-width: 40rem;
+  min-width: 50rem;
 } 
 
 
