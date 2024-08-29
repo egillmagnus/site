@@ -53,7 +53,7 @@ window.onload = function init() {
         pointSlider.style.width = canvas.width + "px";
         recalculatePoints();
     });
-
+    setCanvasSize(canvas);
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
