@@ -39,8 +39,7 @@ window.onload = function init() {
 
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
-        pointSlider.style.width = canvas.width + "px";
-        recalculatePoints();
+        render();
     });
     setCanvasSize(canvas);
 

@@ -52,6 +52,7 @@ window.onload = function init() {
         navbar.classList.toggle("active");
     };
 
+    setCanvasSize(canvas);
 
     // Create the circle
     createCirclePoints();
