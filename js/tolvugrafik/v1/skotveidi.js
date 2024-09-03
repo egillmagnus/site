@@ -47,9 +47,9 @@ var shot = [
     vec2( 0.01, -0.1 )
 ]
 var gun = [
-    vec2(-0.1, -0.9),  // Vertex 1
-    vec2(-0.3, -0.9),  // Vertex 2
-    vec2(-0.2, -0.8)   // Vertex 3
+    vec2(-0.1, -0.9),
+    vec2(-0.3, -0.9),
+    vec2(-0.2, -0.8)
 ];
 var gunColor = vec4(0.4, 0.239, 0.078, 1.0);
 var sky = [
@@ -258,14 +258,14 @@ function updateEntities() {
 
     for (var i = shots.length - 1; i >= 0; i--) {
         for (var j = birds.length - 1; j >= 0; j--) {
-            var dx = Math.abs(shots[i][0] - birds[j][0]); // Absolute difference on x-axis
-            var dy = Math.abs(shots[i][1] - birds[j][1]); // Absolute difference on y-axis
+            var dx = Math.abs(shots[i][0] - birds[j][0]);
+            var dy = Math.abs(shots[i][1] - birds[j][1]);
 
-            if (dx <= 0.07 && dy <= 0.1) { // Collision detected
-                shots.splice(i, 1); // Remove the shot
-                birds.splice(j, 1); // Remove the bird
+            if (dx <= 0.07 && dy <= 0.1) { 
+                shots.splice(i, 1); 
+                birds.splice(j, 1);
                 score++;
-                break; // Exit the loop after collision to avoid accessing deleted items
+                break;
             }
         }
     }
