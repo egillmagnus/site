@@ -256,16 +256,16 @@ function updateEntities() {
         }
     }
 
-    for (var i = shots.length - 1; i >= 0; i--) {
+    outerLoop: for (var i = shots.length - 1; i >= 0; i--) {
         for (var j = birds.length - 1; j >= 0; j--) {
             var dx = Math.abs(shots[i][0] - birds[j][0]);
             var dy = Math.abs(shots[i][1] - birds[j][1]);
 
             if (dx <= 0.07 && dy <= 0.1) { 
-                shots.splice(i, 1); 
-                birds.splice(j, 1);
+                shots.splice(i, 1);
+                birds.splice(j, 1); 
                 score++;
-                break;
+                break outerLoop;
             }
         }
     }
