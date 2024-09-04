@@ -18,19 +18,19 @@ var program;
 let score = 0;
 
 var birds = [];
-var bird= [
-    vec2( -0.1,  0.07 ),
-    vec2(  0.1,  0.07 ),
-    vec2( -0.1, -0.07 ),
-    vec2(  0.1,  0.07 ),
-    vec2( -0.1, -0.07 ),
-    vec2(  0.1, -0.07 ),
-    vec2( 0.01,  0.0 ),
-    vec2( 0.12,  0.0 ),
-    vec2( 0.12, 0.15 ),
-    vec2( 0.1, 0.03 ),
-    vec2( 0.1, 0.07 ),
-    vec2( 0.16, 0.05 )
+var bird = [
+    vec2(-0.1, 0.07),
+    vec2(0.1, 0.07),
+    vec2(-0.1, -0.07),
+    vec2(0.1, 0.07),
+    vec2(-0.1, -0.07),
+    vec2(0.1, -0.07),
+    vec2(0.01, 0.0),
+    vec2(0.12, 0.0),
+    vec2(0.12, 0.15),
+    vec2(0.1, 0.03),
+    vec2(0.1, 0.07),
+    vec2(0.16, 0.05)
 ];
 
 var birdColors = [
@@ -44,7 +44,7 @@ var shotColor = vec4(0.431, 0.431, 0.431, 1.0);
 var shot = [
     vec2(0, 0),
     vec2(-0.01, -0.1),
-    vec2( 0.01, -0.1 )
+    vec2(0.01, -0.1)
 ]
 var gun = [
     vec2(-0.1, -0.9),
@@ -78,7 +78,7 @@ scoreBar = [
     vec2(0, -0.1),
     vec2(0.02, 0),
     vec2(0.02, -0.1)
-]; 
+];
 
 
 
@@ -131,12 +131,11 @@ window.onload = function init() {
 function render() {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
-    if(score < 5) {
+
+    if (score < 5) {
         updateEntities();
         drawPointsToBuffer();
     }
-
-
     gl.drawArrays(gl.TRIANGLES, 0, vertex.length);
 
     window.requestAnimFrame(render);
@@ -170,13 +169,12 @@ function drawPointsToBuffer() {
     // teikna fugla
     for (var i = 0; i < birds.length; i++) {
         for (var j = 0; j < bird.length; j++) {
-            console.log(j);
-            if(birds[i][2] < 0) {
+            if (birds[i][2] < 0) {
                 vertex.push(vec2(birds[i][0] - bird[j][0], birds[i][1] + bird[j][1]));
             } else {
                 vertex.push(vec2(birds[i][0] + bird[j][0], birds[i][1] + bird[j][1]));
             }
-            if(j >= 9) {
+            if (j >= 9) {
                 colors.push(birdColors[2]);
             } else if (j >= 6) {
                 colors.push(birdColors[1]);
@@ -193,10 +191,10 @@ function drawPointsToBuffer() {
     }
 
     // teikna stig
-
-    for(var i = 0; i < score; i++ ) {
-        for(var j = 0; j < scoreBar.length; j++ ) {
-            vertex.push(vec2( -0.95 + scoreBar[j][0] + i * 0.03, 0.95 + scoreBar[j][1] ));
+    for (var i = 0; i < score; i++) {
+        for (var j = 0; j < scoreBar.length; j++) {
+            vertex.push(vec2(-0.95 + scoreBar[j][0] + i * 0.03, 0.95 + scoreBar[j][1]));
+            colors.push(vec4(0.0, 0.0, 0.0, 1.0));
         }
     }
 
@@ -237,11 +235,11 @@ function updateEntities() {
     }
 
 
-    if (birds.length < 6 && Math.random() < 0.01) { 
+    if (birds.length < 6 && Math.random() < 0.01) {
         var birdY = -0.2 + Math.random() * (0.9 + 0.2);
         var birdSpeed = (Math.random() * 0.005) + 0.001;
         if (Math.random() > 0.5) birdSpeed = -birdSpeed;
-        if(birdSpeed < 0 ) {
+        if (birdSpeed < 0) {
             birdX = 1.14;
         } else {
             birdX = -1.14;
@@ -256,16 +254,16 @@ function updateEntities() {
         }
     }
 
-    outerLoop: for (var i = shots.length - 1; i >= 0; i--) {
+    for (var i = shots.length - 1; i >= 0; i--) {
         for (var j = birds.length - 1; j >= 0; j--) {
             var dx = Math.abs(shots[i][0] - birds[j][0]);
             var dy = Math.abs(shots[i][1] - birds[j][1]);
 
-            if (dx <= 0.07 && dy <= 0.1) { 
+            if (dx <= 0.07 && dy <= 0.1) {
                 shots.splice(i, 1);
-                birds.splice(j, 1); 
+                birds.splice(j, 1);
                 score++;
-                break outerLoop;
+                break;
             }
         }
     }
