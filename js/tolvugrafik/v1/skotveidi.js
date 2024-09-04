@@ -1,9 +1,3 @@
-/////////////////////////////////////////////////////////////////
-//    Sýnidæmi í Tölvugrafík
-//     Sýnir notkun á "mousedown" og "mousemove" atburðum
-//
-//    Hjálmtýr Hafsteinsson, september 2024
-/////////////////////////////////////////////////////////////////
 var canvas;
 var gl;
 
@@ -11,8 +5,8 @@ var vertex = [];
 
 var lastShotTime = Date.now();
 
-var mouseX;             // Old value of x-coordinate  
-var movement = false;   // Do we move the paddle?
+var mouseX;
+var movement = false;
 var program;
 
 let score = 0;
@@ -79,6 +73,28 @@ scoreBar = [
     vec2(0.02, 0),
     vec2(0.02, -0.1)
 ];
+
+finalPoint = [
+    vec2(-0.02, 0),
+    vec2(-0.02, -0.02),
+    vec2(0.13, -0.08),
+    vec2(0.13, -0.08),
+    vec2(0.13, -0.1),
+    vec2(-0.02, -0.02)
+];
+
+const starVertices = [
+    vec2(0, ( 1 / 3 ) + 0.15),
+    vec2(-( 1 / 3 ), -( 1 / 3 ) / Math.sqrt(3) + 0.15 ),
+    vec2(( 1 / 3 ), -( 1 / 3 ) / Math.sqrt(3)  + 0.15 ),
+
+    vec2(0, -( 1 / 3 )  + 0.15 ),
+    vec2(-( 1 / 3 ), ( 1 / 3 ) / Math.sqrt(3) + 0.15 ),
+    vec2(( 1 / 3 ), ( 1 / 3 ) / Math.sqrt(3) + 0.15 )
+];
+
+var starColor = vec4( 1.0, 0.843, 0.0, 1.0 );
+
 
 
 
@@ -192,9 +208,21 @@ function drawPointsToBuffer() {
 
     // teikna stig
     for (var i = 0; i < score; i++) {
-        for (var j = 0; j < scoreBar.length; j++) {
-            vertex.push(vec2(-0.95 + scoreBar[j][0] + i * 0.03, 0.95 + scoreBar[j][1]));
-            colors.push(vec4(0.0, 0.0, 0.0, 1.0));
+        var scoreItem = scoreBar;
+        if (i == 4) {
+            scoreItem = finalPoint;
+        }
+            for (var j = 0; j < scoreItem.length; j++) {
+                vertex.push(vec2(-0.95 + scoreItem[j][0] + (i < 4 ? i : 0) * 0.03, 0.95 + scoreItem[j][1]));
+                colors.push(vec4(0.0, 0.0, 0.0, 1.0));
+            }
+    }
+
+    // teikna stjörnu
+    if(score >= 5) {
+        for (var i = 0; i < starVertices.length; i++) {
+            vertex.push(starVertices[i]);
+            colors.push(starColor);
         }
     }
 
@@ -238,10 +266,9 @@ function updateEntities() {
     if (birds.length < 6 && Math.random() < 0.01) {
         var birdY = -0.2 + Math.random() * (0.9 + 0.2);
         var birdSpeed = (Math.random() * 0.005) + 0.001;
+        let birdX = 1.14;
         if (Math.random() > 0.5) birdSpeed = -birdSpeed;
-        if (birdSpeed < 0) {
-            birdX = 1.14;
-        } else {
+        if (birdSpeed > 0) {
             birdX = -1.14;
         }
         birds.push(vec3(birdX, birdY, birdSpeed));
