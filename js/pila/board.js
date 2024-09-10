@@ -1,5 +1,5 @@
 
-import { Throw } from './Throw.js';  // Import the Throw class
+import { Throw } from './throw.js';  // Import the Throw class
 export class Board {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
