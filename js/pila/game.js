@@ -1,5 +1,3 @@
-import { Throw } from './Throw.js';  // Import the Throw class
-
 export class Game {
     constructor(players, board) {
         this.players = players;
@@ -14,20 +12,23 @@ export class Game {
     // Start the game, attach click event to the dartboard
     startGame() {
         this.board.canvas.addEventListener('click', this.handleBoardClick.bind(this));
+        this.board.drawBoard();
     }
 
     // Handle clicks on the dartboard
     handleBoardClick(event) {
-        if (!this.isGameOver) {
-            if (!this.isZoomedIn) {
+        console.log("board clicked");
+        if (!this.isGameOver && !this.board.isZooming) {
+            if (!this.isZoomedIn ) {
+                console.log("zooming in");
                 // First click: zoom in
-                this.board.zoomIn(event.clientX, event.clientY);  // Zoom in based on click position
+                this.board.zoomIn(event.offsetX, event.offsetY);  // Zoom in based on click position
                 this.isZoomedIn = true;
             } else {
                 // Second click: register throw
-                const section = this.board.calculateSectionFromClick(event.clientX, event.clientY);
-                const multiplier = this.board.calculateMultiplier(section);  // Calculate the multiplier (1x, 2x, 3x)
-                const playerThrow = new Throw(section, multiplier);  // Create a new Throw instance
+                console.log("registering throw");
+                const playerThrow = this.board.calculatePoints(event.offsetX, event.offsetY);
+                
                 const points = playerThrow.calculateScore();  // Calculate the score
 
                 this.startTurn(points);
@@ -42,6 +43,7 @@ export class Game {
                 this.isZoomedIn = false;
             }
         }
+        this.board.drawBoard();
     }
 
     // Start a new turn for the current player

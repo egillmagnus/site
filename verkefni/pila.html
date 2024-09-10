@@ -11,10 +11,11 @@
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/pila.css">
-  <script type="module" src="../js/pila/Board.js"></script>
-  <script type="module" src="../js/pila/Throw.js"></script>
-  <script type="module" src="../js/pila/Player.js"></script>
-  <script type="module" src="../js/pila/webgl-dartboard.js"></script>
+  <script type="module" src="../js/pila/board.js"></script>
+  <script type="module" src="../js/pila/throw.js"></script>
+  <script type="module" src="../js/pila/player.js"></script>
+  <script src="/p5/p5.min.js"></script>
+  <script src="../js/pila/game.js"></script>
 </head>
 
 <body>
@@ -44,7 +45,7 @@
     <!-- Game Section (Hidden initially) -->
 
     <div class="dartboard-container">
-      <canvas id="dartboard" width="500" height="500"></canvas>
+      <canvas class="dartboard" id="dartboard" width="500" height="500"></canvas>
     </div>
     <div class="dartboard-container">
 

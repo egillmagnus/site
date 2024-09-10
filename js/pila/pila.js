@@ -1,5 +1,6 @@
-import { Game } from './Game.js';
-import { Board } from './Board.js';
+import { Game } from "./game.js";
+import { Board } from "./board.js";
+import { Player } from "./player.js"; 
 
 let playerCount = 0;
 const maxPlayers = 4;
@@ -138,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const playerName = playerNameInput ? playerNameInput.value || `Player ${i}` : null;
 
             if (playerName) {
-                players.push({ name: playerName, score: 501 }); // Initial score for each player is 501
+                players.push(new Player(playerName)); // Initial score for each player is 501
                 playerNameInput.disabled = true; // Disable the input after game starts
             }
         }

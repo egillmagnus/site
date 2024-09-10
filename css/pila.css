@@ -79,6 +79,10 @@ body {
     transition: 0.5s;
 }
 
+.dartboard {
+    border: .1rem solid var(--main-color);
+    box-shadow: 0 0 2rem var(--main-color);
+}
 
 .about-images {
     margin-top: 2rem;
