@@ -5,6 +5,7 @@ import { Player } from "./player.js";
 let playerCount = 0;
 const maxPlayers = 4;
 const players = [];
+var board;
 
 document.addEventListener('DOMContentLoaded', () => {
     const playerSetupContainer = document.getElementById('player-container');
@@ -144,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const board = new Board('dartboard');
+        board = new Board('dartboard');
         const game = new Game(players, board);
 
         game.startGame();
@@ -182,8 +183,24 @@ document.addEventListener('DOMContentLoaded', () => {
             displayPlayerStats();
         }
     });
+
+
+    const canvas = document.getElementById("dartboard");
+    window.addEventListener("resize", function () {
+        setCanvasSize(canvas);
+        board.windowResized();
+    });
+
+    setCanvasSize(canvas);
+
 });
 
+
+function setCanvasSize(canvas) {
+    var size = Math.min(window.innerWidth*0.95, window.innerHeight * 0.8);
+    canvas.width = size * 0.9;
+    canvas.height = size * 0.9;
+}
 
 let menuicon = document.querySelector("#menu-icon");
 let navbar = document.querySelector(".navbar")

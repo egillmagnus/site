@@ -1,5 +1,6 @@
 
 import { Throw } from './throw.js';  // Import the Throw class
+
 export class Board {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
@@ -30,6 +31,23 @@ export class Board {
         };
 
         this.updateCanvas();  // Start the animation loop
+    }
+
+    windowResized() {
+        oldWidth = this.outerRadius * 2;
+        this.outerRadius = this.canvas.width / 2;
+        this.doubleTopMin = this.outerRadius * 0.71;
+        this.doubleTopMax = this.outerRadius * 0.8;
+        this.tripleMin = this.outerRadius * 0.4;
+        this.tripleMax = this.outerRadius * 0.5;
+        this.twentyFiveTopMin = this.outerRadius * 0.1;
+        this.bullTopMin = this.outerRadius * 0.05;
+
+        this.translateX = this.translateX * (this.canvas.width / oldWidth);
+        this.translateY = this.translateY * (this.canvas.width / oldWidth);
+
+        this.drawBoard();
+
     }
 
     // Easing function (ease-out)
