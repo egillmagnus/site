@@ -8,6 +8,7 @@ const players = [];
 var board;
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DomContentLoaded");
     const playerSetupContainer = document.getElementById('player-container');
     const addPlayerButtonContainer = document.getElementById('add-player-button-container');
     const addPlayerButton = document.getElementById('add-player-button');
@@ -22,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const newPlayer = createPlayerBox(playerCount+1);
             playerSetupContainer.insertBefore(newPlayer, addPlayerButtonContainer);
 
-            // Save players to localStorage whenever a new player is added
             savePlayersToStorage();
 
             if (playerCount === maxPlayers) {
@@ -37,10 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
         playerElement.remove();
         playerCount--;
 
-        // Update player box IDs and labels after removal
         updatePlayerBoxIDs();
 
-        // Save updated player data to localStorage
         savePlayersToStorage();
 
         if (playerCount < maxPlayers) {
@@ -63,11 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="text" class="player-name" placeholder="Nafn" value="">
         `;
 
-        // Attach event listener to the remove button
         const removeButton = newPlayer.querySelector('.remove-player');
         removeButton.addEventListener('click', () => removePlayer(newPlayer.id));
 
-        // Attach event listener to the player name input field to save to localStorage on change
         const playerNameInput = newPlayer.querySelector('.player-name');
         playerNameInput.addEventListener('input', () => {
             savePlayersToStorage();
@@ -85,23 +81,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return newPlayer;
     }
 
-    // Update the IDs and labels of the remaining player boxes after removal
     function updatePlayerBoxIDs() {
         const remainingPlayers = document.querySelectorAll('.player-box');
         remainingPlayers.forEach((playerBox, index) => {
             const newPlayerNumber = index + 1;
-            playerBox.id = `player${newPlayerNumber}`; // Update the id
+            playerBox.id = `player${newPlayerNumber}`;
             const label = playerBox.querySelector('label');
             if (label) {
-                label.textContent = `Leikmaður ${newPlayerNumber}`; // Update the label
+                label.textContent = `Leikmaður ${newPlayerNumber}`;
             }
         });
 
-        // Save updated player data to localStorage
         savePlayersToStorage();
     }
 
-    // Save player names and count to localStorage
     function savePlayersToStorage() {
         const playerData = [];
         document.querySelectorAll('.player-box').forEach(playerBox => {
@@ -113,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('players', JSON.stringify(playerData));
     }
 
-    // Load player data from localStorage on page load
     function loadPlayersFromStorage() {
         const storedPlayers = JSON.parse(localStorage.getItem('players'));
 
@@ -124,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 newPlayer.querySelector('.player-name').value = playerName;
             });
 
-            // Ensure buttons are correctly displayed based on loaded data
         } else {
             console.log("No player in storage, adding player 1");
             const newPlayer = createPlayerBox(1);
@@ -132,16 +123,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Start game functionality
     startGameButton.addEventListener('click', () => {
-        // Collect player names and make them uneditable
         for (let i = 1; i <= playerCount; i++) {
             const playerNameInput = document.querySelector(`#player${i} .player-name`);
             const playerName = playerNameInput ? playerNameInput.value || `Player ${i}` : null;
 
             if (playerName) {
-                players.push(new Player(playerName)); // Initial score for each player is 501
-                playerNameInput.disabled = true; // Disable the input after game starts
+                players.push(new Player(playerName));
+                playerNameInput.disabled = true;
             }
         }
 
@@ -150,14 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         game.startGame();
 
-        // Hide player setup and show the game section
         gameSection.style.display = 'block';
 
-        // Display player stats
         displayPlayerStats();
     });
 
-    // Display player stats
     function displayPlayerStats() {
         playerStatsContainer.innerHTML = '';
         players.forEach(player => {
@@ -170,16 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Example dartboard click event (you can replace this logic with your own)
     document.getElementById('dartboard').addEventListener('click', () => {
-        // Simulate score deduction for the current player
         if (players.length > 0) {
-            const currentPlayer = players[0]; // Just an example for the first player
-            const points = Math.floor(Math.random() * 60) + 1; // Simulate a random throw
-            currentPlayer.score -= points;
-            if (currentPlayer.score < 0) currentPlayer.score = 0; // Ensure score doesn't go negative
-
-            // Update player stats
             displayPlayerStats();
         }
     });

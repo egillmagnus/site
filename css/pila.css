@@ -80,8 +80,8 @@ body {
 }
 
 .dartboard {
-    border: .1rem solid var(--main-color);
-    box-shadow: 0 0 2rem var(--main-color);
+    /* border: .1rem solid var(--main-color);
+    box-shadow: 0 0 2rem var(--main-color); */
 }
 
 .about-images {

@@ -20,6 +20,9 @@ export class Board {
         this.tripleMax = this.outerRadius * 0.5;
         this.twentyFiveTopMin = this.outerRadius * 0.1;
         this.bullTopMin = this.outerRadius * 0.05;
+        this.previousTranslateX = 0;
+        this.previousTranslateY = 0;
+        this.previousZoom = 1;
 
         this.sections = {
             single: [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5],
@@ -44,8 +47,10 @@ export class Board {
 
     }
 
-    easeOut(t) {
-        return t * (2 - t);
+    easeInOut(t) {
+        return t < 0.5
+            ? 4 * t * t * t
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     clearBoard() {
@@ -55,7 +60,6 @@ export class Board {
     drawBoard() {
         const ctx = this.ctx;
         this.clearBoard();
-
         ctx.save();
 
         
@@ -101,7 +105,7 @@ export class Board {
         this.ctx.fillStyle = color;
         this.ctx.strokeStyle = color;
 
-        for (let counter = startDeg; counter <= endDeg + 1; counter++) {
+        for (let counter = startDeg; counter <= endDeg; counter++) {
             const outerX = (Math.cos(this.degToRad(counter)) * max + this.translateX) * this.scale + this.outerRadius;
             const outerY = (Math.sin(this.degToRad(counter)) * max + this.translateY) * this.scale + this.outerRadius;
             this.ctx.lineTo(outerX, outerY);
@@ -140,14 +144,15 @@ export class Board {
     }
 
     zoomIn(clickX, clickY) {
-
+        this.previousTranslateX = this.translateX;
+        this.previousTranslateY = this.translateY;
+        this.previousZoom = this.scale;
         console.log("translateX: " + this.translateX);
         console.log("translateY: " + this.translateY);
         console.log("ClicX: " + clickX);
         console.log("ClicY: " + clickY);
 
-
-        this.targetScale = 2;
+        this.targetScale = 4;
         this.targetTranslateX = -(clickX - (this.canvas.width / 2));
         this.targetTranslateY = -(clickY - (this.canvas.height / 2));
         this.isZooming = true;
@@ -157,6 +162,9 @@ export class Board {
     }
 
     zoomOut() {
+        this.previousTranslateX = this.translateX;
+        this.previousTranslateY = this.translateY;
+        this.previousZoom = this.scale;
         this.targetScale = 1;
         this.targetTranslateX = 0;
         this.targetTranslateY = 0;
@@ -166,24 +174,26 @@ export class Board {
     updateCanvas() {
         if (this.isZooming) {
             const t = this.zoomSpeed;
+    
+            const easedT = this.easeInOut(t);
+    
+            this.scale = this.previousZoom + (this.targetScale - this.previousZoom) * easedT;
+            this.translateX = this.previousTranslateX + (this.targetTranslateX - this.previousTranslateX) * easedT;
+            this.translateY = this.previousTranslateY + (this.targetTranslateY - this.previousTranslateY) * easedT;
+            
+            this.zoomSpeed += 1 / 20;
 
-            this.scale += (this.targetScale - this.scale) * this.easeOut(t);
-
-            this.translateX += (this.targetTranslateX - this.translateX) * this.easeOut(t);
-            this.translateY += (this.targetTranslateY - this.translateY) * this.easeOut(t);
-
-            if (Math.abs(this.scale - this.targetScale) < 0.005 &&
-                Math.abs(this.translateX - this.targetTranslateX) < 1 &&
-                Math.abs(this.translateY - this.targetTranslateY) < 1) {
+            if ( this.zoomSpeed >= 1 ) {
                 this.translateX = this.targetTranslateX;
                 this.translateY = this.targetTranslateY;
                 this.scale = this.targetScale;
+                this.zoomSpeed = 0;
                 this.isZooming = false;
             }
-
+    
             this.drawBoard();
         }
-
+    
         requestAnimationFrame(() => this.updateCanvas());
     }
 
