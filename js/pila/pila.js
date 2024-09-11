@@ -175,9 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function setCanvasSize(canvas) {
-    var size = Math.min(window.innerWidth*0.95, window.innerHeight * 0.8);
+    var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.8);
     canvas.width = size * 0.9;
     canvas.height = size * 0.9;
+    
+    canvas.style.width = (canvas.width / 2) + 'px';
+    canvas.style.height = (canvas.height / 2) + 'px';
 }
 
 let menuicon = document.querySelector("#menu-icon");

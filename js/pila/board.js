@@ -147,18 +147,11 @@ export class Board {
         this.previousTranslateX = this.translateX;
         this.previousTranslateY = this.translateY;
         this.previousZoom = this.scale;
-        console.log("translateX: " + this.translateX);
-        console.log("translateY: " + this.translateY);
-        console.log("ClicX: " + clickX);
-        console.log("ClicY: " + clickY);
 
         this.targetScale = 4;
-        this.targetTranslateX = -(clickX - (this.canvas.width / 2));
-        this.targetTranslateY = -(clickY - (this.canvas.height / 2));
+        this.targetTranslateX = -((clickX* 2) - (this.canvas.width / 2));
+        this.targetTranslateY = -((clickY*2) - (this.canvas.height / 2));
         this.isZooming = true;
-
-        console.log("new translateX: " + this.targetTranslateX);
-        console.log("new translateY: " + this.targetTranslateY);
     }
 
     zoomOut() {
@@ -198,8 +191,8 @@ export class Board {
     }
 
     calculatePoints(clickX, clickY) {
-        const distX = ((clickX - this.outerRadius) / this.scale) - this.translateX;
-        const distY = -(((clickY - this.outerRadius) / this.scale) - this.translateY);
+        const distX = ((clickX*2 - this.outerRadius) / this.scale) - this.translateX;
+        const distY = -(((clickY*2 - this.outerRadius) / this.scale) - this.translateY);
 
         console.log("distX; " + distX);
         console.log("distY; " + distY);
