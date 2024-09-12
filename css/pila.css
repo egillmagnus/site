@@ -88,38 +88,71 @@ body {
     width: 100%;
 }
 
-@keyframes blurInFromLeft {
+
+@keyframes blurIn {
     0% {
-        opacity: 0.5;
         filter: blur(10px);
-        transform: translateX(-50px);
     }
-    50% {
-        opacity: 1;
-        filter: blur(0);
+    100% {
+        filter: blur(0px);
+    }
+}
+
+
+@keyframes blurInLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(-50px);
+        filter: blur(10px);
     }
     100% {
         opacity: 1;
-        filter: blur(0);
         transform: translateX(0px);
+        filter: blur(0px);
     }
 }
 
 @keyframes moveDown {
     0% {
         transform: translateY(-49px);
+        opacity: 0.8;
     }
     100% {
-        transform: translateY(0px);
+        transform: translateY(0);
+        opacity: 1;
     }
+}
+
+
+.first-throw h3,
+.first-throw h4,
+.first-throw p,
+.first-throw .score-list {
+    animation: blurInLeft 0.7s ease forwards;
+}
+
+
+/* Apply individual delays for staggered effect */
+.first-throw h3 {
+    animation-delay: 0s;
+}
+
+.first-throw h4 {
+    animation-delay: 0.1s;
+}
+
+.first-throw p {
+    animation-delay: 0.2s;
+}
+
+.first-throw .score-list {
+    animation-delay: 0.2s;
 }
 
 .player-container .player-box:first-child .score-list li {
     transform: translateY(-49px);
     animation: moveDown 0.7s ease forwards;
 }
-
-
 
 .player-box h3 {
     font-size: 2.6rem;

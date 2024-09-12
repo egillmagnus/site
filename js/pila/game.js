@@ -48,8 +48,8 @@ export class Game {
             let currentPlayer = this.players[this.currentPlayerIndex];
     
             if (this.board.isValidThrow(playerThrow.calculateScore())) {
-                
-                if (currentPlayer.addThrow(playerThrow)) {
+                console.log(this.currentThrow);
+                if (currentPlayer.addThrow(playerThrow, this.currentThrow)) {
                     
                     this.throws.push( this.currentPlayerIndex );
     

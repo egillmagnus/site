@@ -184,9 +184,14 @@ function populatePlayerBoxes() {
         playerBox.classList.add('player-box');
         playerBox.id = `player${playerIndex + 1}`;
 
+        if (game.currentThrow === 0 && players.length > 1) {
+            playerBox.classList.add('first-throw');
+        }
+
         // Format each throw as "section (multiplier)"
-        const previousThrows = player.throws.slice().reverse().map(playerThrow => {
+        const previousThrows = player.throws.slice().reverse().map(playerThrowAndScore => {
             const scoreToText = ["", "Single ", "Double ", "Triple "];
+            const playerThrow = playerThrowAndScore.throw;
             var text = scoreToText[playerThrow.multiplier];
 
             if (playerThrow.section === 0) {

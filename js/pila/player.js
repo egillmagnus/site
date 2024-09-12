@@ -7,35 +7,45 @@ export class Player {
         this.throws = [];
     }
 
-    addThrow(playerThrow) {
+    addThrow(playerThrow, throwNumber) {
         var points = playerThrow.calculateScore();
-        
+        const scoreBeforeThrow = this.score;
         if (this.score - points >= 0) {
             if (this.score - points === 0) {
                 if (playerThrow.multiplier === 2) {
-                    this.throws.push(playerThrow);
+                    this.throws.push( {throw: playerThrow, score: scoreBeforeThrow } );
                     this.score -= points;
                     console.log(`${this.name} wins with a double!`);
                     return true; 
                 } else {
-                    this.throws.push(new Throw(0, 0));
+                    this.handleBust(throwNumber);
                     console.log(`${this.name} did not finish on a double!`);
                     return false;
                 }
             }
 
             if ( this.score - points === 1 ) {
-                this.throws.push(new Throw(0, 0));
+                this.handleBust(throwNumber);
                 return false;
             }
-
-            this.throws.push(playerThrow);
+            this.throws.push( { throw: playerThrow, score: scoreBeforeThrow });
             this.score -= points;
             return true;
         } else {
             console.log(`${this.name} bust!`);
-            this.throws.push(new Throw(0, 0));
+            this.handleBust(throwNumber);
             return false;
+        }
+    }
+
+    handleBust(throwNumber){
+        if( throwNumber === 0 ) {
+            this.throws.push( { throw: new Throw(0, 0), score: this.score } );
+        } else {
+            const newScoreIndex = this.throws.length - throwNumber;
+            console.log(newScoreIndex);
+            this.throws.push( { throw: new Throw(0, 0), score: this.throws[newScoreIndex] } )
+            this.score = this.throws[newScoreIndex].score;
         }
     }
 
