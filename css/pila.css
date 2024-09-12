@@ -22,11 +22,36 @@ body {
     padding: 10rem 9%;
 }
 
+.dartboard-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(-50px); 
+    transition: opacity 0.5s ease, transform 0.5s ease; 
+    height: 0; 
+    overflow: hidden;
+}
+
+.dartboard-container.active {
+    opacity: 1; 
+    transform: translateY(0);
+    height: auto; 
+}
+
+.player-container {
+    transition: transform 0.5s ease;
+}
+
+.player-container.moved-down {
+    transform: translateY(50px);
+}
+
 
 .player-box {
     position: relative;
-    flex: 1 1 45%; /* 45% width with some margin between elements */
-    max-width: 45%; /* Ensures that it does not exceed this width */
+    flex: 1 1 45%;
+    max-width: 45%;
     background: var(--second-bg-color);
     padding: 3rem 2rem 4rem;
     border-radius: 2rem;
@@ -39,20 +64,56 @@ body {
     font-size: 2.6rem;
 }
 
+.player-box h4 {
+    font-size: 2rem;
+}
+
 .player-box p {
     font-size: 1.6rem;
     margin: 1rem 0 3rem;
 }
 
-/* Always visible remove button */
+.player-box .score-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 2rem 0 0;
+    font-size: 1.6rem;
+    text-align: center;
+    max-height: 17rem;
+    overflow-y: auto;
+}
+
+
+.player-box .score-list li {
+    background: var(--bg-color);
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.8rem;
+    border-radius: 1rem;
+    border: 0.1rem solid var(--second-bg-color);
+}
+
+/* Add a scrollbar style to match the theme */
+.player-box .score-list::-webkit-scrollbar {
+    width: 0.6rem;
+}
+
+.player-box .score-list::-webkit-scrollbar-thumb {
+    background-color: var(--bg-color);
+    border-radius: 1rem;
+}
+
+.player-box .score-list::-webkit-scrollbar-track {
+    background: var(--second-bg-color);
+}
+
 .remove-player {
     position: absolute;
     top: 5px;
     right: 5px;
     background: transparent;
     transition: .5s ease;
-    opacity: 1; /* Always visible */
-    pointer-events: auto; /* Always clickable */
+    opacity: 1; 
+    pointer-events: auto;
 }
 
 .remove-player:hover {

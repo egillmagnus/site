@@ -1,11 +1,12 @@
 import { Game } from "./game.js";
 import { Board } from "./board.js";
-import { Player } from "./player.js"; 
+import { Player } from "./player.js";
 
 let playerCount = 0;
 const maxPlayers = 4;
 const players = [];
 var board;
+var game;
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DomContentLoaded");
@@ -15,12 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const startGameButton = document.getElementById('start-game-button');
     const gameSection = document.getElementById('game-section');
     const playerStatsContainer = document.getElementById('player-stats');
+    const canvas = document.getElementById("dartboard");
+    board = new Board('dartboard', 500);
+    setCanvasSize(canvas);
+
 
     loadPlayersFromStorage();
 
     addPlayerButton.addEventListener('click', () => {
         if (playerCount < maxPlayers) {
-            const newPlayer = createPlayerBox(playerCount+1);
+            const newPlayer = createPlayerBox(playerCount + 1);
             playerSetupContainer.insertBefore(newPlayer, addPlayerButtonContainer);
 
             savePlayersToStorage();
@@ -57,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newPlayer.id = `player${playerNumber}`;
         newPlayer.innerHTML = `
             <button class="remove-player"><i class='bx bx-x' ></i></button>
-            <label>Leikmaður ${playerNumber}:</label>
+            <label>Spilari ${playerNumber}:</label>
             <input type="text" class="player-name" placeholder="Nafn" value="">
         `;
 
@@ -109,10 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadPlayersFromStorage() {
         const storedPlayers = JSON.parse(localStorage.getItem('players'));
 
-        if ( storedPlayers && storedPlayers.length > 0) {
+        if (storedPlayers && storedPlayers.length > 0) {
             console.log("Loading players from storage");
             storedPlayers.forEach((playerName, index) => {
-                const newPlayer = createPlayerBox( index + 1);
+                const newPlayer = createPlayerBox(index + 1);
                 newPlayer.querySelector('.player-name').value = playerName;
             });
 
@@ -124,63 +129,121 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     startGameButton.addEventListener('click', () => {
+        // When the game starts, replace the player name inputs with player info
         for (let i = 1; i <= playerCount; i++) {
-            const playerNameInput = document.querySelector(`#player${i} .player-name`);
-            const playerName = playerNameInput ? playerNameInput.value || `Player ${i}` : null;
+            const playerBox = document.querySelector(`#player${i}`);
+            const playerNameInput = playerBox.querySelector('.player-name');
+            const playerName = playerNameInput ? playerNameInput.value || `Spilari ${i}` : null;
 
             if (playerName) {
-                players.push(new Player(playerName));
-                playerNameInput.disabled = true;
+                const newPlayer = new Player(playerName, i);
+                players.push(newPlayer);
+
             }
         }
 
-        board = new Board('dartboard');
-        const game = new Game(players, board);
-
+        game = new Game(players, board);
         game.startGame();
+        populatePlayerBoxes();
 
-        gameSection.style.display = 'block';
+        document.querySelector('.dartboard-container').classList.add('active');
+        document.getElementById('player-container').classList.add('moved-down');
+        document.getElementById('game-section').style.display = 'block';
 
-        displayPlayerStats();
+        setCanvasSize(canvas);
     });
 
-    function displayPlayerStats() {
-        playerStatsContainer.innerHTML = '';
-        players.forEach(player => {
-            const playerStat = document.createElement('div');
-            playerStat.classList.add('player-stat');
-            playerStat.innerHTML = `
-                <strong>${player.name}</strong>: ${player.score} points
-            `;
-            playerStatsContainer.appendChild(playerStat);
-        });
-    }
-
-    document.getElementById('dartboard').addEventListener('click', () => {
-        if (players.length > 0) {
-            displayPlayerStats();
-        }
+    canvas.addEventListener('click', function (event) {
+        game.handleBoardClick(event);
+        populatePlayerBoxes();
     });
 
-
-    const canvas = document.getElementById("dartboard");
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
-        board.windowResized();
     });
 
     setCanvasSize(canvas);
 
 });
 
+function populatePlayerBoxes() {
+
+    const playerContainer = document.getElementById('player-container');
+
+    // Clear the playerContainer to reorder the boxes
+    playerContainer.innerHTML = '';
+
+    var currentIndex = game.currentPlayerIndex;
+    console.log(currentIndex);
+    console.log(players);
+
+
+    for (var index = 0; index < players.length; index++) {
+        var playerIndex = (currentIndex + index) % players.length;
+        var player = players[playerIndex];
+        console.log(playerIndex);
+        var playerBox = document.querySelector(`#player${playerIndex + 1}`);
+
+        playerBox = document.createElement('div');
+        playerBox.classList.add('player-box');
+        playerBox.id = `player${playerIndex + 1}`;
+
+        // Format each throw as "section (multiplier)"
+        const previousThrows = player.throws.slice().reverse().map(playerThrow => {
+            const scoreToText = ["", "Single ", "Double ", "Triple "];
+            var text = scoreToText[playerThrow.multiplier];
+
+            if (playerThrow.section === 0) {
+                if (playerThrow.multiplier === 0) {
+                    text = "Bust!";
+                } else {
+                    text = "Out";
+                }
+            } else {
+                text += playerThrow.section;
+            }
+            if (text == "Double 25") text = "Bullseye";
+            return `<li>${text}</li>`;
+        }).join('');
+
+        // Update player name and info
+        const playerInfo = `
+            <div class="player-info">
+                <h3>${player.name}</h3>
+                <h4>Stig: <span class="remaining-score">${player.score}</span></h4>
+                <div class="previous-scores">
+                    <h4>Köst:</h4>
+                    <ul class="score-list">
+                        ${previousThrows || '<li>Engin köst</li>'}
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        // Update the player box with the new player info
+        playerBox.innerHTML = playerInfo;
+
+        playerContainer.appendChild(playerBox);
+    };
+}
+
+
+
 
 function setCanvasSize(canvas) {
-    var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.8);
-    canvas.width = size * 0.9;
-    canvas.height = size * 0.9;
-    
-    canvas.style.width = (canvas.width / 2) + 'px';
-    canvas.style.height = (canvas.height / 2) + 'px';
+    var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.7);
+
+    var dpr = window.devicePixelRatio || 1;
+
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+
+    var ctx = canvas.getContext('2d');
+    board.windowResized(size);
+    ctx.scale(dpr, dpr);
 }
 
 let menuicon = document.querySelector("#menu-icon");

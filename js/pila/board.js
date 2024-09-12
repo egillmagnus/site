@@ -2,18 +2,18 @@
 import { Throw } from './throw.js';
 
 export class Board {
-    constructor(canvasId) {
+    constructor(canvasId, width) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.scale = 1;
         this.targetScale = 1;
         this.translateX = 0;
-        this.translateY = 0;
+        this.translateY = 0;    
         this.targetTranslateX = this.translateX;
         this.targetTranslateY = this.translateY;
         this.isZooming = false;
         this.zoomSpeed = 0.1;
-        this.outerRadius = this.canvas.width / 2;
+        this.outerRadius = width / 2;
         this.doubleTopMin = this.outerRadius * 0.71;
         this.doubleTopMax = this.outerRadius * 0.8;
         this.tripleMin = this.outerRadius * 0.4;
@@ -34,17 +34,17 @@ export class Board {
         this.updateCanvas();
     }
 
-    windowResized() {
-        this.outerRadius = this.canvas.width / 2;
+    windowResized(width) {
+        this.outerRadius = width / 2;
         this.doubleTopMin = this.outerRadius * 0.71;
         this.doubleTopMax = this.outerRadius * 0.8;
         this.tripleMin = this.outerRadius * 0.4;
         this.tripleMax = this.outerRadius * 0.5;
         this.twentyFiveTopMin = this.outerRadius * 0.1;
-        this.bullTopMin = this.outerRadius * 0.05;;
-
+        this.bullTopMin = this.outerRadius * 0.05;
+        this.scale = 1;
+        this.zoomOut();
         this.drawBoard();
-
     }
 
     easeInOut(t) {
@@ -54,7 +54,7 @@ export class Board {
     }
 
     clearBoard() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.clearRect(0, 0, this.outerRadius * 2, this.outerRadius * 2);
     }
 
     drawBoard() {
@@ -144,13 +144,18 @@ export class Board {
     }
 
     zoomIn(clickX, clickY) {
+        console.log("translateX: " + this.translateX);
+        console.log("translateY: " + this.translateY);
+        console.log("ClicX: " + clickX);
+        console.log("ClicY: " + clickY);
+
         this.previousTranslateX = this.translateX;
         this.previousTranslateY = this.translateY;
         this.previousZoom = this.scale;
 
         this.targetScale = 4;
-        this.targetTranslateX = -((clickX* 2) - (this.canvas.width / 2));
-        this.targetTranslateY = -((clickY*2) - (this.canvas.height / 2));
+        this.targetTranslateX = -((clickX) - (this.outerRadius));
+        this.targetTranslateY = -((clickY) - (this.outerRadius));
         this.isZooming = true;
     }
 
@@ -174,7 +179,7 @@ export class Board {
             this.translateX = this.previousTranslateX + (this.targetTranslateX - this.previousTranslateX) * easedT;
             this.translateY = this.previousTranslateY + (this.targetTranslateY - this.previousTranslateY) * easedT;
             
-            this.zoomSpeed += 1 / 20;
+            this.zoomSpeed += 1 / 60;
 
             if ( this.zoomSpeed >= 1 ) {
                 this.translateX = this.targetTranslateX;
@@ -191,8 +196,8 @@ export class Board {
     }
 
     calculatePoints(clickX, clickY) {
-        const distX = ((clickX*2 - this.outerRadius) / this.scale) - this.translateX;
-        const distY = -(((clickY*2 - this.outerRadius) / this.scale) - this.translateY);
+        const distX = ((clickX - this.outerRadius) / this.scale) - this.translateX;
+        const distY = -(((clickY - this.outerRadius) / this.scale) - this.translateY);
 
         console.log("distX; " + distX);
         console.log("distY; " + distY);

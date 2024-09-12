@@ -1,7 +1,9 @@
+import { Throw } from './throw.js';
 export class Player {
-    constructor(name, initialScore = 501) {
+    constructor(name, id, initialScore = 501) {
         this.name = name;
         this.score = initialScore;
+        this.id = id;
         this.throws = [];
     }
 
@@ -9,22 +11,29 @@ export class Player {
         var points = playerThrow.calculateScore();
         
         if (this.score - points >= 0) {
-            this.throws.push(playerThrow);
-            this.score -= points;
-            
-            if (this.score === 0) {
+            if (this.score - points === 0) {
                 if (playerThrow.multiplier === 2) {
+                    this.throws(playerThrow);
                     console.log(`${this.name} wins with a double!`);
                     return true; 
                 } else {
+                    this.throws.push(new Throw(0, 0));
                     console.log(`${this.name} did not finish on a double!`);
                     return false;
                 }
             }
-            
+
+            if ( this.score - points === 1 ) {
+                this.throws.push(new Throw(0, 2));
+                return false;
+            }
+
+            this.throws.push(playerThrow);
+            this.score -= points;
             return true;
         } else {
             console.log(`${this.name} bust!`);
+            this.throws.push(new Throw(0, 0));
             return false;
         }
     }

@@ -25,7 +25,7 @@ window.onload = function init() {
 
     gl = WebGLUtils.setupWebGL(canvas);
     if (!gl) { alert("WebGL isn't available"); }
-
+    
 
     vertices = [
         vec2(-0.9, -0.9),

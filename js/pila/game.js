@@ -47,7 +47,7 @@ export class Game {
                 
                 if (currentPlayer.addThrow(playerThrow)) {
                     
-                    this.throws.push({ player: currentPlayer.name, throw: playerThrow });
+                    this.throws.push( this.currentPlayerIndex );
     
                     console.log(`${currentPlayer.name} scored ${playerThrow.calculateScore()}. Remaining score: ${currentPlayer.score}`);
                     
