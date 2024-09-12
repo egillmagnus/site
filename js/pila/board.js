@@ -190,7 +190,6 @@ export class Board {
     }
 
     updateCanvas() {
-        console.log("Updating canvas");
         if (this.isZooming) {
             const t = this.zoomSpeed;
 
