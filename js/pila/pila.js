@@ -211,7 +211,7 @@ function populatePlayerBoxes() {
         const playerInfo = `
             <div class="player-info">
                 <h3>${player.name}</h3>
-                <h4>Stig: <span class="remaining-score">${player.score}</span></h4>
+                <h4>Stig: <span class="score-container"><span class="remaining-score">${player.score}</span></span></h4>
                 <div class="previous-scores">
                     <h4>Köst:</h4>
                     <ul class="score-list">

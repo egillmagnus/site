@@ -123,7 +123,6 @@ body {
     }
 }
 
-
 .first-throw h3,
 .first-throw h4,
 .first-throw p,
@@ -138,20 +137,46 @@ body {
 }
 
 .first-throw h4 {
+    opacity: 0;
     animation-delay: 0.1s;
 }
 
 .first-throw p {
+    opacity: 0;
     animation-delay: 0.2s;
 }
 
+
 .first-throw .score-list {
+    opacity: 0;
     animation-delay: 0.2s;
 }
 
 .player-container .player-box:first-child .score-list li {
     transform: translateY(-49px);
     animation: moveDown 0.7s ease forwards;
+}
+
+@keyframes scaleBlurIn {
+    0% {
+        opacity: 0;
+        transform: scale(1.5);
+        filter: blur(2px);
+    }
+    50% {
+        filter: blur(1px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+}
+
+.player-container .player-box:first-child .score-container {
+    display: inline-block;
+    animation: scaleBlurIn 0.7s ease forwards;
+    transform-origin: center;
 }
 
 .player-box h3 {
