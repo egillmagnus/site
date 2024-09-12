@@ -147,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         populatePlayerBoxes();
 
         document.querySelector('.dartboard-container').classList.add('active');
-        document.getElementById('player-container').classList.add('moved-down');
         document.getElementById('game-section').style.display = 'block';
 
         setCanvasSize(canvas);

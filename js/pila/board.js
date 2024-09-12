@@ -8,7 +8,7 @@ export class Board {
         this.scale = 1;
         this.targetScale = 1;
         this.translateX = 0;
-        this.translateY = 0;    
+        this.translateY = 0;
         this.targetTranslateX = this.translateX;
         this.targetTranslateY = this.translateY;
         this.isZooming = false;
@@ -62,11 +62,11 @@ export class Board {
         this.clearBoard();
         ctx.save();
 
-        
-        const PIECES = 18; 
+        const PIECES = 18;
         let count = 0;
         let pos = 0;
 
+        // Draw the dartboard first
         this.drawCircle(this.outerRadius, "black", "black");
 
         for (let counter = -9; counter < (360 - 9); counter += PIECES) {
@@ -78,10 +78,35 @@ export class Board {
             this.printLabel(counter, pos++);
         }
 
-        this.drawCircle(this.twentyFiveTopMin, 'silver', 'green');  
+        this.drawCircle(this.twentyFiveTopMin, 'silver', 'green');
         this.drawCircle(this.bullTopMin, 'silver', 'red');
 
+
         ctx.restore();
+    }
+
+    applyBlurEffect(value) {
+        const ctx = this.ctx;
+        const gradient = ctx.createRadialGradient(
+            this.outerRadius,
+            this.outerRadius,
+            this.outerRadius * 0.2,
+            this.outerRadius,
+            this.outerRadius,
+            this.outerRadius
+        );
+
+        if ( this.targetScale <= this.scale && this.targetScale != 4) {
+            value = 1 - value;
+        }
+
+        gradient.addColorStop(0, "rgba(0, 0, 0, 0");
+        gradient.addColorStop(0.8, "rgba(31, 36, 45, " + (0.6 * value )+ ")");
+        gradient.addColorStop(1, "rgba(31, 36, 45," + value + ")");
+
+        // Apply the gradient over the canvas
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
 
@@ -144,11 +169,6 @@ export class Board {
     }
 
     zoomIn(clickX, clickY) {
-        console.log("translateX: " + this.translateX);
-        console.log("translateY: " + this.translateY);
-        console.log("ClicX: " + clickX);
-        console.log("ClicY: " + clickY);
-
         this.previousTranslateX = this.translateX;
         this.previousTranslateY = this.translateY;
         this.previousZoom = this.scale;
@@ -170,28 +190,29 @@ export class Board {
     }
 
     updateCanvas() {
+        console.log("Updating canvas");
         if (this.isZooming) {
             const t = this.zoomSpeed;
-    
-            const easedT = this.easeInOut(t);
-    
+
+            var easedT = this.easeInOut(t);
+            this.zoomSpeed += 1 / 60;
+            if (easedT >= 1 ) {
+                easedT = 1;
+                this.isZooming = false;
+                this.zoomSpeed = 0;
+            }
+
             this.scale = this.previousZoom + (this.targetScale - this.previousZoom) * easedT;
             this.translateX = this.previousTranslateX + (this.targetTranslateX - this.previousTranslateX) * easedT;
             this.translateY = this.previousTranslateY + (this.targetTranslateY - this.previousTranslateY) * easedT;
-            
-            this.zoomSpeed += 1 / 60;
 
-            if ( this.zoomSpeed >= 1 ) {
-                this.translateX = this.targetTranslateX;
-                this.translateY = this.targetTranslateY;
-                this.scale = this.targetScale;
-                this.zoomSpeed = 0;
-                this.isZooming = false;
-            }
-    
             this.drawBoard();
+            this.applyBlurEffect(easedT);
+        } else if (this.scale > 1 ) {
+            this.drawBoard();
+            this.applyBlurEffect(1);
         }
-    
+
         requestAnimationFrame(() => this.updateCanvas());
     }
 
@@ -208,18 +229,18 @@ export class Board {
 
         let angle = Math.atan2(distY, distX);
 
-        angle = - ( ( angle * (180 / Math.PI) ) - 90 );
+        angle = - ((angle * (180 / Math.PI)) - 90);
         if (angle < 0) {
             angle += 360;
         }
 
 
-        const sectionIndex = ( Math.floor((angle + 9 ) / 18) ) % 20; 
-        console.log("Angle: "+ angle);
+        const sectionIndex = (Math.floor((angle + 9) / 18)) % 20;
+        console.log("Angle: " + angle);
         console.log("sectionIndex: " + sectionIndex);
 
         section = this.sections.single[sectionIndex];
- 
+
 
         if (distanceFromCenter <= this.bullTopMin) {
             section = this.sections.outerBullseye;

@@ -43,23 +43,30 @@ body {
     transition: transform 0.5s ease;
 }
 
-.player-container.moved-down {
-    transform: translateY(50px);
-}
-
 
 .player-box {
     position: relative;
     flex: 1 1 45%;
-    max-width: 45%;
+    max-width: 50vw;
     background: var(--second-bg-color);
     padding: 3rem 2rem 4rem;
     border-radius: 2rem;
     text-align: center;
     border: .2rem solid var(--bg-color);
     transition: 0.5s;
-    min-height: 10rem;
+    min-height: 20rem;
+
+    /* Flexbox for centering content */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centers content vertically */
+    align-items: center; /* Centers content horizontally */
 }
+
+.player-info{
+    width: 100%;
+}
+
 .player-box h3 {
     font-size: 2.6rem;
 }

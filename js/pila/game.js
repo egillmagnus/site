@@ -15,6 +15,7 @@ export class Game {
         this.board.drawBoard();
     }
 
+
     handleBoardClick(event) {
         console.log("board clicked");
         if (!this.isGameOver && !this.board.isZooming) {

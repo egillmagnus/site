@@ -13,7 +13,8 @@ export class Player {
         if (this.score - points >= 0) {
             if (this.score - points === 0) {
                 if (playerThrow.multiplier === 2) {
-                    this.throws(playerThrow);
+                    this.throws.push(playerThrow);
+                    this.score -= points;
                     console.log(`${this.name} wins with a double!`);
                     return true; 
                 } else {
@@ -24,7 +25,7 @@ export class Player {
             }
 
             if ( this.score - points === 1 ) {
-                this.throws.push(new Throw(0, 2));
+                this.throws.push(new Throw(0, 0));
                 return false;
             }
 
