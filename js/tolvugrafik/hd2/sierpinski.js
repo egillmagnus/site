@@ -60,9 +60,9 @@ window.onload = function init() {
 };
 
 function setCanvasSize(canvas) {
-    var size = Math.min(window.innerWidth, window.innerHeight);
-    canvas.width = size * 0.6;
-    canvas.height = size * 0.6;
+    var size = Math.min(window.innerWidth*0.95, window.innerHeight*0.8);
+    canvas.width = size;
+    canvas.height = size;
     if (gl) {
         gl.viewport(0, 0, canvas.width, canvas.height);
     }

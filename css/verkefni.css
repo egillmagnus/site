@@ -29,6 +29,7 @@ body {
     align-items: center;
     gap: 2rem;
     padding: 10rem 9%;
+    min-height: 80vh;
 }
 
 .buttons-container {

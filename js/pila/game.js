@@ -23,6 +23,7 @@ export class Game {
                 console.log("zooming in");
                 this.board.zoomIn(event.offsetX, event.offsetY); 
                 this.isZoomedIn = true;
+                return false;
             } else {
                 console.log("registering throw");
                 const playerThrow = this.board.calculatePoints(event.offsetX, event.offsetY);
@@ -35,9 +36,11 @@ export class Game {
 
                 this.board.zoomOut();
                 this.isZoomedIn = false;
+                return true;
             }
         }
         this.board.drawBoard();
+        return false;
     }
 
     startTurn(playerThrow) {

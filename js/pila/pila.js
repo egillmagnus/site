@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (playerCount === maxPlayers) {
                 addPlayerButtonContainer.style.display = 'none';
             }
-            startGameButton.style.display = 'inline-block';
         }
     });
 
@@ -46,9 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         savePlayersToStorage();
 
-        if (playerCount < maxPlayers) {
-            addPlayerButtonContainer.style.display = 'inline-block';
-        }
 
         if (playerCount === 0) {
             startGameButton.style.display = 'none';
@@ -61,19 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
         newPlayer.classList.add('player-box');
         newPlayer.id = `player${playerNumber}`;
         newPlayer.innerHTML = `
-            <button class="remove-player"><i class='bx bx-x' ></i></button>
-            <label>Spilari ${playerNumber}:</label>
-            <input type="text" class="player-name" placeholder="Nafn" value="">
+            <button class="remove-player"><i class='bx bx-x'></i></button>
+            <label class="player-label">Spilari ${playerNumber}:</label>
+            <input type="text" class="player-name styled-input" placeholder="Nafn" value="">
         `;
-
+    
         const removeButton = newPlayer.querySelector('.remove-player');
         removeButton.addEventListener('click', () => removePlayer(newPlayer.id));
-
+    
         const playerNameInput = newPlayer.querySelector('.player-name');
         playerNameInput.addEventListener('input', () => {
             savePlayersToStorage();
         });
-
+    
         newPlayer.querySelector('.player-name').value = "";
         playerSetupContainer.insertBefore(newPlayer, addPlayerButtonContainer);
         playerCount++;
@@ -82,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         startGameButton.style.display = 'inline-block';
         savePlayersToStorage();
-
+    
         return newPlayer;
     }
 
@@ -93,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playerBox.id = `player${newPlayerNumber}`;
             const label = playerBox.querySelector('label');
             if (label) {
-                label.textContent = `Leikmaður ${newPlayerNumber}`;
+                label.textContent = `Spilari ${newPlayerNumber}`;
             }
         });
 
@@ -153,8 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     canvas.addEventListener('click', function (event) {
-        game.handleBoardClick(event);
-        populatePlayerBoxes();
+        if (game.handleBoardClick(event) ) {
+            populatePlayerBoxes();
+        }
     });
 
     window.addEventListener("resize", function () {

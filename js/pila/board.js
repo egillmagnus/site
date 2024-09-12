@@ -87,22 +87,23 @@ export class Board {
 
     applyBlurEffect(value) {
         const ctx = this.ctx;
+
+        if ( !(this.targetScale <= this.scale && this.targetScale != 4)) {
+            value = 1 - value;
+        }
+
         const gradient = ctx.createRadialGradient(
             this.outerRadius,
             this.outerRadius,
-            this.outerRadius * 0.2,
+            this.outerRadius * 0.8 - ( 0.6 * value ),
             this.outerRadius,
             this.outerRadius,
             this.outerRadius
         );
 
-        if ( this.targetScale <= this.scale && this.targetScale != 4) {
-            value = 1 - value;
-        }
-
         gradient.addColorStop(0, "rgba(0, 0, 0, 0");
-        gradient.addColorStop(0.8, "rgba(31, 36, 45, " + (0.6 * value )+ ")");
-        gradient.addColorStop(1, "rgba(31, 36, 45," + value + ")");
+        gradient.addColorStop(1 - ( 0.2 * (1 - value ) ), "rgba(31, 36, 45, 0.6)");
+        gradient.addColorStop(1, "rgba(31, 36, 45, 1)");
 
         // Apply the gradient over the canvas
         ctx.fillStyle = gradient;
@@ -194,7 +195,7 @@ export class Board {
             const t = this.zoomSpeed;
 
             var easedT = this.easeInOut(t);
-            this.zoomSpeed += 1 / 60;
+            this.zoomSpeed += 1 / 30;
             if (easedT >= 1 ) {
                 easedT = 1;
                 this.isZooming = false;
