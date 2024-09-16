@@ -9,6 +9,10 @@ var mouseX;
 var movement = false;
 var program;
 
+var positionBufferId;
+var colorBufferId;
+var maxNumPoints = 300;
+
 let score = 0;
 
 var birds = [];
@@ -95,8 +99,23 @@ const starVertices = [
 
 var starColor = vec4( 1.0, 0.843, 0.0, 1.0 );
 
+function initBuffers() {
+    positionBufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, maxNumPoints * 8, gl.DYNAMIC_DRAW);
 
+    var vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
 
+    colorBufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, maxNumPoints*8, gl.DYNAMIC_DRAW);
+
+    var vColor = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+}
 
 window.onload = function init() {
 
@@ -140,6 +159,7 @@ window.onload = function init() {
     });
     setCanvasSize(canvas);
 
+    initBuffers();
     render();
 }
 
@@ -226,28 +246,18 @@ function drawPointsToBuffer() {
         }
     }
 
-    var positionBufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertex), gl.DYNAMIC_DRAW);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(vertex));
 
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
-
-    var colorBufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.DYNAMIC_DRAW);
-
-    var vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(colors));
 }
 
 
 function updateEntities() {
     var currentTime = Date.now();
 
-    if (currentTime - lastShotTime >= 1000) {
+    if (currentTime - lastShotTime >= 1000 && shots.length < 7) {
         shots.push(vec2(gun[2][0], gun[2][1]));
 
         lastShotTime = currentTime;
