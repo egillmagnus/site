@@ -80,8 +80,6 @@ window.onload = function init() {
 };
 
 function setUniformVariables() {
-    console.log("Offset: " + offset);
-    console.log("Scale: " + scale);
     var scaleUniformLocation = gl.getUniformLocation(program, "scale");
     var offsetUniformLocation = gl.getUniformLocation(program, "offset");
     var colorUniformLocation = gl.getUniformLocation(program, "color");
