@@ -2,7 +2,7 @@
 
 var gl;
 var points;
-var NumPoints = 50000;
+var NumPoints = 500000;
 var scale = 1;
 var offset = vec2(0, 0);
 var color = vec4(0.0, 1.0, 0.20392156862, 1.0);

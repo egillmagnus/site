@@ -19,7 +19,7 @@
 
     void main() {
         vec4 offsetPosition = vPosition + vec4(offset.x / scale, offset.y/ scale, 0.0, 0.0); 
-        gl_PointSize = scale / 4.0;
+        gl_PointSize = scale / 10.0;
         gl_Position = vec4(offsetPosition.x * scale, offsetPosition.y * scale, offsetPosition.zw);
     }
   </script>
