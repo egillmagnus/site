@@ -35,11 +35,10 @@ window.onload = function init() {
 
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
-        pointSlider.style.width = canvas.width + "px";
         setUniformVariables();
     });
 
-    canvas.addEventListener("wheel", function(event) {
+    canvas.addEventListener("wheel", function (event) {
         event.preventDefault();
         if (event.deltaY < 0) {
             scale *= 1.03;
@@ -49,34 +48,33 @@ window.onload = function init() {
         setUniformVariables();
     });
 
-    canvas.addEventListener("mousedown", function(event) {
+    canvas.addEventListener("mousedown", function (event) {
         isDragging = true;
         lastMousePosition = vec2(event.clientX, event.clientY);
     });
 
-    canvas.addEventListener("mousemove", function(event) {
+    canvas.addEventListener("mousemove", function (event) {
         if (isDragging) {
             var currentPosition = vec2(event.clientX, event.clientY);
             var delta = subtract(currentPosition, lastMousePosition);
-            offset = add(offset, vec2(delta[0] * 2.0 / canvas.width, delta[1] * -2.0 / canvas.width )); // Adjust offset based on drag
+            offset = add(offset, vec2(delta[0] * 2.0 / canvas.width, delta[1] * -2.0 / canvas.width));
             lastMousePosition = currentPosition;
             setUniformVariables();
         }
     });
 
-    canvas.addEventListener("mouseup", function() {
+    canvas.addEventListener("mouseup", function () {
         isDragging = false;
     });
 
-    canvas.addEventListener("mouseleave", function() {
+    canvas.addEventListener("mouseleave", function () {
         isDragging = false;
     });
 
-    window.addEventListener("keydown", function(event) {
+    window.addEventListener("keydown", function (event) {
         event.preventDefault();
         if (event.code === "Space") {
-            color = vec4(Math.random(), Math.random(), Math.random(), 1.0);
-            setUniformVariables();
+            hue = Math.random();
         }
     });
 };
@@ -91,7 +89,6 @@ function setUniformVariables() {
     gl.uniform1f(scaleUniformLocation, scale);
     gl.uniform2fv(offsetUniformLocation, offset);
     gl.uniform4fv(colorUniformLocation, flatten(color));
-    render();
 }
 
 function setCanvasSize(canvas) {
@@ -105,22 +102,22 @@ function setCanvasSize(canvas) {
 
 function calculatePoints() {
     var vertices = [
-        vec2( -0.9, -0.9 ),
-        vec2(    0,  0.9 ),
-        vec2(  0.9, -0.9 )
+        vec2(-0.9, -0.9),
+        vec2(0, 0.9),
+        vec2(0.9, -0.9)
     ];
 
-        var u = add(vertices[0], vertices[1]);
-        var v = add(vertices[0], vertices[2]);
-        var p = mix(u, v, 0.25);
+    var u = add(vertices[0], vertices[1]);
+    var v = add(vertices[0], vertices[2]);
+    var p = mix(u, v, 0.25);
 
     points = [p];
 
     for (var i = 0; points.length < NumPoints; ++i) {
-        var j = Math.floor(Math.random() * 3); 
+        var j = Math.floor(Math.random() * 3);
 
         p = add(points[i], vertices[j]);
-        p = mix(p, vec2(0, 0), 0.5 );
+        p = mix(p, vec2(0, 0), 0.5);
         points.push(p);
     }
 
@@ -138,7 +135,46 @@ function calculatePoints() {
     render();
 }
 
+// Breytir úr hue, saturation og lightness í rgb, gerir fallegri liti en að randomise-a rgb gildi.
+function hslToRgb(h, s, l) {
+    let r, g, b;
+
+    if (s === 0) {
+        r = g = b = l;
+    } else {
+        function hue2rgb(p, q, t) {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 3) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        }
+
+        let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        let p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+    }
+
+    return [r, g, b];
+}
+
+let hue = 0.0;
+const speed = 0.002;
+
 function render() {
+    hue += speed;
+    hue = hue % 1;
+
+    const rgb = hslToRgb(hue, 1.0, 0.5);
+    color = [...rgb, 1.0];
+
+    setUniformVariables();
+
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.POINTS, 0, points.length);
+
+    window.requestAnimFrame(render);
 }
