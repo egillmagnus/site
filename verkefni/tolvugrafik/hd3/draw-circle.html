@@ -31,7 +31,7 @@
         
         vec2 st = gl_FragCoord.xy / resolution.xy;
         
-        st = ( 2.0*st - 1.0 ) - vec2( time, sin(time * 9.4247 ) * 0.5 ) ;
+        st = ( 2.0*st - 1.0 ) - vec2( mod(time, 2.0) - 1.0, sin(time * 9.4247 ) * 0.5 ) ;
         
         if (length(st) < 0.1 || length(st + vec2(2.0, 0.0)) < 0.1 || length(st - vec2(2.0, 0.0)) < 0.1 ) // Bæti við or-skilirðum svo hringurin "wrappar" hringin
             color = vec4( 0.0, 1.0, 0.20392156862, 1.0 );
