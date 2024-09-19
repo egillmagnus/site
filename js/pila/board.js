@@ -69,6 +69,8 @@ export class Board {
         // Draw the dartboard first
         this.drawCircle(this.outerRadius, "black", "black");
 
+        this.buildRing(this.doubleTopMin, this.doubleTopMax, 0, 361, 'red');
+
         for (let counter = -9; counter < (360 - 9); counter += PIECES) {
             this.buildRing(this.doubleTopMin, this.doubleTopMax, counter, counter + PIECES, count++ % 2 ? 'red' : 'green');
             this.buildRing(this.tripleMin, this.tripleMax, counter, counter + PIECES, count % 2 ? 'green' : 'red');
@@ -80,6 +82,13 @@ export class Board {
 
         this.drawCircle(this.twentyFiveTopMin, 'silver', 'green');
         this.drawCircle(this.bullTopMin, 'silver', 'red');
+        this.drawCircle(this.doubleTopMax + 1, 'silver');
+        this.drawCircle(this.doubleTopMin, 'silver');
+        this.drawCircle(this.tripleMax, 'silver');
+        this.drawCircle(this.tripleMin, 'silver');
+        this.drawCircle(this.twentyFiveTopMin, 'silver', 'green');
+        this.drawCircle(this.bullTopMin, 'silver', 'red');
+        this.drawRadials();
 
 
         ctx.restore();
@@ -88,26 +97,50 @@ export class Board {
     applyBlurEffect(value) {
         const ctx = this.ctx;
 
-        if ( !(this.targetScale <= this.scale && this.targetScale != 4)) {
+        if (!(this.targetScale <= this.scale && this.targetScale != 4)) {
             value = 1 - value;
         }
 
         const gradient = ctx.createRadialGradient(
             this.outerRadius,
             this.outerRadius,
-            this.outerRadius * 0.8 - ( 0.6 * value ),
+            this.outerRadius * 0.8 - (0.6 * value),
             this.outerRadius,
             this.outerRadius,
             this.outerRadius
         );
 
         gradient.addColorStop(0, "rgba(0, 0, 0, 0");
-        gradient.addColorStop(1 - ( 0.2 * (1 - value ) ), "rgba(31, 36, 45, 0.6)");
+        gradient.addColorStop(1 - (0.2 * (1 - value)), "rgba(31, 36, 45, 0.6)");
         gradient.addColorStop(1, "rgba(31, 36, 45, 1)");
 
-        // Apply the gradient over the canvas
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    drawRadials() {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.strokeStyle = "silver";
+        ctx.lineWidth = 1 * this.scale;
+        const PIECES = 18;
+
+        for (let counter = -9; counter < 360 - 9; counter += PIECES) {
+            var deg = counter;
+
+            const angleRad = this.degToRad(deg);
+            const startX = Math.cos(angleRad) * this.twentyFiveTopMin * this.scale + this.outerRadius + this.translateX * this.scale;
+            const startY = Math.sin(angleRad) * this.twentyFiveTopMin * this.scale + this.outerRadius + this.translateY * this.scale;
+            const endX = Math.cos(angleRad) * (this.doubleTopMax + 1) * this.scale + this.outerRadius + this.translateX * this.scale;
+            const endY = Math.sin(angleRad) * (this.doubleTopMax + 1) * this.scale + this.outerRadius + this.translateY * this.scale;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+
+        ctx.restore();
     }
 
 
@@ -115,7 +148,7 @@ export class Board {
 
         this.ctx.beginPath();
         this.ctx.arc(this.translateX * this.scale + this.outerRadius, this.translateY * this.scale + this.outerRadius, radius * this.scale, 0, 2 * Math.PI, false);
-        this.ctx.lineWidth = 1;
+        this.ctx.lineWidth = 1 * this.scale;
         this.ctx.strokeStyle = colour;
 
         if (fillColour) {
@@ -157,7 +190,7 @@ export class Board {
         const y = (Math.sin(angle) * labelRadius + this.translateY) * this.scale + this.outerRadius;
 
         this.ctx.fillStyle = 'white';
-        this.ctx.font = this.outerRadius * 0.1 * this.scale + "px Arial";
+        this.ctx.font = this.outerRadius * 0.1 * this.scale + "px Arial Black";
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
@@ -196,7 +229,7 @@ export class Board {
 
             var easedT = this.easeInOut(t);
             this.zoomSpeed += 1 / 30;
-            if (easedT >= 1 ) {
+            if (easedT >= 1) {
                 easedT = 1;
                 this.isZooming = false;
                 this.zoomSpeed = 0;
@@ -208,7 +241,7 @@ export class Board {
 
             this.drawBoard();
             this.applyBlurEffect(easedT);
-        } else if (this.scale > 1 ) {
+        } else if (this.scale > 1) {
             this.drawBoard();
             this.applyBlurEffect(1);
         }

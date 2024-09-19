@@ -27,16 +27,16 @@ body {
     justify-content: center;
     align-items: center;
     opacity: 0;
-    transform: translateY(-50px); 
-    transition: opacity 0.5s ease, transform 0.5s ease; 
-    height: 0; 
+    transform: translateY(-50px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    height: 0;
     overflow: hidden;
 }
 
 .dartboard-container.active {
-    opacity: 1; 
+    opacity: 1;
     transform: translateY(0);
-    height: auto; 
+    height: auto;
 }
 
 .player-container {
@@ -63,7 +63,7 @@ body {
 }
 
 .styled-input:focus {
-    border-color: var(--highlight-color); 
+    border-color: var(--highlight-color);
 }
 
 .player-box {
@@ -84,7 +84,7 @@ body {
 }
 
 
-.player-info{
+.player-info {
     width: 100%;
 }
 
@@ -93,6 +93,7 @@ body {
     0% {
         filter: blur(10px);
     }
+
     100% {
         filter: blur(0px);
     }
@@ -105,6 +106,7 @@ body {
         transform: translateX(-50px);
         filter: blur(10px);
     }
+
     100% {
         opacity: 1;
         transform: translateX(0px);
@@ -117,6 +119,7 @@ body {
         transform: translateY(-49px);
         opacity: 0.8;
     }
+
     100% {
         transform: translateY(0);
         opacity: 1;
@@ -163,9 +166,11 @@ body {
         transform: scale(1.5);
         filter: blur(2px);
     }
+
     50% {
         filter: blur(1px);
     }
+
     100% {
         opacity: 1;
         transform: scale(1);
@@ -231,8 +236,19 @@ body {
     right: 5px;
     background: transparent;
     transition: .5s ease;
-    opacity: 1; 
+    opacity: 1;
     pointer-events: auto;
+}
+
+.btn {
+    flex: 1 1 45%;
+    width: fit-content;
+    max-height: 5rem;
+    min-width: 26vw;
+}
+
+.btn i {
+    font-size: 3rem;
 }
 
 .remove-player:hover {
@@ -262,6 +278,15 @@ body {
 .dartboard {
     /* border: .1rem solid var(--main-color);
     box-shadow: 0 0 2rem var(--main-color); */
+}
+
+.buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 2rem;
 }
 
 .about-images {
@@ -313,6 +338,7 @@ body {
     .about-images {
         flex-direction: column;
     }
+
     .about-images img {
         width: 70vw;
     }
@@ -327,6 +353,15 @@ body {
         min-width: 100%;
     }
 
+    .buttons-container {
+        flex-direction: column;
+        gap: 4vw;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
 }
 
 @media (max-width: 650px) {
@@ -335,9 +370,6 @@ body {
         gap: 4vw;
     }
 
-    .btn {
-        min-width: 60vw;
-    }
 
 }
 

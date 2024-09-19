@@ -35,22 +35,21 @@
       <canvas class="dartboard" id="dartboard" width="500" height="500"></canvas>
     </div>
 
-      <div id="game-section" style="display:none;">
-        <div id="player-stats"></div>
-      </div>
-      <script type="module" src="../js/pila/pila.js"></script>
+    <div id="game-section" style="display:none;">
+    </div>
+    <script type="module" src="../js/pila/pila.js"></script>
     <!-- Player Setup Section -->
     <div class="player-container" id="player-container">
       <!-- Container for adding players -->
-      <div class="player-box" id="add-player-button-container">
-        <button id="add-player-button" class="btn">Bæta við spilara</button>
-      </div>
     </div>
 
     <!-- Start Game Button -->
-    <button id="start-game-button" class="btn">Hefja leik</button>
+    <div class="buttons-container" id="controls-container">
+      <button id="start-game-button" class="btn">Hefja leik</button>
+      <button id="undo-button" class="btn" style="display: none;"><i class='bx bx-undo'></i></button>
+    </div>
 
-      <script type="module" src="../js/pila/pila.js"></script>
+    <script type="module" src="../js/pila/pila.js"></script>
   </section>
 
   <section class="about-project">

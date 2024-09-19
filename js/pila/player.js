@@ -13,10 +13,10 @@ export class Player {
         if (this.score - points >= 0) {
             if (this.score - points === 0) {
                 if (playerThrow.multiplier === 2) {
-                    this.throws.push( {throw: playerThrow, score: scoreBeforeThrow } );
+                    this.throws.push({ throw: playerThrow, score: scoreBeforeThrow });
                     this.score -= points;
                     console.log(`${this.name} wins with a double!`);
-                    return true; 
+                    return true;
                 } else {
                     this.handleBust(throwNumber);
                     console.log(`${this.name} did not finish on a double!`);
@@ -24,11 +24,11 @@ export class Player {
                 }
             }
 
-            if ( this.score - points === 1 ) {
+            if (this.score - points === 1) {
                 this.handleBust(throwNumber);
                 return false;
             }
-            this.throws.push( { throw: playerThrow, score: scoreBeforeThrow });
+            this.throws.push({ throw: playerThrow, score: scoreBeforeThrow });
             this.score -= points;
             return true;
         } else {
@@ -38,14 +38,21 @@ export class Player {
         }
     }
 
-    handleBust(throwNumber){
-        if( throwNumber === 0 ) {
-            this.throws.push( { throw: new Throw(0, 0), score: this.score } );
+    handleBust(throwNumber) {
+        if (throwNumber === 0) {
+            this.throws.push({ throw: new Throw(0, 0), score: this.score });
         } else {
             const newScoreIndex = this.throws.length - throwNumber;
             console.log(newScoreIndex);
-            this.throws.push( { throw: new Throw(0, 0), score: this.throws[newScoreIndex] } )
+            this.throws.push({ throw: new Throw(0, 0), score: this.throws[newScoreIndex] })
             this.score = this.throws[newScoreIndex].score;
+        }
+    }
+
+    undo() {
+        if (this.throws.length) {
+            this.score = this.throws[this.throws.length - 1].score;
+            this.throws.splice(this.throws.length - 1);
         }
     }
 

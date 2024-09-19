@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
 
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -12,7 +12,7 @@
   font-family: "Poppins", "sans-serif";
 }
 
-:root{
+:root {
   --bg-color: #1f242d;
   --second-bg-color: #323946;
   --text-color: #FFF;
@@ -33,7 +33,7 @@ html {
   overflow-x: hidden;
   min-height: 100vh;
   min-width: 100vw;
-} 
+}
 
 section {
   min-height: 80vh;
@@ -91,7 +91,7 @@ span {
 
 .home-content h3 {
   font-size: 3.2rem;
-  font-weight: 700 ;
+  font-weight: 700;
 }
 
 .home-content h3:nth-of-type(2) {
@@ -116,7 +116,7 @@ span {
   font-size: 2.8rem;
   height: 4rem;
   background: transparent;
-  border: .2rem solid var(--main-color); 
+  border: .2rem solid var(--main-color);
   border-radius: 50%;
   color: var(--main-color);
   margin: 3rem 1.5rem 3rem 0;
@@ -225,12 +225,22 @@ span {
   transition: 0.5s;
   min-height: 15rem;
   min-width: 50rem;
-} 
+}
 
 
 .project-box i {
   font-size: 7rem;
   color: var(--main-color);
+}
+
+.project-box .icon-svg {
+  width: 7rem;
+  height: 7rem;
+  fill: var(--main-color);
+  /* Ensure the color is inherited */
+  display: inline-block;
+  color: var(--main-color);
+  /* Set the color to your --main-color variable */
 }
 
 .project-box h3 {
@@ -246,7 +256,7 @@ span {
   border-color: var(--main-color);
   transform: scale(1.02);
   transition: 0.5s;
-} 
+}
 
 
 .portfolio {
@@ -288,7 +298,7 @@ span {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(rgba(0,0,0,0), var(--main-color));
+  background: linear-gradient(rgba(0, 0, 0, 0), var(--main-color));
   display: flex;
   justify-content: center;
   align-items: center;
@@ -301,7 +311,7 @@ span {
 
 .portfolio-box:hover .portfolio-layer {
   transform: translateY(0%);
-  transition: .5s;  
+  transition: .5s;
 }
 
 .portfolio-layer h4 {
@@ -435,8 +445,8 @@ form .input-box {
 }
 
 /*BREAKPOINTS*/
-@media (max-width: 1200px) {s
-  html {
+@media (max-width: 1200px) {
+  s html {
     font-size: 55%;
   }
 }
@@ -518,7 +528,7 @@ form .input-box {
 
   .projects h3 {
     font-size: 3.2rem;
-    font-weight: 700 ;
+    font-weight: 700;
   }
 
   .portfolio h2 {
@@ -535,7 +545,7 @@ form .input-box {
     grid-template-columns: 1fr;
   }
 
-  .footer-text p{
+  .footer-text p {
     font-size: 1.6rem;
   }
 }
@@ -568,4 +578,3 @@ form .input-box {
     margin-top: 2rem;
   }
 }
-

@@ -4,23 +4,32 @@ import { Player } from "./player.js";
 
 let playerCount = 0;
 const maxPlayers = 4;
-const players = [];
+var players = [];
+var ongoingGame = false;
 var board;
 var game;
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DomContentLoaded");
     const playerSetupContainer = document.getElementById('player-container');
-    const addPlayerButtonContainer = document.getElementById('add-player-button-container');
-    const addPlayerButton = document.getElementById('add-player-button');
+    var addPlayerButtonContainer;
+    var addPlayerButton;
     const startGameButton = document.getElementById('start-game-button');
     const gameSection = document.getElementById('game-section');
-    const playerStatsContainer = document.getElementById('player-stats');
     const canvas = document.getElementById("dartboard");
+    const undoButton = document.getElementById("undo-button");
+
+    undoButton.addEventListener('click', () => {
+        if (ongoingGame) {
+            if (game.undo()) {
+                populatePlayerBoxes();
+            }
+        }
+    });
     board = new Board('dartboard', 500);
     setCanvasSize(canvas);
 
-
+    createAddPlayerButton();
     loadPlayersFromStorage();
 
     addPlayerButton.addEventListener('click', () => {
@@ -49,10 +58,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (playerCount === 0) {
             startGameButton.style.display = 'none';
         }
+
+        if (playerCount === 3) {
+            addPlayerButtonContainer.style = 'none';
+        }
+    }
+
+    function createAddPlayerButton() {
+        playerSetupContainer.innerHTML += `
+      <div class="player-box" id="add-player-button-container">
+        <button id="add-player-button" class="btn">Bæta við spilara</button>
+      </div>
+            `;
+        addPlayerButtonContainer = document.getElementById('add-player-button-container');
+        addPlayerButton = document.getElementById('add-player-button');
+        addPlayerButton.addEventListener('click', () => {
+            if (playerCount < maxPlayers) {
+                const newPlayer = createPlayerBox(playerCount + 1);
+                playerSetupContainer.insertBefore(newPlayer, addPlayerButtonContainer);
+
+                savePlayersToStorage();
+
+                if (playerCount === maxPlayers) {
+                    addPlayerButtonContainer.style.display = 'none';
+                }
+            }
+        });
     }
 
     function createPlayerBox(playerNumber) {
-        console.log("adding player " + playerNumber);
+        console.log("adding player " + playerNumber + "player count is: " + playerCount
+        );
         const newPlayer = document.createElement('div');
         newPlayer.classList.add('player-box');
         newPlayer.id = `player${playerNumber}`;
@@ -61,15 +97,18 @@ document.addEventListener('DOMContentLoaded', () => {
             <label class="player-label">Spilari ${playerNumber}:</label>
             <input type="text" class="player-name styled-input" placeholder="Nafn" value="">
         `;
-    
+
         const removeButton = newPlayer.querySelector('.remove-player');
-        removeButton.addEventListener('click', () => removePlayer(newPlayer.id));
-    
+        removeButton.addEventListener('click', () => {
+            removePlayer(newPlayer.id);
+            console.log("removingPlayer");
+        });
+
         const playerNameInput = newPlayer.querySelector('.player-name');
         playerNameInput.addEventListener('input', () => {
             savePlayersToStorage();
         });
-    
+
         newPlayer.querySelector('.player-name').value = "";
         playerSetupContainer.insertBefore(newPlayer, addPlayerButtonContainer);
         playerCount++;
@@ -78,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         startGameButton.style.display = 'inline-block';
         savePlayersToStorage();
-    
+
         return newPlayer;
     }
 
@@ -86,10 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const remainingPlayers = document.querySelectorAll('.player-box');
         remainingPlayers.forEach((playerBox, index) => {
             const newPlayerNumber = index + 1;
-            playerBox.id = `player${newPlayerNumber}`;
-            const label = playerBox.querySelector('label');
-            if (label) {
-                label.textContent = `Spilari ${newPlayerNumber}`;
+            if (playerBox.id != "add-player-button-container") {
+                playerBox.id = `player${newPlayerNumber}`;
+                const label = playerBox.querySelector('label');
+                if (label) {
+                    label.textContent = `Spilari ${newPlayerNumber}`;
+                }
             }
         });
 
@@ -125,31 +166,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     startGameButton.addEventListener('click', () => {
-        // When the game starts, replace the player name inputs with player info
-        for (let i = 1; i <= playerCount; i++) {
-            const playerBox = document.querySelector(`#player${i}`);
-            const playerNameInput = playerBox.querySelector('.player-name');
-            const playerName = playerNameInput ? playerNameInput.value || `Spilari ${i}` : null;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (ongoingGame) {
+            undoButton.style.display = 'none';
+            playerCount = 0;
+            console.log("Ongoing game, resetting game");
+            document.querySelector('.dartboard-container').classList.remove('active');
+            playerSetupContainer.innerHTML = "";
+            createAddPlayerButton()
+            loadPlayersFromStorage();
+            players = [];
 
-            if (playerName) {
-                const newPlayer = new Player(playerName, i);
-                players.push(newPlayer);
+            startGameButton.textContent = "Hefja leik"
 
+            ongoingGame = false;
+
+        } else {
+            console.log("No game ongoing, starting a new one");
+            undoButton.style.display = 'inline-block';
+            for (let i = 1; i <= playerCount; i++) {
+                console.log(i);
+                const playerBox = document.querySelector(`#player${i}`);
+                const playerNameInput = playerBox.querySelector('.player-name');
+                const playerName = playerNameInput ? playerNameInput.value || `Spilari ${i}` : null;
+
+                if (playerName) {
+                    const newPlayer = new Player(playerName, i);
+                    players.push(newPlayer);
+
+                }
             }
+            ongoingGame = true;
+            game = new Game(players, board);
+            game.startGame();
+            startGameButton.textContent = "Endursetja leik"
+            populatePlayerBoxes();
+
+            document.querySelector('.dartboard-container').classList.add('active');
+            document.getElementById('game-section').style.display = 'block';
+
+            setCanvasSize(canvas);
         }
-
-        game = new Game(players, board);
-        game.startGame();
-        populatePlayerBoxes();
-
-        document.querySelector('.dartboard-container').classList.add('active');
-        document.getElementById('game-section').style.display = 'block';
-
-        setCanvasSize(canvas);
     });
 
     canvas.addEventListener('click', function (event) {
-        if (game.handleBoardClick(event) ) {
+        if (game.handleBoardClick(event)) {
             populatePlayerBoxes();
         }
     });
@@ -170,14 +231,11 @@ function populatePlayerBoxes() {
     playerContainer.innerHTML = '';
 
     var currentIndex = game.currentPlayerIndex;
-    console.log(currentIndex);
-    console.log(players);
 
 
     for (var index = 0; index < players.length; index++) {
         var playerIndex = (currentIndex + index) % players.length;
         var player = players[playerIndex];
-        console.log(playerIndex);
         var playerBox = document.querySelector(`#player${playerIndex + 1}`);
 
         playerBox = document.createElement('div');
