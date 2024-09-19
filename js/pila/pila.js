@@ -224,14 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function populatePlayerBoxes() {
-
     const playerContainer = document.getElementById('player-container');
 
     // Clear the playerContainer to reorder the boxes
     playerContainer.innerHTML = '';
 
     var currentIndex = game.currentPlayerIndex;
-
 
     for (var index = 0; index < players.length; index++) {
         var playerIndex = (currentIndex + index) % players.length;
@@ -245,6 +243,21 @@ function populatePlayerBoxes() {
         if (game.currentThrow === 0 && players.length > 1) {
             playerBox.classList.add('first-throw');
         }
+
+        // Add dart icons for the first player
+        let dartIcons = '';
+        if (index === 0) {
+            for (let i = 0; i < 3; i++) {
+                dartIcons += `
+                <svg class="dart-icon" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg" style="fill: ${i < (3 - game.currentThrow) ? 'var(--main-color)' : 'gray'};">
+                    <path d="m1.0181003 12.976393c0-.1297.21941-.4046.76189-.9548l.61267-.6214.006-.373.006-.373.56697-.5732c.31183-.3152997.64259-.6141997.73501-.6640997.0924-.05 1.28023-1.0989 2.63958-2.331l2.47154-2.2401.0253-.9411c.0284-1.0584.15737-1.5977.509-2.1285.35029-.5289 1.0104997-.85240002 1.5524497-.7609.38486.065.56566.2443.70851.7025.12444.3991.17914.4702.26055.3385.0228-.037.0747-.067.11521-.067.0405 0 .0214.058-.0424.1282-.11231.1241-.1036.1319.26838.24.22274.065.46511.1925.57618.3035.16716.1672.19163.2419.19106.5834-.001.73-.38248 1.2817-1.10854 1.6039-.50848.2257-1.04075.3126-1.9152297.3126h-.79221l-2.23187 2.4734c-1.22753 1.3604-2.28622 2.5599997-2.35266 2.6656997-.0664.1057-.3613.4288-.65525.7179-.54796.5389-.84145.6883-1.13703.579-.11495-.043-.24605.057-.77003.5863-.55462.56-1.00119.9139-1.00119.7934z"/>
+                </svg>
+                `;
+            }
+        }
+
+        // Add dart icons container
+        const dartIconsContainer = `<div class="dart-icons-container">${dartIcons}</div>`;
 
         // Format each throw as "section (multiplier)"
         const previousThrows = player.throws.slice().reverse().map(playerThrowAndScore => {
@@ -268,6 +281,7 @@ function populatePlayerBoxes() {
         // Update player name and info
         const playerInfo = `
             <div class="player-info">
+                ${dartIconsContainer} <!-- Insert the dart icons -->
                 <h3>${player.name}</h3>
                 <h4>Stig: <span class="score-container"><span class="remaining-score">${player.score}</span></span></h4>
                 <div class="previous-scores">
@@ -283,8 +297,8 @@ function populatePlayerBoxes() {
         playerBox.innerHTML = playerInfo;
 
         playerContainer.appendChild(playerBox);
-    };
-}
+    }
+};
 
 
 

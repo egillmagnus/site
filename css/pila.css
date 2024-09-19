@@ -84,6 +84,19 @@ body {
 }
 
 
+.dart-icons-container {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    display: flex;
+}
+
+.dart-icon {
+    width: 3rem;
+    height: 3rem;
+}
+
+
 .player-info {
     width: 100%;
 }
@@ -129,6 +142,7 @@ body {
 .first-throw h3,
 .first-throw h4,
 .first-throw p,
+.first-throw .dart-icons-container,
 .first-throw .score-list {
     animation: blurInLeft 0.7s ease forwards;
 }
