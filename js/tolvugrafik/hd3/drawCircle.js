@@ -38,8 +38,15 @@ window.onload = function init() {
 
     iniTime = Date.now();
 
+    window.addEventListener("resize", function () {
+        setCanvasSize(canvas);
+        canvasRes = vec2(canvas.width, canvas.height);
+        gl.uniform2fv(gl.getUniformLocation(program, "resolution"), flatten(canvasRes))
+        render();
+    });
+
     canvasRes = vec2(canvas.width, canvas.height);
-    gl.uniform2fv(gl.getUniformLocation(program, "resolution"), flatten(canvasRes))
+    gl.uniform2fv(gl.getUniformLocation(program, "resolution"), flatten(canvasRes));
 
     render();
 };
