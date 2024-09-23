@@ -149,9 +149,9 @@ function render() {
     mv = mult(mv, rotateX(spinX));
     mv = mult(mv, rotateY(spinY));
 
-    secondAngle = (secondAngle + 6) % 360;
-    minuteAngle = (minuteAngle + 0.1) % 360;
-    hourAngle = (hourAngle + 0.008333) % 360;
+    secondAngle = (secondAngle - 6) % 360;
+    minuteAngle = (minuteAngle - 0.1) % 360;
+    hourAngle = (hourAngle - 0.008333) % 360;
 
     var mv1 = mult(mv, translate(0.0, 0.0, -0.05));
     var mv1 = mult(mv1, rotateX(180));
