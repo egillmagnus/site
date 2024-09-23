@@ -9,7 +9,7 @@ var colors = [];
 var wireframes = false;
 
 var movement = false;
-var spinX = 0;
+var spinX = -10;
 var spinY = 180;
 var origX;
 var origY;
@@ -144,11 +144,22 @@ function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 
+    var aspectRatio = canvas.width / canvas.height;
+    var fov = 45;
+    var near = 0.1;
+    var far = 100.0;
+    var projectionMatrix = perspective(fov, aspectRatio, near, far);
 
-    var mv = mat4();
+    var eye = vec3(0.0, 0.0, 1.75);
+    var at = vec3(0.0, 0.0, 0.0);
+    var up = vec3(0.0, -1.0, 0.0);
+    var viewMatrix = lookAt(eye, at, up);
+
+    var mv = mult(projectionMatrix, viewMatrix);
+
+
     if (!movement) {
-        spinX = (spinX + 0.05) % 360;
-        spinY = (spinY + 0.1) % 360;
+        spinY = (spinY + 0.3) % 360;
     }
     mv = mult(mv, rotateX(spinX));
     mv = mult(mv, rotateY(spinY));
