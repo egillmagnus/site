@@ -1,5 +1,9 @@
 var gl;
 
+var msek = 0;
+
+var speed = 2;
+
 window.onload = function init() {
     var canvas = document.getElementById("gl-canvas");
 
@@ -9,6 +13,11 @@ window.onload = function init() {
     menuicon.onclick = () => {
         menuicon.classList.toggle("bx-x");
         navbar.classList.toggle("active");
+    };
+
+    var speedSlider = document.getElementById("speed");
+    speedSlider.oninput = function () {
+        speed = parseFloat(this.value);
     };
 
     setCanvasSize(canvas);
@@ -40,11 +49,13 @@ window.onload = function init() {
 
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
+        speedSlider.style.width = canvas.width / 2 + "px";
         canvasRes = vec2(canvas.width, canvas.height);
         gl.uniform2fv(gl.getUniformLocation(program, "resolution"), flatten(canvasRes))
         render();
     });
 
+    speedSlider.style.width = canvas.width + "px";
     canvasRes = vec2(canvas.width, canvas.height);
     gl.uniform2fv(gl.getUniformLocation(program, "resolution"), flatten(canvasRes));
 
@@ -55,9 +66,9 @@ window.onload = function init() {
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    var msek = Date.now() - iniTime;
+    msek = msek + speed;
 
-    var time = ((msek * 0.0005));
+    var time = ((msek * 0.005));
     gl.uniform1f(locTime, time);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
