@@ -88,16 +88,16 @@ finalPoint = [
 ];
 
 const starVertices = [
-    vec2(0, ( 1 / 3 ) + 0.15),
-    vec2(-( 1 / 3 ), -( 1 / 3 ) / Math.sqrt(3) + 0.15 ),
-    vec2(( 1 / 3 ), -( 1 / 3 ) / Math.sqrt(3)  + 0.15 ),
+    vec2(0, (1 / 3) + 0.15),
+    vec2(-(1 / 3), -(1 / 3) / Math.sqrt(3) + 0.15),
+    vec2((1 / 3), -(1 / 3) / Math.sqrt(3) + 0.15),
 
-    vec2(0, -( 1 / 3 )  + 0.15 ),
-    vec2(-( 1 / 3 ), ( 1 / 3 ) / Math.sqrt(3) + 0.15 ),
-    vec2(( 1 / 3 ), ( 1 / 3 ) / Math.sqrt(3) + 0.15 )
+    vec2(0, -(1 / 3) + 0.15),
+    vec2(-(1 / 3), (1 / 3) / Math.sqrt(3) + 0.15),
+    vec2((1 / 3), (1 / 3) / Math.sqrt(3) + 0.15)
 ];
 
-var starColor = vec4( 1.0, 0.843, 0.0, 1.0 );
+var starColor = vec4(1.0, 0.843, 0.0, 1.0);
 
 function initBuffers() {
     positionBufferId = gl.createBuffer();
@@ -110,7 +110,7 @@ function initBuffers() {
 
     colorBufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, maxNumPoints*8, gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, maxNumPoints * 8, gl.DYNAMIC_DRAW);
 
     var vColor = gl.getAttribLocation(program, "vColor");
     gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
@@ -232,14 +232,14 @@ function drawPointsToBuffer() {
         if (i == 4) {
             scoreItem = finalPoint;
         }
-            for (var j = 0; j < scoreItem.length; j++) {
-                vertex.push(vec2(-0.95 + scoreItem[j][0] + (i < 4 ? i : 0) * 0.03, 0.95 + scoreItem[j][1]));
-                colors.push(vec4(0.0, 0.0, 0.0, 1.0));
-            }
+        for (var j = 0; j < scoreItem.length; j++) {
+            vertex.push(vec2(-0.95 + scoreItem[j][0] + (i < 4 ? i : 0) * 0.03, 0.95 + scoreItem[j][1]));
+            colors.push(vec4(0.0, 0.0, 0.0, 1.0));
+        }
     }
 
     // teikna stjörnu
-    if(score >= 5) {
+    if (score >= 5) {
         for (var i = 0; i < starVertices.length; i++) {
             vertex.push(starVertices[i]);
             colors.push(starColor);
@@ -308,9 +308,16 @@ function updateEntities() {
 
 
 function setCanvasSize(canvas) {
-    var size = Math.min(window.innerWidth*0.95, window.innerHeight*0.8);
-    canvas.width = size;
-    canvas.height = size;
+    var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.8);
+
+    var dpr = window.devicePixelRatio || 1;
+
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+
     if (gl) {
         gl.viewport(0, 0, canvas.width, canvas.height);
     }
