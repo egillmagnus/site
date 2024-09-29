@@ -39,12 +39,12 @@
     <script type="text/javascript" src="/js/tolvugrafik/Common/webgl-utils.js"></script>
     <script type="text/javascript" src="/js/tolvugrafik/Common/initShaders.js"></script>
     <script type="text/javascript" src="https://unpkg.com/default-passive-events"></script>
-    <script src="/js/tolvugrafik/hd4/billy.js"></script>
+    <script src="/js/tolvugrafik/v2/3d-game-of-life.js"></script>
 </head>
 
 <body>
     <header class="header">
-        <a href="#" class="logo" id="log"><span>Billy</span> hilla</a>
+        <a href="#" class="logo" id="log">Game of <span>life</span></a>
         <i class='bx bx-menu' id="menu-icon"></i>
         <nav class="navbar">
             <a href="/#heim">Heim</a>
@@ -58,7 +58,7 @@
         <div class="fractal-container" id="worley">
             <canvas id="gl-canvas" width="512" height="512"></canvas>
         </div>
-        <button id="wireframeButton" class="btn">Toggle Wireframes</button>
+        <button id="reset-button" class="btn">Reset</button>
     </div>
 
     <footer class="footer">

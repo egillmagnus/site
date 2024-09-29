@@ -15,6 +15,10 @@
     margin-top: 20px;
 }
 
+#gl-canvas {
+    touch-action: none;
+}
+
 
 a.link {
     color: var(--main-color);

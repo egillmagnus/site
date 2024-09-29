@@ -74,7 +74,7 @@ window.onload = function init() {
         movement = true;
         origX = e.offsetX;
         origY = e.offsetY;
-        e.preventDefault();         // Disable drag and drop
+        e.preventDefault(); // Disable drag and drop
     });
 
     canvas.addEventListener("mouseup", function (e) {
@@ -85,9 +85,41 @@ window.onload = function init() {
         if (movement) {
             spinY = (spinY + (origX - e.offsetX)) % 360;
             spinX = (spinX + (origY - e.offsetY)) % 360;
+
+            if (spinX < -90) {
+                spinX = -90;
+            } else if (spinX > 90) {
+                spinX = 90;
+            }
             origX = e.offsetX;
             origY = e.offsetY;
         }
+    });
+
+
+    canvas.addEventListener("touchstart", function (e) {
+        movement = true;
+        origX = e.touches[0].clientX;
+        origY = e.touches[0].clientY;
+    });
+
+    canvas.addEventListener("touchmove", function (e) {
+        if (movement) {
+            var deltaX = e.touches[0].clientX - origX;
+            var deltaY = e.touches[0].clientY - origY;
+            spinY += deltaX % 360;
+            spinX += deltaY % 360;
+
+            if (spinX < -90) spinX = -90;
+            if (spinX > 90) spinX = 90;
+
+            origX = e.touches[0].clientX;
+            origY = e.touches[0].clientY;
+        }
+    });
+
+    canvas.addEventListener("touchend", function (e) {
+        movement = false;
     });
 
     window.addEventListener("resize", function () {
@@ -158,9 +190,6 @@ function render() {
     var mv = mult(projectionMatrix, viewMatrix);
 
 
-    if (!movement) {
-        spinY = (spinY + 0.3) % 360;
-    }
     mv = mult(mv, rotateX(spinX));
     mv = mult(mv, rotateY(spinY));
 

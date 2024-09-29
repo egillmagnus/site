@@ -1,29 +1,33 @@
 var canvas;
 var gl;
 
-var numVertices = 36;
 var points = [];
 var colors = [];
 
 var movement = false;
-var spinX = 0;
+var spinX = -10;
 var spinY = 180;
 var origX;
 var origY;
 
-var matrixLoc;
-var secondAngle = 0;
-var minuteAngle = 0;
-var hourAngle = 0;
-var logo;
+var gridSize = 10;
+var grid = create3DGrid(gridSize);
+
+var updateInterval = 3000;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
 
+    gl = WebGLUtils.setupWebGL(canvas);
+    if (!gl) { alert("WebGL isn't available"); }
+
+    const resetButton = document.getElementById('reset-button');
+    resetButton.addEventListener('click', function () {
+        grid = create3DGrid(gridSize);
+    });
+
     let menuicon = document.querySelector("#menu-icon");
     let navbar = document.querySelector(".navbar");
-
-    logo = document.getElementById("log");
 
     menuicon.onclick = () => {
         menuicon.classList.toggle("bx-x");
@@ -31,8 +35,6 @@ window.onload = function init() {
     };
 
     setCanvasSize(canvas);
-    gl = WebGLUtils.setupWebGL(canvas);
-    if (!gl) { alert("WebGL isn't available"); }
 
     colorCube();
 
@@ -65,12 +67,11 @@ window.onload = function init() {
 
     matrixLoc = gl.getUniformLocation(program, "transform");
 
-    //event listeners for mouse
+    // Event listeners for mouse
     canvas.addEventListener("mousedown", function (e) {
         movement = true;
         origX = e.offsetX;
         origY = e.offsetY;
-        e.preventDefault(); // Disable drag and drop
     });
 
     canvas.addEventListener("mouseup", function (e) {
@@ -123,6 +124,8 @@ window.onload = function init() {
     });
 
     render();
+
+    setInterval(updateGrid, updateInterval);
 }
 
 function colorCube() {
@@ -148,21 +151,36 @@ function quad(a, b, c, d) {
 
     var vertexColors = [
         [0.0, 0.0, 0.0, 1.0],  // black
-        [0.0, 255.0, 51.0 / 255, 1.0],  // minn grænn
+        [1.0, 0.0, 0.0, 1.0],  // red
         [1.0, 1.0, 0.0, 1.0],  // yellow
         [0.0, 1.0, 0.0, 1.0],  // green
-        [50 / 255, 57 / 255, 70 / 255, 1.0],  // Bakgrunnur
+        [0.0, 0.0, 1.0, 1.0],  // blue
         [1.0, 0.0, 1.0, 1.0],  // magenta
         [0.0, 1.0, 1.0, 1.0],  // cyan
         [1.0, 1.0, 1.0, 1.0]   // white
     ];
 
+    // Vertex color assigned by the index of the face
     var indices = [a, b, c, a, c, d];
 
     for (var i = 0; i < indices.length; ++i) {
         points.push(vertices[indices[i]]);
         colors.push(vertexColors[a]);
     }
+}
+
+function create3DGrid(size) {
+    let grid = [];
+    for (let x = 0; x < size; x++) {
+        grid[x] = [];
+        for (let y = 0; y < size; y++) {
+            grid[x][y] = [];
+            for (let z = 0; z < size; z++) {
+                grid[x][y][z] = Math.random() > 0.7 ? 1 : 0;
+            }
+        }
+    }
+    return grid;
 }
 
 function render() {
@@ -174,66 +192,112 @@ function render() {
     var far = 100.0;
     var projectionMatrix = perspective(fov, aspectRatio, near, far);
 
-    var eye = vec3(0.0, -1.0, -3);
+    var eye = vec3(0.0, 0.0, 25.0);
     var at = vec3(0.0, 0.0, 0.0);
-    var up = vec3(0.0, -1.0, 0.0);
+    var up = vec3(0.0, 1.0, 0.0);
     var viewMatrix = lookAt(eye, at, up);
 
-    var mv = mult(projectionMatrix, viewMatrix);
+    var globalTransform = mult(projectionMatrix, viewMatrix);
 
-    mv = mult(mv, rotateX(spinX));
-    mv = mult(mv, rotateY(spinY));
-
-    var currentTime = new Date();
-    var milliseconds = currentTime.getMilliseconds();
-    var seconds = currentTime.getSeconds();
-    var minutes = currentTime.getMinutes();
-    var hours = currentTime.getHours();
-
-    logo.textContent = hours.toString().padStart(2, '0') + ":" +
-        minutes.toString().padStart(2, '0') + ":" +
-        seconds.toString().padStart(2, '0');
+    globalTransform = mult(globalTransform, rotateX(spinX));
+    globalTransform = mult(globalTransform, rotateY(spinY));
 
 
-    var offsetTime = -90;
-    var hourAngle = (360 + offsetTime - ((hours % 12) * 30 + minutes * 0.5)) % 360;
+    renderGrid(globalTransform);
 
-    var minuteAngle = (360 + offsetTime - hourAngle - (minutes * 6 + seconds * 0.1)) % 360;
+    requestAnimationFrame(render);
+}
 
-    var secondAngle = (360 + offsetTime - hourAngle - minuteAngle - (seconds * 6 + (milliseconds / 166.66))) % 360;
+function countNeighbors(x, y, z) {
+    let neighbors = 0;
+    for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            for (let k = -1; k <= 1; k++) {
+                if (i === 0 && j === 0 && k === 0) continue;
+                let nx = x + i;
+                let ny = y + j;
+                let nz = z + k;
+                if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && nz >= 0 && nz < gridSize) {
+                    neighbors += grid[nx][ny][nz];
+                }
+            }
+        }
+    }
+    return neighbors;
+}
 
-    var mv1 = mult(mv, translate(0.0, 0.0, -0.05));
-    var mv1 = mult(mv1, rotateX(180));
-    mv1 = mult(mv1, scalem(1.5, 1.5, 0.01));
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(mv1));
-    gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+function updateGrid() {
+    let newGrid = createEmpty3DGrid(gridSize);
 
-    var armLength = 0.33;
-    var armWidth = 0.03;
+    for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+            for (let z = 0; z < gridSize; z++) {
+                let neighbors = countNeighbors(x, y, z);
 
-    mv1 = mult(mv, rotateZ(hourAngle));
-    mv1Final = mult(mv1, translate(armLength / 2, 0.0, 0.0));
-    mv1Final = mult(mv1Final, scalem(armLength, armWidth, armWidth));
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(mv1Final));
-    gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+                if (grid[x][y][z] === 1) {
+                    // Survive if 5, 6, or 7 neighbors
+                    if (neighbors >= 5 && neighbors <= 7) {
+                        newGrid[x][y][z] = 1;
+                    } else {
+                        newGrid[x][y][z] = 0;
+                    }
+                } else {
+                    // Spawn if exactly 6 neighbors
+                    if (neighbors === 6) {
+                        newGrid[x][y][z] = 1;
+                    } else {
+                        newGrid[x][y][z] = 0;
+                    }
+                }
+            }
+        }
+    }
+    grid = newGrid;
+}
 
-    var mv2 = mv1;
-    mv2 = mult(mv2, translate(armLength, 0.0, 0.0));
-    mv2 = mult(mv2, rotateZ(minuteAngle));
-    mv2Final = mult(mv2, translate(armLength / 2, 0.0, 0.0));
-    mv2Final = mult(mv2Final, scalem(armLength, armWidth * 0.8, armWidth * 0.8));
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(mv2Final));
-    gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+function createEmpty3DGrid(size) {
+    let grid = [];
+    for (let x = 0; x < size; x++) {
+        grid[x] = [];
+        for (let y = 0; y < size; y++) {
+            grid[x][y] = [];
+            for (let z = 0; z < size; z++) {
+                grid[x][y][z] = 0;
+            }
+        }
+    }
+    return grid;
+}
 
-    var mv3 = mv2;
-    mv3 = mult(mv3, translate(armLength, 0.0, 0.0));
-    mv3 = mult(mv3, rotateZ(secondAngle));
-    mv3 = mult(mv3, translate(armLength / 2, 0.0, 0.0));
-    mv3 = mult(mv3, scalem(armLength, armWidth * 0.6, armWidth * 0.6));
-    gl.uniformMatrix4fv(matrixLoc, false, flatten(mv3));
-    gl.drawArrays(gl.TRIANGLES, 0, numVertices);
+function renderGrid(globalTransform) {
+    for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+            for (let z = 0; z < gridSize; z++) {
+                if (grid[x][y][z] === 1) {
+                    drawCube(x, y, z, globalTransform);
+                }
+            }
+        }
+    }
+}
 
-    requestAnimFrame(render);
+function drawCube(x, y, z, globalTransform) {
+    let modelMatrix = mat4();
+
+    modelMatrix = mult(modelMatrix, scalem(0.95, 0.95, 0.95));
+
+    let spacing = 1.1;
+    modelMatrix = mult(modelMatrix, translate(
+        (x - gridSize / 2) * spacing,
+        (y - gridSize / 2) * spacing,
+        (z - gridSize / 2) * spacing
+    ));
+
+    let transform = mult(globalTransform, modelMatrix);
+
+    gl.uniformMatrix4fv(matrixLoc, false, flatten(transform));
+
+    gl.drawArrays(gl.TRIANGLES, 0, 36);
 }
 
 
