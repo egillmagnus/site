@@ -70,6 +70,7 @@ window.onload = function init() {
         movement = true;
         origX = e.offsetX;
         origY = e.offsetY;
+        e.preventDefault(); // Disable drag and drop
     });
 
     canvas.addEventListener("mouseup", function (e) {
@@ -237,18 +238,10 @@ function render() {
 
 
 function setCanvasSize(canvas) {
-    var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.7);
-
-    var dpr = window.devicePixelRatio || 1;
-
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-
-    canvas.style.width = size + 'px';
-    canvas.style.height = size + 'px';
-
+    var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.8);
+    canvas.width = size;
+    canvas.height = size;
     if (gl) {
         gl.viewport(0, 0, canvas.width, canvas.height);
     }
-
 }

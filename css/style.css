@@ -20,26 +20,20 @@
   --footer-text-color: #6b7078;
 }
 
-
-main {
-  width: 100%;
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
+  min-width: 100vw;
 }
 
 
 html {
   font-size: 65.2%;
   overflow-x: hidden;
-  width: 100%;
+  min-height: 100vh;
+  min-width: 100vw;
 }
-
-body {
-  position: relative;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  width: 100%;
-  height: 100%;
-}
-
 
 section {
   min-height: 80vh;
@@ -230,7 +224,6 @@ span {
   border: .2rem solid var(--bg-color);
   transition: 0.5s;
   min-height: 15rem;
-  max-width: 100vw;
   min-width: 50rem;
 }
 
@@ -453,7 +446,7 @@ form .input-box {
 
 /*BREAKPOINTS*/
 @media (max-width: 1200px) {
-  html {
+  s html {
     font-size: 55%;
   }
 }
@@ -560,12 +553,6 @@ form .input-box {
 @media (max-width: 450px) {
   html {
     font-size: 50%;
-  }
-
-
-  .projects-container .project-box {
-    min-width: 90vw;
-    max-width: 100%;
   }
 
   .input-box .input-field {
