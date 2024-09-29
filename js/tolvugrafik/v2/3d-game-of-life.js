@@ -5,8 +5,8 @@ var points = [];
 var colors = [];
 
 var movement = false;
-var spinX = -10;
-var spinY = 180;
+var spinX = 10;
+var spinY = 90;
 var origX;
 var origY;
 
@@ -287,10 +287,11 @@ function drawCube(x, y, z, globalTransform) {
     modelMatrix = mult(modelMatrix, scalem(0.95, 0.95, 0.95));
 
     let spacing = 1.1;
+    let centerOffset = (gridSize - 1) / 2;
     modelMatrix = mult(modelMatrix, translate(
-        (x - gridSize / 2) * spacing,
-        (y - gridSize / 2) * spacing,
-        (z - gridSize / 2) * spacing
+        (x - centerOffset) * spacing,
+        (y - centerOffset) * spacing,
+        (z - centerOffset) * spacing
     ));
 
     let transform = mult(globalTransform, modelMatrix);
