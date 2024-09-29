@@ -15,12 +15,15 @@ var matrixLoc;
 var secondAngle = 0;
 var minuteAngle = 0;
 var hourAngle = 0;
+var logo;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
 
     let menuicon = document.querySelector("#menu-icon");
     let navbar = document.querySelector(".navbar");
+
+    logo = document.getElementById("log");
 
     menuicon.onclick = () => {
         menuicon.classList.toggle("bx-x");
@@ -149,9 +152,23 @@ function render() {
     mv = mult(mv, rotateX(spinX));
     mv = mult(mv, rotateY(spinY));
 
-    secondAngle = (secondAngle - 6) % 360;
-    minuteAngle = (minuteAngle - 0.1) % 360;
-    hourAngle = (hourAngle - 0.008333) % 360;
+    var currentTime = new Date();
+    var milliseconds = currentTime.getMilliseconds();
+    var seconds = currentTime.getSeconds();
+    var minutes = currentTime.getMinutes();
+    var hours = currentTime.getHours();
+
+    logo.textContent = hours.toString().padStart(2, '0') + ":" +
+        minutes.toString().padStart(2, '0') + ":" +
+        seconds.toString().padStart(2, '0');
+
+
+    var offsetTime = -90;
+    var hourAngle = (360 + offsetTime - ((hours % 12) * 30 + minutes * 0.5)) % 360;
+
+    var minuteAngle = (360 + offsetTime - hourAngle - (minutes * 6 + seconds * 0.1)) % 360;
+
+    var secondAngle = (360 + offsetTime - hourAngle - minuteAngle - (seconds * 6 + (milliseconds / 166.66))) % 360;
 
     var mv1 = mult(mv, translate(0.0, 0.0, -0.05));
     var mv1 = mult(mv1, rotateX(180));
