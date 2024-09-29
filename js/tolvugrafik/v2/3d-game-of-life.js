@@ -5,8 +5,8 @@ var points = [];
 var colors = [];
 
 var movement = false;
-var spinX = 10;
-var spinY = 90;
+var spinX = 30;
+var spinY = 45;
 var origX;
 var origY;
 
@@ -78,8 +78,8 @@ window.onload = function init() {
 
     canvas.addEventListener("mousemove", function (e) {
         if (movement) {
-            spinY = (spinY + (origX - e.offsetX)) % 360;
-            spinX = (spinX + (origY - e.offsetY)) % 360;
+            spinY = (spinY - (origX - e.offsetX) * 0.2) % 360;
+            spinX = (spinX - (origY - e.offsetY) * 0.2) % 360;
 
             if (spinX < -90) {
                 spinX = -90;
@@ -102,8 +102,8 @@ window.onload = function init() {
         if (movement) {
             var deltaX = e.touches[0].clientX - origX;
             var deltaY = e.touches[0].clientY - origY;
-            spinY += deltaX % 360;
-            spinX += deltaY % 360;
+            spinY += (deltaX * 0.5) % 360;
+            spinX += (deltaY * 0.5) % 360;
 
             if (spinX < -90) spinX = -90;
             if (spinX > 90) spinX = 90;
