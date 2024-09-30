@@ -11,9 +11,16 @@ var origX;
 var origY;
 
 var gridSize = 10;
-var grid = create3DGrid(gridSize);
+var grid = createGrid(gridSize);
+var lastUpdateTime = 0;
 
-var updateInterval = 3000;
+
+var prevGrid = copyGrid(grid);
+
+var animationDuration = 1000;
+var fullRotation = Math.PI * 2;
+
+var updateInterval = 2500;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -23,7 +30,7 @@ window.onload = function init() {
 
     const resetButton = document.getElementById('reset-button');
     resetButton.addEventListener('click', function () {
-        grid = create3DGrid(gridSize);
+        grid = createGrid(gridSize);
     });
 
     let menuicon = document.querySelector("#menu-icon");
@@ -91,7 +98,7 @@ window.onload = function init() {
         }
     });
 
-
+    // Touch event listeners
     canvas.addEventListener("touchstart", function (e) {
         movement = true;
         origX = e.touches[0].clientX;
@@ -169,7 +176,7 @@ function quad(a, b, c, d) {
     }
 }
 
-function create3DGrid(size) {
+function createGrid(size) {
     let grid = [];
     for (let x = 0; x < size; x++) {
         grid[x] = [];
@@ -181,6 +188,20 @@ function create3DGrid(size) {
         }
     }
     return grid;
+}
+
+function copyGrid(grid) {
+    let newGrid = [];
+    for (let x = 0; x < gridSize; x++) {
+        newGrid[x] = [];
+        for (let y = 0; y < gridSize; y++) {
+            newGrid[x][y] = [];
+            for (let z = 0; z < gridSize; z++) {
+                newGrid[x][y][z] = grid[x][y][z];
+            }
+        }
+    }
+    return newGrid;
 }
 
 function render() {
@@ -202,8 +223,17 @@ function render() {
     globalTransform = mult(globalTransform, rotateX(spinX));
     globalTransform = mult(globalTransform, rotateY(spinY));
 
+    var currentTime = Date.now();
 
-    renderGrid(globalTransform);
+    if (currentTime - lastUpdateTime < animationDuration) {
+        var elapsed = (currentTime - lastUpdateTime) % animationDuration;
+        var progress = elapsed / animationDuration;
+        var rotation = progress * fullRotation;
+
+        renderGrid(globalTransform, progress, rotation, true);
+    } else {
+        renderGrid(globalTransform, 1, 0, false);
+    }
 
     requestAnimationFrame(render);
 }
@@ -227,7 +257,9 @@ function countNeighbors(x, y, z) {
 }
 
 function updateGrid() {
-    let newGrid = createEmpty3DGrid(gridSize);
+    prevGrid = copyGrid(grid);
+
+    let newGrid = createEmptyGrid(gridSize);
 
     for (let x = 0; x < gridSize; x++) {
         for (let y = 0; y < gridSize; y++) {
@@ -235,14 +267,12 @@ function updateGrid() {
                 let neighbors = countNeighbors(x, y, z);
 
                 if (grid[x][y][z] === 1) {
-                    // Survive if 5, 6, or 7 neighbors
                     if (neighbors >= 5 && neighbors <= 7) {
                         newGrid[x][y][z] = 1;
                     } else {
                         newGrid[x][y][z] = 0;
                     }
                 } else {
-                    // Spawn if exactly 6 neighbors
                     if (neighbors === 6) {
                         newGrid[x][y][z] = 1;
                     } else {
@@ -252,28 +282,23 @@ function updateGrid() {
             }
         }
     }
+
     grid = newGrid;
+    lastUpdateTime = Date.now();
 }
 
-function createEmpty3DGrid(size) {
-    let grid = [];
-    for (let x = 0; x < size; x++) {
-        grid[x] = [];
-        for (let y = 0; y < size; y++) {
-            grid[x][y] = [];
-            for (let z = 0; z < size; z++) {
-                grid[x][y][z] = 0;
-            }
-        }
-    }
-    return grid;
-}
-
-function renderGrid(globalTransform) {
+function renderGrid(globalTransform, progress, rotation, animate) {
     for (let x = 0; x < gridSize; x++) {
         for (let y = 0; y < gridSize; y++) {
             for (let z = 0; z < gridSize; z++) {
-                if (grid[x][y][z] === 1) {
+                var isPrevActive = prevGrid[x][y][z] === 1;
+                var isNewActive = grid[x][y][z] === 1;
+                var isAnimating = isPrevActive !== isNewActive;
+
+                if (animate && isAnimating) {
+                    var scale = isNewActive ? progress : 1 - progress;
+                    drawAnimatedCube(x, y, z, globalTransform, scale, rotation);
+                } else if (isNewActive) {
                     drawCube(x, y, z, globalTransform);
                 }
             }
@@ -284,9 +309,7 @@ function renderGrid(globalTransform) {
 function drawCube(x, y, z, globalTransform) {
     let modelMatrix = mat4();
 
-    modelMatrix = mult(modelMatrix, scalem(0.95, 0.95, 0.95));
-
-    let spacing = 1.1;
+    let spacing = 1.0;
     let centerOffset = (gridSize - 1) / 2;
     modelMatrix = mult(modelMatrix, translate(
         (x - centerOffset) * spacing,
@@ -299,6 +322,43 @@ function drawCube(x, y, z, globalTransform) {
     gl.uniformMatrix4fv(matrixLoc, false, flatten(transform));
 
     gl.drawArrays(gl.TRIANGLES, 0, 36);
+}
+
+function drawAnimatedCube(x, y, z, globalTransform, scale, rotation) {
+    let modelMatrix = mat4();
+
+    let spacing = 1.0;
+    let centerOffset = (gridSize - 1) / 2;
+    modelMatrix = mult(modelMatrix, translate(
+        (x - centerOffset) * spacing,
+        (y - centerOffset) * spacing,
+        (z - centerOffset) * spacing
+    ));
+
+
+    modelMatrix = mult(modelMatrix, rotateY(rotation * (180 / Math.PI)))
+
+    modelMatrix = mult(modelMatrix, scalem(scale * 0.95, scale * 0.95, scale * 0.95));
+
+    let finalTransform = mult(globalTransform, modelMatrix);
+
+    gl.uniformMatrix4fv(matrixLoc, false, flatten(finalTransform));
+
+    gl.drawArrays(gl.TRIANGLES, 0, 36);
+}
+
+function createEmptyGrid(size) {
+    let grid = [];
+    for (let x = 0; x < size; x++) {
+        grid[x] = [];
+        for (let y = 0; y < size; y++) {
+            grid[x][y] = [];
+            for (let z = 0; z < size; z++) {
+                grid[x][y][z] = 0;
+            }
+        }
+    }
+    return grid;
 }
 
 
