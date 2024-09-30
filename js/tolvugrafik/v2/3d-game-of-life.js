@@ -31,6 +31,8 @@ window.onload = function init() {
     const resetButton = document.getElementById('reset-button');
     resetButton.addEventListener('click', function () {
         grid = createGrid(gridSize);
+        prevGrid = copyGrid(grid);
+        lastUpdateTime = Date.now();
     });
 
     let menuicon = document.querySelector("#menu-icon");
