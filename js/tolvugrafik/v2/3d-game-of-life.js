@@ -309,7 +309,7 @@ function renderGrid(globalTransform, progress, rotation, animate) {
 function drawCube(x, y, z, globalTransform) {
     let modelMatrix = mat4();
 
-    let spacing = 1.0;
+    let spacing = 1.1;
     let centerOffset = (gridSize - 1) / 2;
     modelMatrix = mult(modelMatrix, translate(
         (x - centerOffset) * spacing,
@@ -327,7 +327,7 @@ function drawCube(x, y, z, globalTransform) {
 function drawAnimatedCube(x, y, z, globalTransform, scale, rotation) {
     let modelMatrix = mat4();
 
-    let spacing = 1.0;
+    let spacing = 1.1;
     let centerOffset = (gridSize - 1) / 2;
     modelMatrix = mult(modelMatrix, translate(
         (x - centerOffset) * spacing,
