@@ -149,7 +149,7 @@ window.onload = function init() {
 
             let pinchZoomFactor = initialPinchDistance / currentPinchDistance;
 
-            zoom = lastPinchZoom * inchZoomFactor;
+            zoom = lastPinchZoom * pinchZoomFactor;
 
             zoom = Math.max(Math.min(zoom, 100.0), 0.5);
 
