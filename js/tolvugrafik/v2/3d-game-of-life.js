@@ -20,7 +20,7 @@ let lastPinchZoom = zoom;
 var zoom = 25.0;
 
 
-var prevGrid = createEmptyGrid(gridSize);//copyGrid(grid);
+var prevGrid = createEmptyGrid(gridSize);
 
 var animationDuration = 1000;
 var fullRotation = Math.PI * 2;
@@ -231,19 +231,6 @@ function createGrid(size) {
     return grid;
 }
 
-function copyGrid(grid) {
-    let newGrid = [];
-    for (let x = 0; x < gridSize; x++) {
-        newGrid[x] = [];
-        for (let y = 0; y < gridSize; y++) {
-            newGrid[x][y] = [];
-            for (let z = 0; z < gridSize; z++) {
-                newGrid[x][y][z] = grid[x][y][z];
-            }
-        }
-    }
-    return newGrid;
-}
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -302,7 +289,7 @@ function countNeighbors(x, y, z) {
 }
 
 function updateGrid() {
-    prevGrid = grid;//copyGrid(grid);
+    prevGrid = grid;
 
     let newGrid = createEmptyGrid(gridSize);
 
