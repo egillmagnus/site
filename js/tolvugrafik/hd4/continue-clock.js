@@ -92,6 +92,10 @@ window.onload = function init() {
         }
     });
 
+    canvas.addEventListener("mouseleave", function () {
+        isDragging = false;
+    });
+
 
     canvas.addEventListener("touchstart", function (e) {
         movement = true;

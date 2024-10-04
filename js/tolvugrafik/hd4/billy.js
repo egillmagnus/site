@@ -81,6 +81,10 @@ window.onload = function init() {
         movement = false;
     });
 
+    canvas.addEventListener("mouseleave", function () {
+        isDragging = false;
+    });
+
     canvas.addEventListener("mousemove", function (e) {
         if (movement) {
             spinY = (spinY + (origX - e.offsetX)) % 360;

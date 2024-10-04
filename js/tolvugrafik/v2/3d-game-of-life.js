@@ -12,10 +12,15 @@ var origY;
 
 var gridSize = 10;
 var grid = createGrid(gridSize);
-var lastUpdateTime = 0;
+var lastUpdateTime = Date.now();
+
+let initialPinchDistance = null;
+let lastPinchZoom = zoom;
+
+var zoom = 25.0;
 
 
-var prevGrid = copyGrid(grid);
+var prevGrid = createEmptyGrid(gridSize);//copyGrid(grid);
 
 var animationDuration = 1000;
 var fullRotation = Math.PI * 2;
@@ -31,7 +36,7 @@ window.onload = function init() {
     const resetButton = document.getElementById('reset-button');
     resetButton.addEventListener('click', function () {
         grid = createGrid(gridSize);
-        prevGrid = copyGrid(grid);
+        prevGrid = createEmptyGrid(gridSize);
         lastUpdateTime = Date.now();
     });
 
@@ -100,15 +105,35 @@ window.onload = function init() {
         }
     });
 
-    // Touch event listeners
-    canvas.addEventListener("touchstart", function (e) {
-        movement = true;
-        origX = e.touches[0].clientX;
-        origY = e.touches[0].clientY;
+    canvas.addEventListener("mouseleave", function () {
+        isDragging = false;
     });
 
+    canvas.addEventListener("wheel", function (event) {
+        event.preventDefault();
+        if (event.deltaY < 0) {
+            zoom += 0.5;
+        } else {
+            zoom -= 0.5;
+        }
+
+        zoom = Math.max(Math.min(zoom, 100.0), 0.5);
+    }, { passive: false });
+
+    canvas.addEventListener("touchstart", function (e) {
+        if (e.touches.length === 1) {
+            movement = true;
+            origX = e.touches[0].clientX;
+            origY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+            movement = false;
+            initialPinchDistance = getPinchDistance(e.touches[0], e.touches[1]);
+            lastPinchZoom = zoom;
+        }
+    }, { passive: false });
+
     canvas.addEventListener("touchmove", function (e) {
-        if (movement) {
+        if (e.touches.length === 1 && movement) {
             var deltaX = e.touches[0].clientX - origX;
             var deltaY = e.touches[0].clientY - origY;
             spinY += (deltaX * 0.5) % 360;
@@ -119,20 +144,34 @@ window.onload = function init() {
 
             origX = e.touches[0].clientX;
             origY = e.touches[0].clientY;
+        } else if (e.touches.length === 2 && initialPinchDistance) {
+            let currentPinchDistance = getPinchDistance(e.touches[0], e.touches[1]);
+
+            let pinchZoomFactor = currentPinchDistance / initialPinchDistance;
+
+            zoom = lastPinchZoom * pinchZoomFactor;
+
+            zoom = Math.max(Math.min(zoom, 100.0), 0.5);
+
+            e.preventDefault();
         }
-    });
+    }, { passive: false });
 
     canvas.addEventListener("touchend", function (e) {
-        movement = false;
-    });
+        if (e.touches.length < 2) {
+            initialPinchDistance = null;
+        }
+
+        if (e.touches.length === 0) {
+            movement = false;
+        }
+    }, { passive: false });
 
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
     });
 
     render();
-
-    setInterval(updateGrid, updateInterval);
 
     setCanvasSize(canvas);
 }
@@ -211,11 +250,10 @@ function render() {
 
     var aspectRatio = canvas.width / canvas.height;
     var fov = 45;
-    var near = 0.1;
-    var far = 100.0;
+    var near = 0.001;
+    var far = zoom + 6;
     var projectionMatrix = perspective(fov, aspectRatio, near, far);
-
-    var eye = vec3(0.0, 0.0, 25.0);
+    var eye = vec3(0.0, 0.0, zoom);
     var at = vec3(0.0, 0.0, 0.0);
     var up = vec3(0.0, 1.0, 0.0);
     var viewMatrix = lookAt(eye, at, up);
@@ -226,6 +264,11 @@ function render() {
     globalTransform = mult(globalTransform, rotateY(spinY));
 
     var currentTime = Date.now();
+
+    if (currentTime - lastUpdateTime > updateInterval) {
+        updateGrid();
+    }
+
 
     if (currentTime - lastUpdateTime < animationDuration) {
         var elapsed = (currentTime - lastUpdateTime) % animationDuration;
@@ -259,7 +302,7 @@ function countNeighbors(x, y, z) {
 }
 
 function updateGrid() {
-    prevGrid = copyGrid(grid);
+    prevGrid = grid;//copyGrid(grid);
 
     let newGrid = createEmptyGrid(gridSize);
 
@@ -308,18 +351,34 @@ function renderGrid(globalTransform, progress, rotation, animate) {
     }
 }
 
+
+// function easing(t) {
+//     const damping = 5.0;
+//     const stiffness = 5.0;
+//     return 1 - Math.pow(Math.E, -damping * t) * Math.cos(stiffness * t);
+// }
+
+
+function easing(t) {
+    return t * t;  // t^3 provides a smooth ease-in curve
+}
+
+
+
+
+
 function drawCube(x, y, z, globalTransform) {
-    let modelMatrix = mat4();
+    let mv = mat4();
 
     let spacing = 1.1;
     let centerOffset = (gridSize - 1) / 2;
-    modelMatrix = mult(modelMatrix, translate(
+    mv = mult(mv, translate(
         (x - centerOffset) * spacing,
         (y - centerOffset) * spacing,
         (z - centerOffset) * spacing
     ));
 
-    let transform = mult(globalTransform, modelMatrix);
+    let transform = mult(globalTransform, mv);
 
     gl.uniformMatrix4fv(matrixLoc, false, flatten(transform));
 
@@ -327,22 +386,24 @@ function drawCube(x, y, z, globalTransform) {
 }
 
 function drawAnimatedCube(x, y, z, globalTransform, scale, rotation) {
-    let modelMatrix = mat4();
+    let mv = mat4();
 
     let spacing = 1.1;
+
+    let easedScale = easing(scale);
     let centerOffset = (gridSize - 1) / 2;
-    modelMatrix = mult(modelMatrix, translate(
+    mv = mult(mv, translate(
         (x - centerOffset) * spacing,
         (y - centerOffset) * spacing,
         (z - centerOffset) * spacing
     ));
 
 
-    modelMatrix = mult(modelMatrix, rotateY(rotation * (180 / Math.PI)))
+    mv = mult(mv, rotateY(rotation * (180 / Math.PI)))
 
-    modelMatrix = mult(modelMatrix, scalem(scale * 0.95, scale * 0.95, scale * 0.95));
+    mv = mult(mv, scalem(easedScale * 0.95, easedScale * 0.95, easedScale * 0.95));
 
-    let finalTransform = mult(globalTransform, modelMatrix);
+    let finalTransform = mult(globalTransform, mv);
 
     gl.uniformMatrix4fv(matrixLoc, false, flatten(finalTransform));
 
@@ -363,6 +424,12 @@ function createEmptyGrid(size) {
     return grid;
 }
 
+
+function getPinchDistance(touch1, touch2) {
+    let dx = touch1.clientX - touch2.clientX;
+    let dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
 
 function setCanvasSize(canvas) {
     var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.8);
