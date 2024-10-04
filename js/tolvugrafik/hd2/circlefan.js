@@ -30,7 +30,7 @@ window.onload = function init() {
 
 
     var pointSlider = document.getElementById("point-slider");
-    pointSlider.style.width = canvas.width + "px";
+    pointSlider.style.width = Math.min(canvas.width, window.innerWidth * 0.9) + "px";
 
     pointSlider.addEventListener("input", function (event) {
         numCirclePoints = parseInt(event.target.value);
@@ -39,7 +39,7 @@ window.onload = function init() {
 
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
-        pointSlider.style.width = canvas.width + "px";  // Adjust slider width with the canvas
+        pointSlider.style.width = Math.min(canvas.width, window.innerWidth * 0.9) + "px";  // Adjust slider width with the canvas
         createCirclePoints();  // Recalculate and re-render after resize
     });
 
@@ -97,7 +97,7 @@ function render() {
 }
 
 function setCanvasSize(canvas) {
-    var size = Math.min(window.innerWidth*0.95, window.innerHeight*0.8);
+    var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.8);
     canvas.width = size;
     canvas.height = size;
     if (gl) {

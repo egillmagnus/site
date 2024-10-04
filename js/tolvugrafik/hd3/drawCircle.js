@@ -55,7 +55,7 @@ window.onload = function init() {
         render();
     });
 
-    speedSlider.style.width = canvas.width + "px";
+    speedSlider.style.width = Math.min(canvas.width, window.innerWidth * 0.9) + "px";
     canvasRes = vec2(canvas.width, canvas.height);
     gl.uniform2fv(gl.getUniformLocation(program, "resolution"), flatten(canvasRes));
 

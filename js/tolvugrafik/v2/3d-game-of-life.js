@@ -48,6 +48,11 @@ window.onload = function init() {
         navbar.classList.toggle("active");
     };
 
+    var speedSlider = document.getElementById("speed-slider");
+    speedSlider.addEventListener("input", function (event) {
+        updateInterval = parseInt(event.target.value);
+        animationDuration = Math.max(500, updateInterval * 2 / 5);
+    });
     colorCube();
 
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -169,11 +174,13 @@ window.onload = function init() {
 
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
+        speedSlider.style.width = Math.min(canvas.width, window.innerWidth * 0.9) + "px";
     });
 
     render();
 
     setCanvasSize(canvas);
+    speedSlider.style.width = Math.min(canvas.width, window.innerWidth * 0.9) + "px";
 }
 
 function colorCube() {

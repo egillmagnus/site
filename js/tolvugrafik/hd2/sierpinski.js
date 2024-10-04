@@ -43,7 +43,7 @@ window.onload = function init() {
 
 
     var pointSlider = document.getElementById("point-slider");
-    pointSlider.style.width = canvas.width + "px";
+    pointSlider.style.width = Math.min(canvas.width, window.innerWidth * 0.9) + "px";
 
     pointSlider.addEventListener("input", function (event) {
         NumPoints = parseInt(event.target.value);
@@ -52,15 +52,15 @@ window.onload = function init() {
 
     window.addEventListener("resize", function () {
         setCanvasSize(canvas);
-        pointSlider.style.width = canvas.width + "px";
-        recalculatePoints(); 
+        pointSlider.style.width = Math.min(canvas.width, window.innerWidth * 0.9) + "px";
+        recalculatePoints();
     });
 
     recalculatePoints();
 };
 
 function setCanvasSize(canvas) {
-    var size = Math.min(window.innerWidth*0.95, window.innerHeight*0.8);
+    var size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.8);
     canvas.width = size;
     canvas.height = size;
     if (gl) {
@@ -70,9 +70,9 @@ function setCanvasSize(canvas) {
 
 function recalculatePoints() {
     var vertices = [
-        vec2( -0.9, -0.9 ),
-        vec2(    0,  0.9 ),
-        vec2(  0.9, -0.9 )
+        vec2(-0.9, -0.9),
+        vec2(0, 0.9),
+        vec2(0.9, -0.9)
     ];
 
     var p;
@@ -100,7 +100,7 @@ function recalculatePoints() {
                 j = Math.floor(Math.random() * 2) + 1;
             }
         } else {
-            j = Math.floor(Math.random() * 3); 
+            j = Math.floor(Math.random() * 3);
         }
 
         p = add(points[i], vertices[j]);
