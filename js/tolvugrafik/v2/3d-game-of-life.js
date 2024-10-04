@@ -147,15 +147,9 @@ window.onload = function init() {
         } else if (e.touches.length === 2 && initialPinchDistance) {
             let currentPinchDistance = getPinchDistance(e.touches[0], e.touches[1]);
 
-            let pinchZoomFactor = currentPinchDistance / initialPinchDistance;
+            let pinchZoomFactor = initialPinchDistance / currentPinchDistance;
 
-            let deltaZoom = -0.5
-
-            if (pinchZoomFactor < 1) {
-                deltaZoom = 0.5;
-            }
-
-            zoom = lastPinchZoom + (deltaZoom * pinchZoomFactor);
+            zoom = lastPinchZoom * inchZoomFactor;
 
             zoom = Math.max(Math.min(zoom, 100.0), 0.5);
 
