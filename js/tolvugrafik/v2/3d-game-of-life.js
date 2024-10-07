@@ -50,8 +50,13 @@ window.onload = function init() {
 
     var speedSlider = document.getElementById("speed-slider");
     speedSlider.addEventListener("input", function (event) {
-        updateInterval = parseInt(event.target.value);
+        var newUpdateInterval = parseInt(event.target.value);
+
+        var ratio = newUpdateInterval / updateInterval
+        updateInterval = newUpdateInterval;
         animationDuration = Math.max(500, updateInterval * 2 / 5);
+        var timeSinceUpdate = Date.now() - lastUpdateTime;
+        timeSinceUpdate = Date.now() - (timeSinceUpdate * ratio)
     });
     colorCube();
 
@@ -245,7 +250,7 @@ function render() {
     var aspectRatio = canvas.width / canvas.height;
     var fov = 45;
     var near = 0.001;
-    var far = zoom + 6;
+    var far = zoom + 8;
     var projectionMatrix = perspective(fov, aspectRatio, near, far);
     var eye = vec3(0.0, 0.0, zoom);
     var at = vec3(0.0, 0.0, 0.0);
