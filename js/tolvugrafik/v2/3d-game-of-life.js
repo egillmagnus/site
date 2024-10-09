@@ -4,6 +4,8 @@ var gl;
 var points = [];
 var colors = [];
 
+var nEmptyIterations = 0;
+
 var movement = false;
 var spinX = 30;
 var spinY = 45;
@@ -35,9 +37,7 @@ window.onload = function init() {
 
     const resetButton = document.getElementById('reset-button');
     resetButton.addEventListener('click', function () {
-        grid = createGrid(gridSize);
-        prevGrid = createEmptyGrid(gridSize);
-        lastUpdateTime = Date.now();
+        resetGrid();
     });
 
     let menuicon = document.querySelector("#menu-icon");
@@ -302,7 +302,7 @@ function countNeighbors(x, y, z) {
 
 function updateGrid() {
     prevGrid = grid;
-
+    var empty = true;
     let newGrid = createEmptyGrid(gridSize);
 
     for (let x = 0; x < gridSize; x++) {
@@ -313,12 +313,14 @@ function updateGrid() {
                 if (grid[x][y][z] === 1) {
                     if (neighbors >= 5 && neighbors <= 7) {
                         newGrid[x][y][z] = 1;
+                        empty = false;
                     } else {
                         newGrid[x][y][z] = 0;
                     }
                 } else {
                     if (neighbors === 6) {
                         newGrid[x][y][z] = 1;
+                        empty = false;
                     } else {
                         newGrid[x][y][z] = 0;
                     }
@@ -327,8 +329,16 @@ function updateGrid() {
         }
     }
 
+    if (empty) {
+        nEmptyIterations++;
+    }
+
+
     grid = newGrid;
     lastUpdateTime = Date.now();
+    if (nEmptyIterations >= 5) {
+        resetGrid();
+    }
 }
 
 function renderGrid(globalTransform, progress, rotation, animate) {
@@ -414,6 +424,13 @@ function createEmptyGrid(size) {
         }
     }
     return grid;
+}
+
+function resetGrid() {
+    grid = createGrid(gridSize);
+    prevGrid = createEmptyGrid(gridSize);
+    lastUpdateTime = Date.now();
+    nEmptyIterations = 0;
 }
 
 
