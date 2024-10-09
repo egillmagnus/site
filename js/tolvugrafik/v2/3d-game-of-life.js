@@ -351,15 +351,8 @@ function renderGrid(globalTransform, progress, rotation, animate) {
 }
 
 
-// function easing(t) {
-//     const damping = 5.0;
-//     const stiffness = 5.0;
-//     return 1 - Math.pow(Math.E, -damping * t) * Math.cos(stiffness * t);
-// }
-
-
 function easing(t) {
-    return t * t;  // t^3 provides a smooth ease-in curve
+    return t * t;
 }
 
 
