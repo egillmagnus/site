@@ -12,6 +12,10 @@ var spinY = 45;
 var origX;
 var origY;
 
+var normals = [];
+
+var program;
+
 var gridSize = 10;
 var grid = createGrid(gridSize);
 var lastUpdateTime = Date.now();
@@ -68,16 +72,8 @@ window.onload = function init() {
     //
     //  Load shaders and initialize attribute buffers
     //
-    var program = initShaders(gl, "vertex-shader", "fragment-shader");
+    program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
-
-    var cBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
-
-    var vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
 
     var vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
@@ -86,6 +82,29 @@ window.onload = function init() {
     var vPosition = gl.getAttribLocation(program, "vPosition");
     gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
+
+    var nBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW);
+
+    var vNormal = gl.getAttribLocation(program, "vNormal");
+    gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal);
+
+    // lighting 
+    var lightPosLoc = gl.getUniformLocation(program, "lightPos");
+    var viewPosLoc = gl.getUniformLocation(program, "viewPos");
+    var ambientColorLoc = gl.getUniformLocation(program, "ambientColor");
+    var diffuseColorLoc = gl.getUniformLocation(program, "diffuseColor");
+    var specularColorLoc = gl.getUniformLocation(program, "specularColor");
+    var shininessLoc = gl.getUniformLocation(program, "shininess");
+
+    gl.uniform3fv(lightPosLoc, flatten(vec3(10.0, 10.0, 10.0)));
+    gl.uniform3fv(viewPosLoc, flatten(vec3(0.0, 0.0, zoom)));
+    gl.uniform3fv(ambientColorLoc, flatten(vec3(0.1, 0.1, 0.1)));
+    gl.uniform3fv(diffuseColorLoc, flatten(vec3(0.0, 1.0, 0.0)));
+    gl.uniform3fv(specularColorLoc, flatten(vec3(0.5, 1.0, 0.5)));
+    gl.uniform1f(shininessLoc, 32.0);
 
     matrixLoc = gl.getUniformLocation(program, "transform");
 
@@ -209,23 +228,19 @@ function quad(a, b, c, d) {
         vec3(0.5, -0.5, -0.5)
     ];
 
-    var vertexColors = [
-        [0.0, 0.0, 0.0, 1.0],  // black
-        [1.0, 0.0, 0.0, 1.0],  // red
-        [1.0, 1.0, 0.0, 1.0],  // yellow
-        [0.0, 1.0, 0.0, 1.0],  // green
-        [0.0, 0.0, 1.0, 1.0],  // blue
-        [1.0, 0.0, 1.0, 1.0],  // magenta
-        [0.0, 1.0, 1.0, 1.0],  // cyan
-        [1.0, 1.0, 1.0, 1.0]   // white
-    ];
+    var normal = cross(
+        subtract(vertices[b], vertices[a]),
+        subtract(vertices[c], vertices[b])
+    );
 
-    // Vertex color assigned by the index of the face
+    normal = normalize(normal);
+
     var indices = [a, b, c, a, c, d];
+
 
     for (var i = 0; i < indices.length; ++i) {
         points.push(vertices[indices[i]]);
-        colors.push(vertexColors[a]);
+        normals.push(normal);
     }
 }
 
@@ -257,10 +272,14 @@ function render() {
     var up = vec3(0.0, 1.0, 0.0);
     var viewMatrix = lookAt(eye, at, up);
 
+    var viewPosLoc = gl.getUniformLocation(program, "viewPos");
+    gl.uniform3fv(viewPosLoc, flatten(eye));
+
     var globalTransform = mult(projectionMatrix, viewMatrix);
 
     globalTransform = mult(globalTransform, rotateX(spinX));
     globalTransform = mult(globalTransform, rotateY(spinY));
+
 
     var currentTime = Date.now();
 
@@ -364,8 +383,6 @@ function renderGrid(globalTransform, progress, rotation, animate) {
 function easing(t) {
     return t * t;
 }
-
-
 
 
 
