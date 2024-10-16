@@ -24,8 +24,6 @@ let initialPinchDistance = null;
 let lastPinchZoom = zoom;
 
 var zoom = 25.0;
-
-
 var prevGrid = createEmptyGrid(gridSize);
 
 var animationDuration = 1000;
