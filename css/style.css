@@ -51,6 +51,11 @@ span {
 }
 
 
+h3 {
+  font-size: 2rem;
+  font-weight: 500;
+}
+
 .header {
   position: fixed;
   top: 0;
