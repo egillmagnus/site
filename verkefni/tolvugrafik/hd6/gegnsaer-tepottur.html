@@ -13,72 +13,76 @@
     <link rel="stylesheet" href="/css/verkefni.css">
     <link rel="stylesheet" href="/css/tolvugrafik/main.css">
     <script id="vertex-shader" type="x-shader/x-vertex">
-    attribute vec4 vPosition;
-    attribute vec4 vNormal;
-    varying vec3 N, L, E;
-    uniform mat4 modelViewMatrix;
-    uniform mat4 projectionMatrix;
-    uniform vec4 lightPosition;
-    uniform mat3 normalMatrix;
-
-    void main()
-    {
-        vec3 pos = (modelViewMatrix * vPosition).xyz;
-
-        // check for directional light
-        if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
-        else L = normalize( lightPosition.xyz - pos );
-
-        E =  -normalize(pos);
-        N = normalize( normalMatrix*vNormal.xyz);
-
-        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-
-    }
+        attribute vec4 vPosition;
+        attribute vec4 vNormal;
+        varying vec3 N, L, E;
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        uniform vec4 lightPosition;
+        uniform mat3 normalMatrix;
+        
+        void main()
+        {
+            vec3 pos = (modelViewMatrix * vPosition).xyz;
+        
+            // check for directional light
+            if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
+            else L = normalize( lightPosition.xyz - pos );
+        
+            E =  -normalize(pos);
+            N = normalize( normalMatrix*vNormal.xyz);
+        
+            gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+        
+        }
 
   </script>
 
     <script id="fragment-shader" type="x-shader/x-fragment">
-    precision mediump float;
+        precision mediump float;
 
-    uniform vec4 ambientProduct;
-    uniform vec4 diffuseProduct;
-    uniform vec4 specularProduct;
-    uniform float shininess;
-    varying vec3 N, L, E;
-
-    void main()
-    {
-        vec4 fColor;
-
-        vec3 H = normalize( normalize(L) + normalize(E) );
-        vec4 ambient = ambientProduct;
-
-        float Kd = max( dot(normalize(L), normalize(N)), 0.0 );
-        vec4  diffuse = Kd*diffuseProduct;
-
-        float Ks = pow( max(dot(normalize(N), H), 0.0), shininess );
-        vec4  specular = Ks * specularProduct;
-
-        if( dot(normalize(L), normalize(N)) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
-
-        fColor = ambient + diffuse +specular;
-        fColor.a = 1.0;
-
-        gl_FragColor = fColor;
-    }
+        uniform vec4 ambientProduct;
+        uniform vec4 diffuseProduct;
+        uniform vec4 specularProduct;
+        uniform float shininess;
+        uniform float discardThreshold;
+        
+        varying vec3 N, L, E;
+        
+        void main()
+        {
+            vec4 fColor;
+        
+            vec3 H = normalize( L + E );
+        
+            vec4 ambient = ambientProduct;
+            vec4 diffuse = max( dot(L, N), 0.0 ) * diffuseProduct;
+            vec4 specular = specularProduct * pow( max(dot(N, H), 0.0), shininess );
+        
+            if( dot(L, N) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
+        
+            vec4 color = ambient + diffuse + specular;
+            color.a = 1.0;
+        
+            if( length(color) > discardThreshold )
+                discard;
+            else
+                gl_FragColor = color;
+        }
+        
 
   </script>
     <script type="text/javascript" src="/js/tolvugrafik/Common/MV.js"></script>
     <script type="text/javascript" src="/js/tolvugrafik/Common/webgl-utils.js"></script>
     <script type="text/javascript" src="/js/tolvugrafik/Common/initShaders.js"></script>
+    <script type="text/javascript" src="/js/tolvugrafik/Common/teapotData.js"></script>
     <script type="text/javascript" src="https://unpkg.com/default-passive-events"></script>
-    <script src="/js/tolvugrafik/hd6/billy-phong.js"></script>
+    <script src="/js/tolvugrafik/hd6/gegnsaer-tepottur.js"></script>
 </head>
 
 <body>
     <header class="header">
-        <a href="#" class="logo" id="log">Billy <span>Phong</span></a>
+        <a href="#" class="logo" id="log">Gegnsær <span>tepottur</span></a>
         <i class='bx bx-menu' id="menu-icon"></i>
         <nav class="navbar">
             <a href="/#heim">Heim</a>
