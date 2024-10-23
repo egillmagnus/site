@@ -63,8 +63,9 @@
         
             vec4 color = ambient + diffuse + specular;
             color.a = 1.0;
-        
-            if( length(color) > discardThreshold )
+            // length(color) alltaf > 1 því .a er 1, 
+            // látum threshold max vera 3 og tokum lengd af color.rgb
+            if( length(color.rgb) > discardThreshold )
                 discard;
             else
                 gl_FragColor = color;

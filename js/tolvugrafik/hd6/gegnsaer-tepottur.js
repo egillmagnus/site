@@ -110,7 +110,7 @@ window.onload = function init() {
     window.addEventListener("keydown", function (e) {
         switch (e.key) {
             case "ArrowUp":
-                discardThreshold = Math.min(discardThreshold + 0.1, 4.0);
+                discardThreshold = Math.min(discardThreshold + 0.1, 3.0);
                 updateDiscardThreshold();
                 break;
             case "ArrowDown":
