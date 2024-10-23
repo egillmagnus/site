@@ -200,7 +200,7 @@ window.onload = function init() {
         e.preventDefault()
 
         zDist = Math.max(Math.min(zDist, -0.1), -50.0);
-    });
+    }, { passive: false });
 
     setCanvasSize(canvas);
 
