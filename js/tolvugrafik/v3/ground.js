@@ -12,22 +12,19 @@ function initGroundBuffers(gl) {
     const cellWidth = 1.0;
     const cellDepth = 1.0;
     const groundLevel = 0.0; // Y = 0
-    const wallHeight = 0.5;
+    const wallHeight = 1;
 
     const gridWidth = 14;
     const gridDepth = 13;
 
     const colors = {
-        grass: [0.0, 0.5, 0.0, 1.0],      // Green
-        road: [0.2, 0.2, 0.2, 1.0],       // Dark gray
-        water: [0.0, 0.0, 0.8, 1.0],      // Blue
-        finish: [0.7, 0.7, 0.0, 1.0],     // Yellow for finish line
-        wall: [0.0, 0.6, 0.0, 1.0],       // Green for walls
+        grass: [0.0, 0.5, 0.0, 1.0],
+        road: [0.2, 0.2, 0.2, 1.0],
+        water: [0.0, 0.0, 0.8, 1.0],
+        wall: [0.0, 0.6, 0.0, 1.0],
     };
 
-    // Helper function to add a cell in X-Z plane
     function addCell(x, z, color) {
-        // Compute the normal for the ground plane (0, 1, 0) since it's flat on the XZ plane
         const normal = [0.0, 1.0, 0.0];
 
         // Define the vertices
@@ -40,10 +37,8 @@ function initGroundBuffers(gl) {
             x, groundLevel, z + cellDepth
         );
 
-        // Add normals for each vertex (same normal for all vertices of the face)
         for (let i = 0; i < 6; i++) groundNormals.push(...normal);
 
-        // Add colors (same as before)
         for (let i = 0; i < 6; i++) groundColors.push(...color);
     }
 
@@ -76,14 +71,14 @@ function initGroundBuffers(gl) {
     }
 
     // Finish row
+    count = 0;
     for (let x = startX; x < startX + gridWidth; x += cellWidth) {
-        if (x % 2 == 0) {
-            console.log(x);
+        if (count < 2) {
             addCell(x, startZ + 12 * cellDepth, colors.water);
+            count++
         } else {
-            console.log(x);
-            addCell(x, startZ + 12 * cellDepth, colors.finish);
-
+            addCell(x, startZ + 12 * cellDepth, colors.grass);
+            count = 0;
         }
     }
 

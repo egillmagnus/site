@@ -1,7 +1,7 @@
 
 // Global variables
 let gl, program;
-let frogPosition = { x: -0.5, y: -6 }; // Start position at bottom middle (0, -6)
+let frogPosition = { x: -0.5, z: -6 };
 let matrixLoc;
 let isFrogView = false; // Flag to toggle views
 
@@ -20,6 +20,8 @@ var viewMatrix;
 var lastMovementDir = 0;
 
 let modelsLoaded = 0;
+
+let dead = false;
 
 
 let cars = [];
@@ -56,6 +58,7 @@ const lightSpecular = vec3(1.0, 1.0, 1.0);
 
 var frogBuffers;
 var carBuffers;
+var flyBuffers;
 
 var canvas;
 
@@ -123,6 +126,7 @@ window.onload = function init() {
     vNormal = gl.getAttribLocation(program, 'vNormal');
     vColor = gl.getAttribLocation(program, 'vColor');
 
+
     // Set up projection matrix (perspective)
     const aspect = canvas.width / canvas.height;
     const fov = 90;
@@ -135,12 +139,16 @@ window.onload = function init() {
     setCanvasSize(canvas);
     // Key handlers for movement
     window.addEventListener("keydown", (event) => {
+
+        if (dead && event.key !== "v") {
+            return;
+        }
         switch (event.key) {
             case "ArrowUp":
                 if (isFrogView) {
                     moveInFrogView(0);
                 } else {
-                    frogPosition.y += 1;
+                    frogPosition.z += 1;
                     lastMovementDir = 0;
                 }
                 event.preventDefault();
@@ -149,7 +157,7 @@ window.onload = function init() {
                 if (isFrogView) {
                     moveInFrogView(2);
                 } else {
-                    frogPosition.y -= 1;
+                    frogPosition.z -= 1;
                     lastMovementDir = 2;
                 }
                 event.preventDefault();
@@ -181,7 +189,7 @@ window.onload = function init() {
         }
         console.log(frogPosition.x);
         frogPosition.x = Math.max(Math.min(frogPosition.x, 6.5), -6.5);
-        frogPosition.y = Math.max(Math.min(frogPosition.y, 6), -6);
+        frogPosition.z = Math.max(Math.min(frogPosition.z, 6), -6);
     });
 
     // Mouse handlers for rotating the view in frog perspective
@@ -204,15 +212,16 @@ window.onload = function init() {
         }
     });
 
+    initializeThings();
+
 
     loadFrogModel(gl, '/verkefni/tolvugrafik/v3/froggy.obj', function (buffers) {
         console.log("loaded frog model");
         frogBuffers = buffers;
 
-        if (modelsLoaded) {
+        modelsLoaded++;
+        if (modelsLoaded === 3) {
             render();
-        } else {
-            modelsLoaded++;
         }
 
     });
@@ -221,7 +230,16 @@ window.onload = function init() {
         console.log("Car model loaded");
         carBuffers = buffers;
         modelsLoaded++;
-        if (modelsLoaded === 2) {
+        if (modelsLoaded === 3) {
+            render();
+        }
+    });
+
+    loadFlyModel(gl, '/verkefni/tolvugrafik/v3/fly.obj', function (buffers) {
+        console.log("Car model loaded");
+        flyBuffers = buffers;
+        modelsLoaded++;
+        if (modelsLoaded === 3) {
             render();
         }
     });
@@ -238,11 +256,11 @@ function moveInFrogView(moveDir) {
 
 
     if (newDir == 0) {
-        frogPosition.y += 1;
+        frogPosition.z += 1;
     } else if (newDir == 1) {
         frogPosition.x += 1;
     } else if (newDir == 2) {
-        frogPosition.y -= 1;
+        frogPosition.z -= 1;
     } else if (newDir == 3) {
         frogPosition.x -= 1;
     }
@@ -251,6 +269,17 @@ function moveInFrogView(moveDir) {
     lastMovementDir = newDir;
 }
 
+function initializeThings() {
+    initializeCars();
+
+}
+
+
+function initializeCars() {
+    for (var i = 0; i < 4 * 60; i++) {
+        updateCars();
+    }
+}
 
 
 
@@ -267,7 +296,7 @@ function render() {
 
     if (isFrogView) {
 
-        var frogTranslation = translate(-frogPosition.x, -0.4, -frogPosition.y);
+        var frogTranslation = translate(-frogPosition.x, -0.4, -frogPosition.z);
         const frogRotation = rotateY(-spinY);
 
         viewMatrix = mult(frogRotation, frogTranslation);
@@ -288,10 +317,10 @@ function render() {
 
         viewMatrix = lookAt(eye, at, up);
 
-        const left = -8.0;
-        const right = 8.0;
-        const bottom = -7.5;
-        const top = 7.5;
+        const left = -7.0;
+        const right = 7.0;
+        const bottom = -6.5;
+        const top = 6.5;
         const near = 0.1;
         const far = 100.0;
         projectionMatrix = ortho(left, right, bottom, top, near, far);
@@ -320,20 +349,37 @@ function render() {
 }
 
 
+function killed() {
+    if (dead) return;
+
+    dead = true;
+
+
+    setTimeout(function () {
+        frogPosition = { x: -0.5, z: -6 };
+        lastMovementDir = 0;
+        spinY = (180 + 90 * lastMovementDir) % 360;
+
+        dead = false;
+
+    }, 1000);
+}
+
+
 function updateElements() {
     updateCars();
 
 }
 
 function updateCars() {
-
-
     lanes.forEach(lane => {
         let carsInLane = cars.filter(car => car.lane === lane.z);
-        if (carsInLane.length < 3 && Math.random() < 0.05) {
-            // Spawn a new car in this lane
+
+        let canSpawn = !carsInLane.some(car => (car.x * -1 * lane.direction) > 4);
+
+        if (canSpawn && carsInLane.length < 4 && Math.random() < 0.02) {
             let car = {
-                x: (lane.direction === 1) ? -10 : 10,
+                x: (lane.direction === 1) ? -8 : 8,
                 lane: lane.z,
                 speed: difficulty * lane.direction,
             };
@@ -344,8 +390,14 @@ function updateCars() {
     for (let i = cars.length - 1; i >= 0; i--) {
         let car = cars[i];
         car.x += car.speed;
-        if (car.x < -10 || car.x > 10) {
+        if (car.x < -8 || car.x > 8) {
             cars.splice(i, 1);
+        } else {
+            if (car.lane === frogPosition.z) {
+                if (Math.abs(car.x - frogPosition.x) <= 1.2) {
+                    killed();
+                }
+            }
         }
     }
 }
@@ -357,6 +409,43 @@ function drawElements() {
     drawGround();
     drawFrog();
     drawCars();
+    drawFly();
+}
+
+
+function drawFly() {
+    if (!flyBuffers) return;
+
+    gl.uniform3fv(uMaterialAmbientLoc, [0.8, 0.8, 0.0]);
+    gl.uniform3fv(uMaterialSpecularLoc, [0.5, 0.5, 0.0]);
+    gl.uniform1f(uShininessLoc, 50.0);
+
+    let modelMatrix = mat4();
+    modelMatrix = mult(modelMatrix, translate(0.0, 0.2, 0.0));
+    modelMatrix = mult(modelMatrix, scalem(0.1, 0.1, 0.1));
+    modelMatrix = mult(modelMatrix, rotateY(-90));
+    modelMatrix = mult(modelMatrix, rotateX(-90));
+
+
+    gl.uniformMatrix4fv(uModelMatrixLoc, false, flatten(modelMatrix));
+
+    const modelViewMatrix = mult(viewMatrix, modelMatrix);
+    const normalMatrixFly = normalMatrix(modelViewMatrix, true);
+    gl.uniformMatrix3fv(uNormalMatrixLoc, false, flatten(normalMatrixFly));
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, flyBuffers.position);
+    gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, flyBuffers.normal);
+    gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, flyBuffers.color);
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+
+    gl.drawArrays(gl.TRIANGLES, 0, flyBuffers.vertexCount);
 }
 
 
@@ -388,7 +477,7 @@ function drawFrog() {
 
     let modelMatrix = mat4();
 
-    modelMatrix = mult(modelMatrix, translate(frogPosition.x, 0.2, frogPosition.y));
+    modelMatrix = mult(modelMatrix, translate(frogPosition.x, 0.2, frogPosition.z));
 
     modelMatrix = mult(modelMatrix, rotateY(lastMovementDir * 90));
 
