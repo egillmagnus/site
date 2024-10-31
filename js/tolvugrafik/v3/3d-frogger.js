@@ -82,16 +82,13 @@ window.onload = function init() {
         return;
     }
 
-    // Initialize WebGL settings
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.2, 0.2, 0.3, 1.0); // Background color
+    gl.clearColor(0.38, 0.718, 1, 1);
     gl.enable(gl.DEPTH_TEST);
 
-    // Load shaders and initialize program
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
-    // Uniform location for transformation matrix
     matrixLoc = gl.getUniformLocation(program, "transform");
 
     const groundData = initGroundBuffers(gl);
@@ -127,7 +124,6 @@ window.onload = function init() {
     vColor = gl.getAttribLocation(program, 'vColor');
 
 
-    // Set up projection matrix (perspective)
     const aspect = canvas.width / canvas.height;
     const fov = 90;
     const near = 0.1;
@@ -135,9 +131,7 @@ window.onload = function init() {
     const projectionMatrix = perspective(fov, aspect, near, far);
     gl.uniformMatrix4fv(uProjectionMatrixLoc, false, flatten(projectionMatrix));
 
-    // Set canvas size and start rendering loop
     setCanvasSize(canvas);
-    // Key handlers for movement
     window.addEventListener("keydown", (event) => {
 
         if (dead && event.key !== "v") {
@@ -210,6 +204,10 @@ window.onload = function init() {
             origX = e.offsetX;
             origY = e.offsetY;
         }
+    });
+
+    window.addEventListener("resize", function () {
+        setCanvasSize(canvas);
     });
 
     initializeThings();
