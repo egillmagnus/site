@@ -65,12 +65,12 @@ void main() {
     vec3 viewDir = normalize(uCameraPosition - fPosition);
 
     // Ambient component
-    vec3 ambient = uLightAmbient * uMaterialAmbient;
+    vec3 ambient = fColor.rgb * uMaterialAmbient * 2.0;
+
 
     // Diffuse component
     float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = uLightDiffuse * fColor.rgb * diff;  // Use vertex color as diffuse color
-
+    vec3 diffuse = uLightDiffuse * fColor.rgb * diff;
     // Specular component
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = 0.0;
@@ -79,6 +79,7 @@ void main() {
     vec3 specular = uLightSpecular * uMaterialSpecular * spec;
 
     vec3 color = ambient + diffuse + specular;
+
     gl_FragColor = vec4(color, fColor.a);  // Use alpha from vertex color
 }
 
@@ -90,6 +91,8 @@ void main() {
     <script type="text/javascript" src="/js/tolvugrafik/v3/ground.js"></script>
     <script src="/js/tolvugrafik/v3/3d-frogger.js"></script>
     <script src="/js/tolvugrafik/v3/frog.js"></script>
+    <script src="/js/tolvugrafik/v3/car.js"></script>
+    <script src="/js/tolvugrafik/v3/objUtils.js"></script>
 </head>
 
 <body>

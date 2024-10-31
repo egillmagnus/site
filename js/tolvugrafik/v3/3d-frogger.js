@@ -19,6 +19,20 @@ var viewMatrix;
 
 var lastMovementDir = 0;
 
+let modelsLoaded = 0;
+
+
+let cars = [];
+let difficulty = 0.05;
+let lanes = [
+    { z: -5, direction: -1 },
+    { z: -4, direction: 1 },
+    { z: -3, direction: -1 },
+    { z: -2, direction: 1 },
+    { z: -1, direction: -1 },
+];
+
+
 
 var uModelMatrixLoc
 var uViewMatrixLoc
@@ -34,13 +48,14 @@ var uMaterialSpecularLoc
 var uShininessLoc
 var uCameraPositionLoc
 
-const lightPosition = vec3(0.0, 5.0, 15.0);
+const lightPosition = vec3(10.0, 20.0, 200.0);
 const lightAmbient = vec3(0.7, 0.7, 0.7);
 const lightDiffuse = vec3(0.9, 0.9, 0.9);
 const lightSpecular = vec3(1.0, 1.0, 1.0);
 
 
 var frogBuffers;
+var carBuffers;
 
 var canvas;
 
@@ -160,10 +175,11 @@ window.onload = function init() {
             case "v": // Toggle view
                 console.log("Switching view");
                 isFrogView = !isFrogView;
+                spinY = (180 + 90 * lastMovementDir) % 360;
                 event.preventDefault();
                 break;
         }
-
+        console.log(frogPosition.x);
         frogPosition.x = Math.max(Math.min(frogPosition.x, 6.5), -6.5);
         frogPosition.y = Math.max(Math.min(frogPosition.y, 6), -6);
     });
@@ -192,7 +208,22 @@ window.onload = function init() {
     loadFrogModel(gl, '/verkefni/tolvugrafik/v3/froggy.obj', function (buffers) {
         console.log("loaded frog model");
         frogBuffers = buffers;
-        render();
+
+        if (modelsLoaded) {
+            render();
+        } else {
+            modelsLoaded++;
+        }
+
+    });
+
+    loadCarModel(gl, '/verkefni/tolvugrafik/v3/car.obj', function (buffers) {
+        console.log("Car model loaded");
+        carBuffers = buffers;
+        modelsLoaded++;
+        if (modelsLoaded === 2) {
+            render();
+        }
     });
 
 };
@@ -228,31 +259,45 @@ function render() {
 
     let projectionMatrix;
     const aspect = canvas.width / canvas.height;
-    const near = 0.1;
+    const near = 0.01;
     const far = 100.0;
+
+    var transformedLightPos;
 
 
     if (isFrogView) {
 
-        const frogTranslation = translate(-frogPosition.x, -0.5, -frogPosition.y);
+        var frogTranslation = translate(-frogPosition.x, -0.4, -frogPosition.y);
         const frogRotation = rotateY(-spinY);
 
         viewMatrix = mult(frogRotation, frogTranslation);
 
-        projectionMatrix = perspective(90, aspect, near, far);
+        viewMatrix = mult(translate(0, 0, 0.2), viewMatrix);
+
+        projectionMatrix = perspective(120, aspect, near, far);
+
 
         const eye = vec3(0.0, 0.5, 0.0);
         gl.uniform3fv(uCameraPositionLoc, flatten(eye));
+        transformedLightPos = mult(viewMatrix, vec4(lightPosition, 0));
     } else {
         // Default view
-        const eye = vec3(frogPosition.x, 15.0, frogPosition.y - 1);
-        const at = vec3(frogPosition.x, 0.0, frogPosition.y);
+        const eye = vec3(0.0, 15.0, 0.0);
+        const at = vec3(0.0, 0.0, 0.0);
         const up = vec3(0.0, 0.0, 1.0);
 
         viewMatrix = lookAt(eye, at, up);
-        projectionMatrix = perspective(45, aspect, near, far);
+
+        const left = -8.0;
+        const right = 8.0;
+        const bottom = -7.5;
+        const top = 7.5;
+        const near = 0.1;
+        const far = 100.0;
+        projectionMatrix = ortho(left, right, bottom, top, near, far);
 
         gl.uniform3fv(uCameraPositionLoc, flatten(eye));
+        transformedLightPos = mult(mat4(), vec4(lightPosition, 0));
     }
 
     gl.uniformMatrix4fv(uViewMatrixLoc, false, flatten(viewMatrix));
@@ -261,13 +306,48 @@ function render() {
     const modelMatrix = mat4();
     gl.uniformMatrix4fv(uModelMatrixLoc, false, flatten(modelMatrix));
 
+    gl.uniform3fv(uLightPositionLoc, flatten(vec3(transformedLightPos[0], transformedLightPos[1], transformedLightPos[2])));
+
     const modelViewMatrix = mult(viewMatrix, modelMatrix);
     const normalMatrix1 = normalMatrix(modelViewMatrix, true);
     gl.uniformMatrix3fv(uNormalMatrixLoc, false, flatten(normalMatrix1));
 
+    updateElements();
+
     drawElements();
 
     requestAnimationFrame(render);
+}
+
+
+function updateElements() {
+    updateCars();
+
+}
+
+function updateCars() {
+
+
+    lanes.forEach(lane => {
+        let carsInLane = cars.filter(car => car.lane === lane.z);
+        if (carsInLane.length < 3 && Math.random() < 0.05) {
+            // Spawn a new car in this lane
+            let car = {
+                x: (lane.direction === 1) ? -10 : 10,
+                lane: lane.z,
+                speed: difficulty * lane.direction,
+            };
+            cars.push(car);
+        }
+    });
+
+    for (let i = cars.length - 1; i >= 0; i--) {
+        let car = cars[i];
+        car.x += car.speed;
+        if (car.x < -10 || car.x > 10) {
+            cars.splice(i, 1);
+        }
+    }
 }
 
 
@@ -276,6 +356,7 @@ function render() {
 function drawElements() {
     drawGround();
     drawFrog();
+    drawCars();
 }
 
 
@@ -343,6 +424,60 @@ function drawFrogModel(gl, buffers) {
     gl.enableVertexAttribArray(vColor);
 
     gl.drawArrays(gl.TRIANGLES, 0, buffers.vertexCount);
+}
+
+
+function drawCars() {
+    // Set material properties common to all cars
+    gl.uniform3fv(uMaterialAmbientLoc, [0.2, 0.2, 0.2]);
+    gl.uniform3fv(uMaterialSpecularLoc, [0.5, 0.5, 0.5]);
+    gl.uniform1f(uShininessLoc, 30.0);
+
+    // Draw each car
+    cars.forEach(car => drawCar(car));
+}
+
+function drawCar(car) {
+    if (!carBuffers) return; // Ensure the buffers are loaded
+
+    gl.uniform3fv(uMaterialAmbientLoc, [0.2, 0.2, 0.2]);
+    gl.uniform3fv(uMaterialSpecularLoc, [0.5, 0.5, 0.5]);
+    gl.uniform1f(uShininessLoc, 30.0);
+
+    let modelMatrix = mat4();
+
+    // Apply transformations to position the car
+    modelMatrix = mult(modelMatrix, translate(car.x, 0.0, car.lane));
+    modelMatrix = mult(modelMatrix, scalem(0.4, 0.4, 0.4));
+
+    // If the car is moving left (-x direction), rotate it by 180 degrees
+    if (car.speed < 0) {
+        modelMatrix = mult(modelMatrix, rotateY(-90));
+    } else {
+        modelMatrix = mult(modelMatrix, rotateY(90));
+    }
+
+    gl.uniformMatrix4fv(uModelMatrixLoc, false, flatten(modelMatrix));
+
+    // Compute normal matrix
+    const modelViewMatrix = mult(viewMatrix, modelMatrix);
+    const normalMatrixCar = normalMatrix(modelViewMatrix, true);
+    gl.uniformMatrix3fv(uNormalMatrixLoc, false, flatten(normalMatrixCar));
+
+    // Bind buffers and draw the car
+    gl.bindBuffer(gl.ARRAY_BUFFER, carBuffers.position);
+    gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, carBuffers.normal);
+    gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, carBuffers.color);
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+
+    gl.drawArrays(gl.TRIANGLES, 0, carBuffers.vertexCount);
 }
 
 

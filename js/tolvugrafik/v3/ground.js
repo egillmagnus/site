@@ -77,7 +77,14 @@ function initGroundBuffers(gl) {
 
     // Finish row
     for (let x = startX; x < startX + gridWidth; x += cellWidth) {
-        addCell(x, startZ + 12 * cellDepth, colors.finish);
+        if (x % 2 == 0) {
+            console.log(x);
+            addCell(x, startZ + 12 * cellDepth, colors.water);
+        } else {
+            console.log(x);
+            addCell(x, startZ + 12 * cellDepth, colors.finish);
+
+        }
     }
 
     // Walls around the grid (as vertical planes)
