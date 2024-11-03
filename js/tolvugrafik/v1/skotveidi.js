@@ -13,6 +13,9 @@ var positionBufferId;
 var colorBufferId;
 var maxNumPoints = 300;
 
+// Global variables
+
+
 let score = 0;
 
 var birds = [];

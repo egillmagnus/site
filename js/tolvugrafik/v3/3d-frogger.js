@@ -3,7 +3,6 @@
 let gl, program;
 let frogPosition = { x: -0.5, z: -6 };
 let matrixLoc;
-let isFrogView = false; // Flag to toggle views
 
 // Variables for camera rotation in frog view
 let spinX = -20; // Rotation along x-axis
@@ -11,6 +10,11 @@ let spinY = 180; // Rotation along y-axis
 let movement = false;
 let origX, origY;
 
+let deathTime;
+
+
+
+var fly = { x: 0, z: 6, active: true, spawnTime: 0 };
 var vPosition;
 var vNormal;
 var vColor;
@@ -59,6 +63,8 @@ const lightSpecular = vec3(1.0, 1.0, 1.0);
 var frogBuffers;
 var carBuffers;
 var flyBuffers;
+
+var viewNr = 0;
 
 var canvas;
 
@@ -133,62 +139,63 @@ window.onload = function init() {
 
     setCanvasSize(canvas);
     window.addEventListener("keydown", (event) => {
-
+        switch (event.key) {
+            case "ArrowUp":
+            case "ArrowDown":
+            case "ArrowLeft":
+            case "ArrowRight":
+            case "v":
+                event.preventDefault();
+        }
         if (dead && event.key !== "v") {
             return;
         }
         switch (event.key) {
             case "ArrowUp":
-                if (isFrogView) {
+                if (viewNr == 1) {
                     moveInFrogView(0);
                 } else {
                     frogPosition.z += 1;
                     lastMovementDir = 0;
                 }
-                event.preventDefault();
                 break;
             case "ArrowDown":
-                if (isFrogView) {
+                if (viewNr == 1) {
                     moveInFrogView(2);
                 } else {
                     frogPosition.z -= 1;
                     lastMovementDir = 2;
                 }
-                event.preventDefault();
                 break;
             case "ArrowLeft":
-                if (isFrogView) {
+                if (viewNr == 1) {
                     moveInFrogView(1);
                 } else {
                     frogPosition.x += 1;
                     lastMovementDir = 1;
                 }
-                event.preventDefault();
                 break;
             case "ArrowRight":
-                if (isFrogView) {
+                if (viewNr == 1) {
                     moveInFrogView(3);
                 } else {
                     frogPosition.x -= 1;
                     lastMovementDir = 3;
                 }
-                event.preventDefault();
                 break;
             case "v": // Toggle view
                 console.log("Switching view");
-                isFrogView = !isFrogView;
+                viewNr = (viewNr + 1) % 3
                 spinY = (180 + 90 * lastMovementDir) % 360;
-                event.preventDefault();
                 break;
         }
-        console.log(frogPosition.x);
         frogPosition.x = Math.max(Math.min(frogPosition.x, 6.5), -6.5);
         frogPosition.z = Math.max(Math.min(frogPosition.z, 6), -6);
     });
 
     // Mouse handlers for rotating the view in frog perspective
     canvas.addEventListener("mousedown", function (e) {
-        if (isFrogView) {
+        if (viewNr == 1) {
             movement = true;
             origX = e.offsetX;
             origY = e.offsetY;
@@ -198,7 +205,7 @@ window.onload = function init() {
     canvas.addEventListener("mouseup", () => (movement = false));
 
     canvas.addEventListener("mousemove", function (e) {
-        if (movement && isFrogView) {
+        if (movement && viewNr == 1) {
             spinY = (spinY - (origX - e.offsetX) * 0.2) % 360;
             spinX = Math.min(Math.max(spinX - (origY - e.offsetY) * 0.2, -200), 90); // Limit looking up/down
             origX = e.offsetX;
@@ -241,6 +248,8 @@ window.onload = function init() {
             render();
         }
     });
+
+    fly.spawnTime = Data.now();
 
 };
 
@@ -292,7 +301,7 @@ function render() {
     var transformedLightPos;
 
 
-    if (isFrogView) {
+    if (viewNr == 1) {
 
         var frogTranslation = translate(-frogPosition.x, -0.4, -frogPosition.z);
         const frogRotation = rotateY(-spinY);
@@ -307,7 +316,7 @@ function render() {
         const eye = vec3(0.0, 0.5, 0.0);
         gl.uniform3fv(uCameraPositionLoc, flatten(eye));
         transformedLightPos = mult(viewMatrix, vec4(lightPosition, 0));
-    } else {
+    } else if (viewNr == 0) {
         // Default view
         const eye = vec3(0.0, 15.0, 0.0);
         const at = vec3(0.0, 0.0, 0.0);
@@ -322,6 +331,21 @@ function render() {
         const near = 0.1;
         const far = 100.0;
         projectionMatrix = ortho(left, right, bottom, top, near, far);
+
+        gl.uniform3fv(uCameraPositionLoc, flatten(eye));
+        transformedLightPos = mult(mat4(), vec4(lightPosition, 0));
+    } else {
+        const eye = vec3(frogPosition.x, 10.0, frogPosition.z - 5.0);
+        const at = vec3(frogPosition.x, 0.0, frogPosition.z);
+        const up = vec3(0.0, 1.0, 0.0);
+
+        viewMatrix = lookAt(eye, at, up);
+
+        const fov = 45.0;
+        const aspect = canvas.width / canvas.height;
+        const near = 0.1;
+        const far = 100.0;
+        projectionMatrix = perspective(fov, aspect, near, far);
 
         gl.uniform3fv(uCameraPositionLoc, flatten(eye));
         transformedLightPos = mult(mat4(), vec4(lightPosition, 0));
@@ -352,6 +376,8 @@ function killed() {
 
     dead = true;
 
+    deathTime = Date.now();
+
 
     setTimeout(function () {
         frogPosition = { x: -0.5, z: -6 };
@@ -366,6 +392,7 @@ function killed() {
 
 function updateElements() {
     updateCars();
+    updateFly();
 
 }
 
@@ -400,7 +427,25 @@ function updateCars() {
     }
 }
 
+function updateFly() {
 
+    if (Date.now() - fly.spawnTime > 5000) {
+        fly.spawnTime = Date.now();
+        if (fly.active) {
+            fly.active = false;
+        } else {
+            fly.active = true;
+            fly.x = (Math.floor(Math.random() * 5) - 2) * 3;
+        }
+    }
+
+    if (fly.active && frogPosition.z === fly.z && Math.abs(frogPosition.x - fly.x) <= 1.0) {
+        fly.active = false;
+
+        console.log("Fly collected! Bonus points awarded.");
+    }
+
+}
 
 
 function drawElements() {
@@ -412,14 +457,16 @@ function drawElements() {
 
 
 function drawFly() {
-    if (!flyBuffers) return;
+    if (!flyBuffers || !fly.active) {
+        return;
+    }
 
-    gl.uniform3fv(uMaterialAmbientLoc, [0.8, 0.8, 0.0]);
-    gl.uniform3fv(uMaterialSpecularLoc, [0.5, 0.5, 0.0]);
+    gl.uniform3fv(uMaterialAmbientLoc, [0.3, 0.3, 0.0]);
+    gl.uniform3fv(uMaterialSpecularLoc, [0.5, 0.5, 0.5]);
     gl.uniform1f(uShininessLoc, 50.0);
 
     let modelMatrix = mat4();
-    modelMatrix = mult(modelMatrix, translate(0.0, 0.2, 0.0));
+    modelMatrix = mult(modelMatrix, translate(fly.x - 0.4, 0.2, fly.z));
     modelMatrix = mult(modelMatrix, scalem(0.1, 0.1, 0.1));
     modelMatrix = mult(modelMatrix, rotateY(-90));
     modelMatrix = mult(modelMatrix, rotateX(-90));
@@ -469,13 +516,21 @@ function drawGround() {
 }
 
 function drawFrog() {
-    gl.uniform3fv(uMaterialAmbientLoc, [0.0, 0.3, 0.]);
+    gl.uniform3fv(uMaterialAmbientLoc, [0.0, 0.2, 0.]);
     gl.uniform3fv(uMaterialSpecularLoc, [0.5, 0.5, 0.5]);
     gl.uniform1f(uShininessLoc, 50.0);
 
     let modelMatrix = mat4();
 
-    modelMatrix = mult(modelMatrix, translate(frogPosition.x, 0.2, frogPosition.z));
+    let height = 0.2;
+
+    if (dead) {
+        const time = Date.now() - deathTime;
+
+        height = ((time / 1000) / -2) + 0.2;
+    }
+
+    modelMatrix = mult(modelMatrix, translate(frogPosition.x, height, frogPosition.z));
 
     modelMatrix = mult(modelMatrix, rotateY(lastMovementDir * 90));
 
