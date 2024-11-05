@@ -27,7 +27,7 @@ function initCarBuffers(gl, objData) {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
     const vertexCount = positions.length / 3;
-    const defaultColor = [1.0, 0.0, 0.0, 1.0]; // Red color with full opacity
+    const defaultColor = [1.0, 0.0, 0.0, 1.0];
     const colors = new Float32Array(vertexCount * 4);
 
     for (let i = 0; i < vertexCount; i++) {

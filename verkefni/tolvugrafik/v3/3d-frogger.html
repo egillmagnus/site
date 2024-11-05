@@ -94,6 +94,8 @@ void main() {
     <script src="/js/tolvugrafik/v3/car.js"></script>
     <script src="/js/tolvugrafik/v3/fly.js"></script>
     <script src="/js/tolvugrafik/v3/objUtils.js"></script>
+    <script src="/js/tolvugrafik/v3/turtle.js"></script>
+    <script src="/js/tolvugrafik/v3/log.js"></script>
 </head>
 
 <body>
@@ -111,6 +113,10 @@ void main() {
     <div class="project-container">
         <div class="fractal-container" id="worley">
             <canvas id="gl-canvas" width="512" height="512"></canvas>
+            <div id="game-info">
+                <p id="score">Score: 0</p>
+                <p id="lives">Lives: 3</p>
+            </div>
         </div>
     </div>
 

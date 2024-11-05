@@ -165,7 +165,6 @@ function quad(a, b, c, d) {
         [1.0, 1.0, 1.0, 1.0]   // white
     ];
 
-    //vertex color assigned by the index of the vertex
     var indices = [a, b, c, a, c, d];
 
     for (var i = 0; i < indices.length; ++i) {

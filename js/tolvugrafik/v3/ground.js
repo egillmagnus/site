@@ -74,10 +74,10 @@ function initGroundBuffers(gl) {
     count = 0;
     for (let x = startX; x < startX + gridWidth; x += cellWidth) {
         if (count < 2) {
-            addCell(x, startZ + 12 * cellDepth, colors.water);
+            addCell(x, startZ + 12 * cellDepth, colors.grass);
             count++
         } else {
-            addCell(x, startZ + 12 * cellDepth, colors.grass);
+            addCell(x, startZ + 12 * cellDepth, colors.water);
             count = 0;
         }
     }

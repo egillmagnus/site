@@ -43,3 +43,25 @@ a.link:active {
 .project-container {
     background-color: var(--second-bg-color);
 }
+
+
+#game-info {
+    position: relative;
+    top: 10px;
+    width: 512px;
+    display: flex;
+    justify-content: space-between;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 0 20px;
+    pointer-events: none;
+    /* Make sure it doesn't interfere with mouse events */
+}
+
+#score {
+    text-align: left;
+}
+
+#lives {
+    text-align: right;
+}
