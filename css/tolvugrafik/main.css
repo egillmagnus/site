@@ -65,3 +65,11 @@ a.link:active {
 #lives {
     text-align: right;
 }
+
+
+#game-control-info {
+    position: relative;
+    top: 10px;
+    display: flex;
+    justify-content: space-between;
+}

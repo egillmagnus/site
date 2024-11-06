@@ -24,17 +24,17 @@ function initGroundBuffers(gl) {
         wall: [0.0, 0.6, 0.0, 1.0],
     };
 
-    function addCell(x, z, color) {
+    function addCell(x, y, z, color) {
         const normal = [0.0, 1.0, 0.0];
 
         // Define the vertices
         groundVertices.push(
-            x, groundLevel, z,
-            x + cellWidth, groundLevel, z,
-            x + cellWidth, groundLevel, z + cellDepth,
-            x, groundLevel, z,
-            x + cellWidth, groundLevel, z + cellDepth,
-            x, groundLevel, z + cellDepth
+            x, y, z,
+            x + cellWidth, y, z,
+            x + cellWidth, y, z + cellDepth,
+            x, y, z,
+            x + cellWidth, y, z + cellDepth,
+            x, y, z + cellDepth
         );
 
         for (let i = 0; i < 6; i++) groundNormals.push(...normal);
@@ -48,25 +48,25 @@ function initGroundBuffers(gl) {
 
     // Starting grass row
     for (let x = startX; x < startX + gridWidth; x += cellWidth) {
-        addCell(x, startZ, colors.grass);
+        addCell(x, groundLevel, startZ, colors.grass);
     }
 
     // Road section (5 rows)
     for (let z = startZ + cellDepth; z < startZ + 6 * cellDepth; z += cellDepth) {
         for (let x = startX; x < startX + gridWidth; x += cellWidth) {
-            addCell(x, z, colors.road);
+            addCell(x, groundLevel, z, colors.road);
         }
     }
 
     // Middle grass row
     for (let x = startX; x < startX + gridWidth; x += cellWidth) {
-        addCell(x, startZ + 6 * cellDepth, colors.grass);
+        addCell(x, groundLevel, startZ + 6 * cellDepth, colors.grass);
     }
 
     // Water section (5 rows)
     for (let z = startZ + 7 * cellDepth; z < startZ + 12 * cellDepth; z += cellDepth) {
         for (let x = startX; x < startX + gridWidth; x += cellWidth) {
-            addCell(x, z, colors.water);
+            addCell(x, groundLevel, z, colors.water);
         }
     }
 
@@ -74,13 +74,29 @@ function initGroundBuffers(gl) {
     count = 0;
     for (let x = startX; x < startX + gridWidth; x += cellWidth) {
         if (count < 2) {
-            addCell(x, startZ + 12 * cellDepth, colors.grass);
+            addCell(x, groundLevel, startZ + 12 * cellDepth, colors.grass);
             count++
         } else {
-            addCell(x, startZ + 12 * cellDepth, colors.water);
+            addCell(x, groundLevel, startZ + 12 * cellDepth, colors.water);
             count = 0;
         }
     }
+
+    for (let x = startX - 10; x < -startX + 10; x++) {
+        for (let z = startZ - 10; z < -startX + 10; z++) {
+            if ((x < startX || x > -startX - 1) || (z < startZ || z > -startZ - 1)) {
+                const greenVariation = [
+                    0.0,                       // R: fixed for green
+                    0.5 + Math.random() * 0.3, // G: base green with slight variation (0.5 to 0.8)
+                    0.0,
+                    1.0                        // B: fixed for green
+                ];
+                addCell(x, groundLevel + 1, z, greenVariation);
+            }
+        }
+    }
+
+
 
     // Walls around the grid (as vertical planes)
     function addWall(x1, z1, x2, z2) {
