@@ -479,6 +479,11 @@ function updateFrog() {
         killed();
     }
 
+
+    if (frogPosition.x > 7 || frogPosition.x < -7) {
+        killed();
+    }
+
     if (!frogOnThing) {
         frogPosition.y = 0;
     }
