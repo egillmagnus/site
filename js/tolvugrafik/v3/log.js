@@ -2,12 +2,12 @@ let pointsArray = [];
 let normalsArray = [];
 
 function createUnitCube() {
-    quad(1, 0, 3, 2);
-    quad(2, 3, 7, 6);
-    quad(3, 0, 4, 7);
-    quad(6, 5, 1, 2);
-    quad(4, 5, 6, 7);
-    quad(5, 4, 0, 1);
+    quad(1, 0, 3, 2, 0);
+    quad(2, 3, 7, 6, 1);
+    quad(3, 0, 4, 7, 2);
+    quad(6, 5, 1, 2, 3);
+    quad(4, 5, 6, 7, 4);
+    quad(5, 4, 0, 1, 5);
 }
 
 function quad(a, b, c, d, n) {
@@ -40,9 +40,6 @@ function quad(a, b, c, d, n) {
 }
 
 function initLogBuffers(gl) {
-    pointsArray = [];
-    normalsArray = [];
-
     createUnitCube();
 
     const positionBuffer = gl.createBuffer();
