@@ -214,15 +214,15 @@ window.onload = function init() {
                     lastMovementDir = 3;
                 }
                 break;
-            case "v": // Toggle view
+            case "v":
                 console.log("Switching view");
                 viewNr = (viewNr + 1) % 3
                 spinY = (180 + 90 * lastMovementDir) % 360;
                 break;
-            case "p": // Toggle view
+            case "p":
                 update = !update;
                 break;
-            case "s": // Toggle view
+            case "s":
                 updateElements();
                 break;
         }
@@ -231,7 +231,6 @@ window.onload = function init() {
         console.log("frogPos " + frogPosition.x);
     });
 
-    // Mouse handlers for rotating the view in frog perspective
     canvas.addEventListener("mousedown", function (e) {
         if (viewNr == 1) {
             movement = true;
@@ -245,7 +244,7 @@ window.onload = function init() {
     canvas.addEventListener("mousemove", function (e) {
         if (movement && viewNr == 1) {
             spinY = (spinY - (origX - e.offsetX) * 0.2) % 360;
-            spinX = Math.min(Math.max(spinX - (origY - e.offsetY) * 0.2, -200), 90); // Limit looking up/down
+            spinX = Math.min(Math.max(spinX - (origY - e.offsetY) * 0.2, -200), 90);
             origX = e.offsetX;
             origY = e.offsetY;
         }
@@ -590,7 +589,6 @@ function updateTurtles() {
     turtleLanes.forEach(lane => {
         let turtlesInLane = turtles.filter(turtle => turtle.lane === lane.z);
 
-        // Condition to spawn a new turtle group
         let canSpawn = !turtlesInLane.some(turtle => turtle.x < -8 + lane.count);
 
         if (canSpawn && turtlesInLane.length < 4 && Math.random() < 0.02) {
@@ -879,7 +877,6 @@ function drawFrog() {
 
     gl.uniformMatrix4fv(uModelMatrixLoc, false, flatten(modelMatrix));
 
-    // Compute normal matrix
     const modelViewMatrix = mult(viewMatrix, modelMatrix);
     const normalMatrixFrog = normalMatrix(modelViewMatrix, true);
     gl.uniformMatrix3fv(uNormalMatrixLoc, false, flatten(normalMatrixFrog));
@@ -921,17 +918,15 @@ function drawFrogModel(gl, buffers) {
 
 
 function drawCars() {
-    // Set material properties common to all cars
     gl.uniform3fv(uMaterialAmbientLoc, [0.2, 0.2, 0.2]);
     gl.uniform3fv(uMaterialSpecularLoc, [0.5, 0.5, 0.5]);
     gl.uniform1f(uShininessLoc, 30.0);
 
-    // Draw each car
     cars.forEach(car => drawCar(car));
 }
 
 function drawCar(car) {
-    if (!carBuffers) return; // Ensure the buffers are loaded
+    if (!carBuffers) return;
 
     gl.uniform3fv(uMaterialAmbientLoc, [0.2, 0.2, 0.2]);
     gl.uniform3fv(uMaterialSpecularLoc, [0.5, 0.5, 0.5]);
@@ -939,11 +934,9 @@ function drawCar(car) {
 
     let modelMatrix = mat4();
 
-    // Apply transformations to position the car
     modelMatrix = mult(modelMatrix, translate(car.x, 0.0, car.lane));
     modelMatrix = mult(modelMatrix, scalem(0.4, 0.4, 0.4));
 
-    // If the car is moving left (-x direction), rotate it by 180 degrees
     if (car.speed < 0) {
         modelMatrix = mult(modelMatrix, rotateY(-90));
     } else {
@@ -952,12 +945,10 @@ function drawCar(car) {
 
     gl.uniformMatrix4fv(uModelMatrixLoc, false, flatten(modelMatrix));
 
-    // Compute normal matrix
     const modelViewMatrix = mult(viewMatrix, modelMatrix);
     const normalMatrixCar = normalMatrix(modelViewMatrix, true);
     gl.uniformMatrix3fv(uNormalMatrixLoc, false, flatten(normalMatrixCar));
 
-    // Bind buffers and draw the car
     gl.bindBuffer(gl.ARRAY_BUFFER, carBuffers.position);
     gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
