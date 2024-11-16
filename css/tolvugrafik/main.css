@@ -73,3 +73,13 @@ a.link:active {
     display: flex;
     justify-content: space-between;
 }
+
+.dg.ac {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 9999 !important;
+    position: absolute !important;
+    top: 7.9rem !important;
+    right: 0 !important;
+}

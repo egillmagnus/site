@@ -1,12 +1,8 @@
-// car.js
-
-
-// Function to load the OBJ and MTL files for the car model
 function loadCarModel(gl, objUrl, callback) {
     fetch(objUrl)
         .then(response => response.text())
         .then(objText => {
-            const objData = parseOBJ(objText); // Use existing parseOBJ function
+            const objData = parseOBJ(objText);
             const carBuffers = initCarBuffers(gl, objData);
             callback(carBuffers);
         })
@@ -34,7 +30,6 @@ function initCarBuffers(gl, objData) {
         colors.set(defaultColor, i * 4);
     }
 
-    // Create color buffer
     const colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);

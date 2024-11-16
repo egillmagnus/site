@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="description" content="Heimasíða Egils" />
+    <meta charset="utf-8">
+    <title>Heimasíða Egils</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="Egill Magnússon" content="">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/verkefni.css">
+    <link rel="stylesheet" href="/css/tolvugrafik/main.css">
+</head>
+
+<body>
+    <header class="header">
+        <a href="#" class="logo" id="log">Gegnsær <span>tepottur</span></a>
+        <i class='bx bx-menu' id="menu-icon"></i>
+        <nav class="navbar">
+            <a href="/#heim">Heim</a>
+            <a href="/#um-mig">Um mig</a>
+            <a href="/#verkefni">Verkefni</a>
+        </nav>
+    </header>
+    <div id="top">
+    </div>
+    <div class="project-container">
+        <div class="fractal-container" id="worley">
+            <canvas id="c" width="512" height="512"></canvas>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-text">
+            <p>&copy; 2024 Egill Magnússon | Vefsíða í vinnslu</p>
+        </div>
+        <div class="footer-iconTop">
+            <a href="#top"><i class='bx bx-up-arrow-alt'></i></a>
+        </div>
+    </footer>
+    <script type="text/javascript" src="/js/tolvugrafik/Common/three.js"></script>
+    <script src="/js/tolvugrafik/Common/controls/OrbitControls.js"></script>
+    <script src="/js/tolvugrafik/Common/libs/dat.gui.min.js"></script>
+    <script src="/js/tolvugrafik/hd7/skuggar.js"></script>
+
+</body>
+
+</html>
