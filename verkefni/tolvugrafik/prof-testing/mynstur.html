@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<style type="text/css">
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+    }
+
+    button {
+        margin: 1rem;
+    }
+
+    #gl-canvas {
+        border: 3px solid #333;
+        background-color: white;
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 24px;
+        color: #333;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .container p {
+        font-size: 18px;
+        margin-top: 10px;
+    }
+</style>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute  vec4 vPosition;
+attribute  vec2 vTexCoord;
+
+varying vec2 fTexCoord;
+
+uniform mat4 projection;
+uniform mat4 modelview;
+
+void main()
+{
+    fTexCoord = vTexCoord;
+    gl_Position = projection * modelview * vPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+varying vec2 fTexCoord;
+uniform sampler2D texture;
+
+void main()
+{
+    gl_FragColor = texture2D( texture, fTexCoord );
+}
+</script>
+
+<script type="text/javascript" src="/js/tolvugrafik/Common/MV.js"></script>
+<script type="text/javascript" src="/js/tolvugrafik/Common/webgl-utils.js"></script>
+<script type="text/javascript" src="/js/tolvugrafik/Common/initShaders.js"></script>
+<script src="/js/tolvugrafik/prof-testing/mynstur.js"></script>
+
+
+<body>
+    <canvas id="gl-canvas" width="450" height="450"></canvas>
+    <img id="texImage" src="/images/pottur.jpg" hidden></img>
+    <div class="button-container">
+        <button id="i">i)</button>
+        <button id="ii">ii)</button>
+        <button id="iii">iii)</button>
+    </div>
+</body>
+
+</html>
