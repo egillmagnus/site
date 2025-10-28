@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>WS1 – 4 Light</title>
+  <style>
+    canvas {
+      width: 640px;
+      height: 320px;
+      border: 1px solid #333;
+      display: block;
+      margin: 1rem auto;
+    }
+  </style>
+</head>
+
+<body>
+  <h1 style="text-align:center;">Worksheet 1 · Part 4</h1>
+  <canvas id="gfx" width="640" height="320"></canvas>
+
+  <script defer src="../../common/MV.js"></script>
+
+  <script id="shader-rays" type="x-shader/wgsl">
+    struct VSOut {
+  @builtin(position) pos : vec4<f32>,
+  @location(0) img : vec2<f32>,
+};
+
+@vertex
+fn vsMain(@builtin(vertex_index) vid : u32) -> VSOut {
+  var corners = array<vec2<f32>, 4>(
+    vec2<f32>(-1.0, -1.0),
+    vec2<f32>( 1.0, -1.0),
+    vec2<f32>(-1.0,  1.0),
+    vec2<f32>( 1.0,  1.0)
+  );
+  var out : VSOut;
+  let p = corners[vid];
+  out.pos = vec4<f32>(p, 0.0, 1.0);
+  out.img = p;
+  return out;
+}
+
+struct Camera {
+  eye    : vec4<f32>,
+  U      : vec4<f32>,
+  V      : vec4<f32>,
+  W      : vec4<f32>,
+  aspect : f32,
+  zoom   : f32,
+};
+@group(0) @binding(0) var<uniform> cam : Camera;
+
+struct Ray    { origin: vec3<f32>, dir: vec3<f32> };
+struct HitInfo{
+  hit   : bool,
+  t     : f32,
+  albedo: vec3<f32>,
+  normal: vec3<f32>,
+};
+
+struct Light {
+  Li : vec3<f32>,
+  wi : vec3<f32>,
+};
+
+fn intersectTriangle(ray: Ray,
+                     v0: vec3<f32>, v1: vec3<f32>, v2: vec3<f32>,
+                     tmin: f32, tmax: f32,
+                     color: vec3<f32>) -> HitInfo {
+  let e0 = v1 - v0;
+  let e1 = v2 - v0;
+  let n  = cross(e0, e1);
+
+  var q = dot(ray.dir, n);
+  if (abs(q) < 1e-8) { return HitInfo(false, tmax, vec3<f32>(0.0), vec3<f32>(0.0)); }
+  q = 1.0 / q;
+
+  let o_to_v0 = v0 - ray.origin;
+  let t = dot(o_to_v0, n) * q;
+  if (t <= tmin || t >= tmax) { return HitInfo(false, tmax, vec3<f32>(0.0), vec3<f32>(0.0)); }
+
+  let n_tmp = cross(o_to_v0, ray.dir);
+  let beta  =  dot(n_tmp, e1) * q;
+  if (beta < 0.0) { return HitInfo(false, tmax, vec3<f32>(0.0), vec3<f32>(0.0)); }
+
+  let gamma = -dot(n_tmp, e0) * q;
+  if (gamma < 0.0 || beta + gamma > 1.0) {
+    return HitInfo(false, tmax, vec3<f32>(0.0), vec3<f32>(0.0));
+  }
+
+  let nn = normalize(n);
+  return HitInfo(true, t, color, nn);
+}
+
+fn intersectSphere(ray: Ray,
+                   center: vec3<f32>, radius: f32,
+                   tmin: f32, tmax: f32,
+                   color: vec3<f32>) -> HitInfo {
+  let oc = ray.origin - center;
+  let b = dot(oc, ray.dir);
+  let c = dot(oc, oc) - radius * radius;
+  let disc = b*b - c;
+  if (disc < 0.0) { return HitInfo(false, tmax, vec3<f32>(0.0), vec3<f32>(0.0)); }
+
+  let s = sqrt(disc);
+  var t = -b - s;
+  if (t <= tmin || t >= tmax) {
+    t = -b + s;
+    if (t <= tmin || t >= tmax) {
+      return HitInfo(false, tmax, vec3<f32>(0.0), vec3<f32>(0.0));
+    }
+  }
+
+  let p  = ray.origin + t * ray.dir;
+  let nn = normalize(p - center);
+  return HitInfo(true, t, color, nn);
+}
+
+fn intersectPlane(ray: Ray,
+                  p0: vec3<f32>, n: vec3<f32>,
+                  tmin: f32, tmax: f32,
+                  color: vec3<f32>) -> HitInfo {
+  let denom = dot(n, ray.dir);
+  if (abs(denom) < 1e-6) { return HitInfo(false, tmax, vec3<f32>(0.0), vec3<f32>(0.0)); }
+  let t = dot(p0 - ray.origin, n) / denom;
+  if (t <= tmin || t >= tmax) { return HitInfo(false, tmax, vec3<f32>(0.0), vec3<f32>(0.0)); }
+  let nn = normalize(n);
+  return HitInfo(true, t, color, nn);
+}
+
+fn samplePointLight(P: vec3<f32>, lightPos: vec3<f32>, intensity: vec3<f32>) -> Light {
+  let L  = lightPos - P;
+  let r2 = max(dot(L, L), 1e-8);
+  let wi = normalize(L);
+  let Li = intensity / r2;
+  return Light(Li, wi);
+}
+
+fn shadeDiffuse(albedo: vec3<f32>, n: vec3<f32>, light: Light) -> vec3<f32> {
+  let nl = max(0.0, dot(normalize(n), light.wi));
+  return albedo * light.Li * nl;
+}
+
+@fragment
+fn fsMain(@location(0) img : vec2<f32>) -> @location(0) vec4<f32> {
+  let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
+  let Pimg   = center + img.x * cam.U.xyz + (img.y / cam.aspect) * cam.V.xyz;
+  let dir    = normalize(Pimg - cam.eye.xyz);
+  let ray    = Ray(cam.eye.xyz, dir);
+
+  var Lo  = vec3<f32>(0.1, 0.3, 0.6);
+  var tmax = 1e30;
+  let tmin = 1e-4;
+
+  let planeColor = vec3<f32>(0.1, 0.7, 0.0);
+  let triColor   = vec3<f32>(0.4, 0.3, 0.2);
+  let sphColor   = vec3<f32>(0.0, 0.0, 0.0);
+
+  var best = HitInfo(false, 1e30, vec3<f32>(0.0), vec3<f32>(0.0));
+
+  let triHit = intersectTriangle(ray,
+      vec3<f32>(-0.2, 0.1,  0.9),
+      vec3<f32>( 0.2, 0.1,  0.9),
+      vec3<f32>(-0.2, 0.1, -0.1),
+      tmin, tmax, triColor);
+  if (triHit.hit && triHit.t < best.t) { best = triHit; }
+
+  let sphHit = intersectSphere(ray, vec3<f32>(0.0, 0.5, 0.0), 0.3,
+                               tmin, tmax, sphColor);
+  if (sphHit.hit && sphHit.t < best.t) { best = sphHit; }
+
+  let plHit  = intersectPlane(ray, vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(0.0, 1.0, 0.0),
+                              tmin, tmax, planeColor);
+  if (plHit.hit && plHit.t < best.t) { best = plHit; } 
+  if (best.hit) {
+    let Phit = ray.origin + best.t * ray.dir;
+
+    let PI = 3.1415926535;
+    let light = samplePointLight(Phit, vec3<f32>(0.0, 1.0, 0.0), vec3<f32>(PI, PI, PI));
+
+    Lo = shadeDiffuse(best.albedo, best.normal, light);
+    //Lo = best.albedo;
+  }
+
+  return vec4<f32>(Lo, 1.0);
+}
+  </script>
+
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>
