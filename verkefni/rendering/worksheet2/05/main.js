@@ -51,10 +51,6 @@ async function init() {
         render();
     }, { passive: false });
 
-    // --- Uniforms ---
-    // Layout (matches WGSL):
-    // vec4 eye, vec4 U, vec4 V, vec4 W, (aspect, zoom, gamma, _pad0), (matteMode, sphereMode, _pad1, _pad2)
-    // = 16 floats + 4 floats + 4 u32 = 96 bytes total
     const uniformBuffer = device.createBuffer({
         size: 96,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -63,12 +59,10 @@ async function init() {
     function writeUniforms() {
         const aspect = canvas.width / canvas.height;
 
-        // Use one ArrayBuffer; Float32 view for floats, Uint32 view for mode flags.
         const buf = new ArrayBuffer(96);
         const f32 = new Float32Array(buf);
         const u32 = new Uint32Array(buf);
 
-        // Floats
         f32.set([eye[0], eye[1], eye[2], 1.0], 0);  // eye
         f32.set([U[0], U[1], U[2], 0.0], 4);  // U
         f32.set([V[0], V[1], V[2], 0.0], 8);  // V
@@ -83,7 +77,8 @@ async function init() {
     }
 
     // --- Pipeline ---
-    const wgsl = document.getElementById('shader-rays').textContent.trim();
+    const resp = await fetch('shader.wgsl');
+    const wgsl = await resp.text();
     const module = device.createShaderModule({ code: wgsl });
     const pipeline = await device.createRenderPipelineAsync({
         layout: 'auto',

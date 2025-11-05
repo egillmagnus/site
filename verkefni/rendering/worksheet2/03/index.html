@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>WS2 – 2 Mirror + Shader Switch</title>
+  <title>WS2 – 3 Refraction </title>
   <style>
     canvas {
       width: 640px;
@@ -17,33 +17,36 @@
       max-width: 720px;
       margin: 0 auto 0.5rem;
       font: 14px/1.2 system-ui;
-      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      align-items: center;
     }
   </style>
 </head>
 
 <body>
-  <h1 style="text-align:center;">Worksheet 2 · Part 2</h1>
+  <h1 style="text-align:center;">Worksheet 2 · Part 3</h1>
 
   <div class="bar">
     <label><b>Matte shader</b>:</label>
     <select id="matteMode">
-      <option value="0">Base color (ambient+diffuse)</option>
-      <option value="1" selected>Lambert (with shadows)</option>
+      <option value="0">Base color</option>
+      <option value="1" selected>lambert</option>
     </select>
     &nbsp;&nbsp;&nbsp;
     <label><b>Sphere shader</b>:</label>
     <select id="sphereMode">
-      <option value="0">Base color (ambient+diffuse)</option>
-      <option value="1">Lambert+Phong (with shadows)</option>
-      <option value="2">Mirror (perfect reflection)</option>
-      <option value="3" selected>Refractive (n=1.5)</option>
+      <option value="0">Base color</option>
+      <option value="1">Lambert</option>
+      <option value="2">Mirror</option>
+      <option value="3" selected>Refractive</option>
     </select>
   </div>
 
   <div class="bar">
     <label for="gammaSlider"><b>Gamma</b>:</label>
-    <input id="gammaSlider" type="range" min="0.8" max="3.0" step="0.01" value="2.2" style="width: 320px;">
+    <input id="gammaSlider" type="range" min="0.8" max="3.0" step="0.03" value="2.2" style="width: 320px;">
     <span id="gammaValue">2.20</span>
     <small style="opacity:.75"> (Scroll on canvas to dolly)</small>
   </div>
@@ -83,8 +86,8 @@ struct Camera {
   zoom   : f32,
   gamma  : f32,
   _pad0  : f32,
-  matteMode  : u32,   // 0 base color, 1 lambert
-  sphereMode : u32,   // 0 base, 1 lambert+phong, 2 mirror
+  matteMode  : u32,   // 0 base, 1 lambert
+  sphereMode : u32,   // 0 base, 1 lambert, 2 mirror, 3 refract
   _pad1      : u32,
   _pad2      : u32,
 };
@@ -93,32 +96,30 @@ struct Camera {
 struct Ray { origin: vec3<f32>, dir: vec3<f32> };
 
 struct Light {
-  Li   : vec3<f32>,  // radiance at P
-  wi   : vec3<f32>,  // unit dir to light
-  dist : f32,        // distance to light
+  Li   : vec3<f32>,
+  wi   : vec3<f32>,
+  dist : f32,
 };
 
 struct Material {
-  ambient  : vec3<f32>,
-  diffuse  : vec3<f32>,
-  specular : vec3<f32>,
-  shininess: f32,
-  ior      : f32,
+  ambient : vec3<f32>,
+  diffuse : vec3<f32>,
+  ior     : f32,      // 1.0 for matte, 1.5 for sphere
 };
 
-struct HitInfo{
+struct HitInfo {
   hit      : bool,
   t        : f32,
   n        : vec3<f32>,
   mat      : Material,
-  shaderId : u32,
+  shaderId : u32,     // 0 matte bucket, 2 sphere bucket
   _padH    : u32,
-  relEta   : f32,
+  relEta   : f32,     // filled in trace for refraction
 };
 
-
-fn makeMaterial(base_rgb: vec3<f32>, shininess: f32, spec_rgb: vec3<f32>, ior: f32) -> Material {
-  return Material(0.1 * base_rgb, 0.9 * base_rgb, spec_rgb, shininess, ior);
+// 10% ambient, 90% diffuse
+fn makeMaterial(base_rgb: vec3<f32>, ior: f32) -> Material {
+  return Material(0.1 * base_rgb, 0.9 * base_rgb, ior);
 }
 
 fn samplePointLight(P: vec3<f32>, lightPos: vec3<f32>, intensity: vec3<f32>) -> Light {
@@ -130,7 +131,7 @@ fn samplePointLight(P: vec3<f32>, lightPos: vec3<f32>, intensity: vec3<f32>) -> 
 }
 
 fn missMat() -> Material {
-  return makeMaterial(vec3<f32>(0.0), 1.0, vec3<f32>(0.0), 1.0);
+  return makeMaterial(vec3<f32>(0.0), 1.0);
 }
 
 fn missHit(tmax: f32) -> HitInfo {
@@ -138,7 +139,7 @@ fn missHit(tmax: f32) -> HitInfo {
 }
 
 fn okHit(t: f32, n: vec3<f32>, mat: Material, shaderId: u32) -> HitInfo {
-  return HitInfo(true, t, normalize(n), mat, shaderId, 0u, 1.0); // relEta set later
+  return HitInfo(true, t, normalize(n), mat, shaderId, 0u, 1.0);
 }
 
 fn addRelEta(h: HitInfo, rel: f32) -> HitInfo {
@@ -146,16 +147,16 @@ fn addRelEta(h: HitInfo, rel: f32) -> HitInfo {
 }
 
 fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
-  // If entering (N·dir < 0) => rel = n1/n2 = curEta / h.mat.ior
-  // If exiting  (N·dir > 0) => rel = n1/n2 = curEta / 1.0
+  // entering: N·dir < 0 → from curEta to h.mat.ior
   if (dot(h.n, ray.dir) < 0.0) {
     return curEta / h.mat.ior;
   } else {
+    // exiting → to air
     return curEta / 1.0;
   }
 }
 
-// ---------- Intersections ----------
+// ---------------- intersections ----------------
 fn intersectTriangle(ray: Ray,
                      v0: vec3<f32>, v1: vec3<f32>, v2: vec3<f32>,
                      tmin: f32, tmax: f32) -> HitInfo {
@@ -172,14 +173,13 @@ fn intersectTriangle(ray: Ray,
   if (t <= tmin || t >= tmax) { return missHit(tmax); }
 
   let n_tmp = cross(o_to_v0, ray.dir);
-  let beta  =  dot(n_tmp, e1) * q;
+  let beta  = dot(n_tmp, e1) * q;
   if (beta < 0.0) { return missHit(tmax); }
 
   let gamma = -dot(n_tmp, e0) * q;
   if (gamma < 0.0 || beta + gamma > 1.0) { return missHit(tmax); }
 
-  // matte triangle (ior 1.0), shaderId=0 (matte bucket; actual mode chosen via cam.matteMode)
-  let mat = makeMaterial(vec3<f32>(0.4, 0.3, 0.2), 1.0, vec3<f32>(0.0), 1.0);
+  let mat = makeMaterial(vec3<f32>(0.4, 0.3, 0.2), 1.0);
   return okHit(t, n, mat, 0u);
 }
 
@@ -202,10 +202,10 @@ fn intersectSphere(ray: Ray,
   let Phit = ray.origin + t * ray.dir;
   let n     = Phit - C;
 
-  let mat = makeMaterial(vec3<f32>(0.0), 42.0, vec3<f32>(0.1), 1.5);
+  // sphere is refractive-capable → ior = 1.5
+  let mat = makeMaterial(vec3<f32>(0.0), 1.5);
   return okHit(t, n, mat, 2u);
 }
-
 
 fn intersectPlane(ray: Ray,
                   P0: vec3<f32>, N: vec3<f32>,
@@ -216,7 +216,7 @@ fn intersectPlane(ray: Ray,
   let t = dot(P0 - ray.origin, N) / denom;
   if (t <= tmin || t >= tmax) { return missHit(tmax); }
 
-  let mat = makeMaterial(vec3<f32>(0.1, 0.7, 0.0), 1.0, vec3<f32>(0.0), 1.0);
+  let mat = makeMaterial(vec3<f32>(0.1, 0.7, 0.0), 1.0);
   return okHit(t, N, mat, 0u);
 }
 
@@ -239,7 +239,7 @@ fn intersect_scene(ray: Ray, tmin: f32, tmax: f32) -> HitInfo {
   return best;
 }
 
-// ---------- Helpers ----------
+// ---------------- helpers ----------------
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
   let eps = 1e-4;
   let ray = Ray(P + eps * wi, wi);
@@ -247,19 +247,15 @@ fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
   return h.hit;
 }
 
-fn phongSpecular(N: vec3<f32>, wi: vec3<f32>, wo: vec3<f32>,
-                 shininess: f32, specRGB: vec3<f32>, Li: vec3<f32>) -> vec3<f32> {
-  let H  = normalize(wi + wo);
-  let nh = max(0.0, dot(N, H));
-  let s  = pow(nh, shininess);
-  return specRGB * Li * s;
-}
-
 fn background(dir: vec3<f32>) -> vec3<f32> {
   return vec3<f32>(0.1, 0.3, 0.6);
 }
 
-// shade one hit: returns (color, continueRay, nextDir)
+// one-hit shader:
+// 0: base (ambient+diffuse)
+// 1: lambert with shadows
+// 2: mirror (sentinel)
+// 3: refract (sentinel)
 fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
   let PI    = 3.1415926535;
   let Lpos  = vec3<f32>(0.0, 1.0, 0.0);
@@ -268,122 +264,112 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
   var N = hit.n;
   if (dot(N, ray.dir) > 0.0) { N = -N; }
   let P  = ray.origin + hit.t * ray.dir;
-  let wo = normalize(-ray.dir);
   let L  = samplePointLight(P, Lpos, I);
 
-  // Decide effective shader per object type + UI modes
+  // pick mode (UI overrides per-object bucket)
   var mode : u32 = hit.shaderId;
-  if (hit.shaderId == 0u) {       // matte objects
+  if (hit.shaderId == 0u) {
     mode = cam.matteMode;
-  } else if (hit.shaderId == 2u) { // sphere
+  } else if (hit.shaderId == 2u) {
     mode = cam.sphereMode;
   }
 
-  // 0 = base color (ambient+diffuse only), no lighting
+  // 0: base, no lighting
   if (mode == 0u) {
     return hit.mat.ambient + hit.mat.diffuse;
   }
 
-  // 2 = mirror (perfect reflection) → handled by trace loop (no local color)
+  // 2: mirror
   if (mode == 2u) {
-    // Signal "no local term"; the loop will continue with reflected ray.
-    // We return a sentinel negative color to indicate "continue".
     return vec3<f32>(-1.0, -1.0, -1.0);
   }
 
+  // 3: refractive
   if (mode == 3u) {
     return vec3<f32>(-2.0, -2.0, -2.0);
   }
 
-  // 1 = Lambert (and Phong if specular is nonzero), with hard shadows
+  // 1: lambert with shadows
   if (occluded_from(P, L.wi, L.dist)) {
     return hit.mat.ambient;
   }
   let nl = max(0.0, dot(N, L.wi));
-  var Lo = hit.mat.ambient + hit.mat.diffuse * L.Li * nl;
-
-  // Add Phong spec if material has spec component (used by sphere in mode=1)
-  if (any(hit.mat.specular > vec3<f32>(0.0))) {
-    Lo += phongSpecular(N, L.wi, wo, hit.mat.shininess, hit.mat.specular, L.Li);
-  }
-  return Lo;
+  let lambert = hit.mat.diffuse * L.Li * nl;
+  return hit.mat.ambient + lambert;
 }
 
 const MAX_BOUNCES : i32 = 4;
 
 fn trace(ray0: Ray) -> vec3<f32> {
   var ray = ray0;
-  var throughput = vec3<f32>(1.0);
-  var eta : f32 = 1.0; // current medium IOR (air)
+  var eta : f32 = 1.0;  // current medium IOR (start in air)
 
   for (var depth: i32 = 0; depth < MAX_BOUNCES; depth = depth + 1) {
     let h = intersect_scene(ray, 1e-4, 1e30);
     if (!h.hit) {
-      return throughput * background(ray.dir);
+      return background(ray.dir);
     }
 
+    // compute relative eta at this hit and pass to shader via copy
     let hRel = addRelEta(h, computeRelEta(h, ray, eta));
     let c = shade_once(ray, hRel);
 
-    // ----- Mirror continuation sentinel -----
-if (all(c == vec3<f32>(-1.0))) {
-  var N = hRel.n;
-  if (dot(N, ray.dir) > 0.0) { N = -N; }
-  let R   = normalize(reflect(ray.dir, N));
-  let eps = 1e-4;
-  let P   = ray.origin + hRel.t * ray.dir;
-  ray = Ray(P + eps * R, R);
-  continue;
-}
-
-    // ----- Refraction continuation sentinel -----
-    if (all(c == vec3<f32>(-2.0))) {
-  let P = ray.origin + hRel.t * ray.dir;
-
-  // Face-forward normal & entering/exiting
-  var N = hRel.n;
-  var into = true;
-  if (dot(N, ray.dir) > 0.0) {
-    N = -N;        // exiting
-    into = false;
-  }
-
-  let rel = hRel.relEta;        // relative IOR stored in HitInfo
-  let cosi = -dot(N, ray.dir);
-  let k = 1.0 - rel*rel*(1.0 - cosi*cosi);
-
-  if (k < 0.0) {
-    // Total internal reflection
-    let R   = normalize(reflect(ray.dir, N));
-    let eps = 1e-4;
-    ray = Ray(P + eps * R, R);
-    // eta unchanged (still inside if we TIR)
-  } else {
-    // Proper refraction
-    let T   = normalize(rel * ray.dir + (rel * cosi - sqrt(k)) * N);
-    let eps = 1e-4;
-    ray = Ray(P + eps * T, T);
-    // Update absolute medium IOR for next step
-    if (into) {
-      eta = hRel.mat.ior;   // moved into the object
-    } else {
-      eta = 1.0;            // back to air
+    // mirror continuation
+    if (all(c == vec3<f32>(-1.0))) {
+      var N = hRel.n;
+      if (dot(N, ray.dir) > 0.0) { N = -N; }
+      let R   = normalize(reflect(ray.dir, N));
+      let eps = 1e-4;
+      let P   = ray.origin + hRel.t * ray.dir;
+      ray = Ray(P + eps * R, R);
+      continue;
     }
-  }
-  continue;
-}
-    // Otherwise: local shading result → stop
-    return throughput * c;
+
+    // refraction continuation
+    if (all(c == vec3<f32>(-2.0))) {
+      let P = ray.origin + hRel.t * ray.dir;
+
+      // face-forward normal and detect entering/exiting
+      var N = hRel.n;
+      var entering = true;
+      if (dot(N, ray.dir) > 0.0) {
+        N = -N;
+        entering = false;
+      }
+
+      let rel = hRel.relEta;
+      let cosi = -dot(N, ray.dir);
+      let k = 1.0 - rel*rel*(1.0 - cosi*cosi);
+
+      if (k < 0.0) {
+        // total internal reflection
+        let R   = normalize(reflect(ray.dir, N));
+        let eps = 1e-4;
+        ray = Ray(P + eps * R, R);
+        // eta unchanged
+      } else {
+        let T   = normalize(rel * ray.dir + (rel * cosi - sqrt(k)) * N);
+        let eps = 1e-4;
+        ray = Ray(P + eps * T, T);
+        // update medium
+        if (entering) {
+          eta = hRel.mat.ior;
+        } else {
+          eta = 1.0;
+        }
+      }
+      continue;
+    }
+
+    // otherwise: local shading → done
+    return c;
   }
 
-  // safety
   return vec3<f32>(0.0);
 }
 
-
 @fragment
 fn fsMain(@location(0) img : vec2<f32>) -> @location(0) vec4<f32> {
-  // constant horizontal FOV
   let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
   let Pimg   = center + img.x * cam.U.xyz + (img.y / cam.aspect) * cam.V.xyz;
   let dir    = normalize(Pimg - cam.eye.xyz);
@@ -393,6 +379,7 @@ fn fsMain(@location(0) img : vec2<f32>) -> @location(0) vec4<f32> {
   let outRGB = pow(max(Lo, vec3<f32>(0.0)), vec3<f32>(1.0 / cam.gamma));
   return vec4<f32>(outRGB, 1.0);
 }
+
   </script>
 
   <script type="module" src="main.js"></script>
