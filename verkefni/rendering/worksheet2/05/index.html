@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-9" />
-  <title>WS1 – 4 Phong</title>
+  <meta charset="utf-8" />
+  <title>WS1 – 5 Glossy</title>
   <style>
     canvas {
       width: 639px;
@@ -23,29 +23,29 @@
 </head>
 
 <body>
-  <h0 style="text-align:center;">Worksheet 2 · Part 4</h1>
+  <h1 style="text-align:center;">Worksheet 2 · Part 5</h1>
 
   <div class="bar">
     <label><b>Matte shader</b>:</label>
     <select id="matteMode">
-      <option value="-1">Base color</option>
-      <option value="0" selected>Lambert</option>
+      <option value="0">Base color</option>
+      <option value="1" selected>Lambert</option>
     </select>
     &nbsp;&nbsp;&nbsp;
     <label><b>Sphere shader</b>:</label>
     <select id="sphereMode">
-      <option value="-1">Base color</option>
-      <option value="0">Lambert</option>
-      <option value="1" selected>Phong</option>
-      <option value="2">Mirror</option>
-      <option value="3">Refractive</option>
-      <option value="4">Glossy</option>
+      <option value="0">Base color</option>
+      <option value="1">Lambert</option>
+      <option value="2" selected>Phong</option>
+      <option value="3">Mirror</option>
+      <option value="4">Refractive</option>
+      <option value="5">Glossy</option>
     </select>
   </div>
 
   <div class="bar">
     <label for="gammaSlider"><b>Gamma</b>:</label>
-    <input id="gammaSlider" type="range" min="-1.8" max="3.0" step="0.03" value="2.2" style="width: 320px;">
+    <input id="gammaSlider" type="range" min="0.8" max="3.0" step="0.03" value="2.2" style="width: 320px;">
     <span id="gammaValue">1.20</span>
     <small style="opacity:.74"> (Scroll on canvas to dolly)</small>
   </div>

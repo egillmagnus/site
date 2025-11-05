@@ -19,8 +19,8 @@ async function init() {
     const up = vec3(0.0, 1.0, 0.0);
 
     const W = normalize(subtract(at, eye));
-    const U = normalize(cross(up, W));
-    const V = normalize(cross(W, U));
+    const U = normalize(cross(W, up));
+    const V = normalize(cross(U, W));
 
     const uniformBuffer = device.createBuffer({
         size: 80,

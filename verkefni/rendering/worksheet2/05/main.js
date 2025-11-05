@@ -36,8 +36,8 @@ async function init() {
     const at = vec3(0.0, 0.5, 0.0);
     const up = vec3(0.0, 1.0, 0.0);
     const W = normalize(subtract(at, eye));
-    const U = normalize(cross(up, W));
-    const V = normalize(cross(W, U));
+    const U = normalize(cross(W, up));
+    const V = normalize(cross(U, W));
     const zoom = 1.0;
 
     // Dolly along look direction with scroll
