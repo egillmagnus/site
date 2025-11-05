@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>WS2 – 5 Glossy</title>
+  <title>WS3 – 1b grass texture</title>
   <style>
     canvas {
       width: 640px;
@@ -23,31 +23,25 @@
 </head>
 
 <body>
-  <h1 style="text-align:center;">Worksheet 2 · Part 5</h1>
-
-  <div class="bar">
-    <label><b>Matte shader</b>:</label>
-    <select id="matteMode">
-      <option value="0">Base color</option>
-      <option value="1" selected>Lambert</option>
-    </select>
-    &nbsp;&nbsp;&nbsp;
-    <label><b>Sphere shader</b>:</label>
-    <select id="sphereMode">
-      <option value="0">Base color</option>
-      <option value="1">Lambert</option>
-      <option value="2" selected>Phong</option>
-      <option value="3">Mirror</option>
-      <option value="4">Refractive</option>
-      <option value="5">Glossy</option>
-    </select>
-  </div>
+  <h1 style="text-align:center;">Worksheet 3 · Part 1b</h1>
 
   <div class="bar">
     <label for="gammaSlider"><b>Gamma</b>:</label>
     <input id="gammaSlider" type="range" min="0.8" max="3.0" step="0.03" value="2.2" style="width: 320px;">
     <span id="gammaValue">1.20</span>
-    <small style="opacity:.74"> (Scroll on canvas to dolly)</small>
+  </div>
+  <div class="bar">
+    <label><b>Addressing</b>:</label>
+    <select id="addrMode">
+      <option value="0" selected>Clamp-to-edge</option>
+      <option value="1">Repeat</option>
+    </select>
+    &nbsp;&nbsp;&nbsp;
+    <label><b>Filtering</b>:</label>
+    <select id="filterMode">
+      <option value="0" selected>Nearest</option>
+      <option value="1">Linear</option>
+    </select>
   </div>
 
   <canvas id="gfx" width="639" height="320"></canvas>
