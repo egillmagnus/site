@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>WS3 – 4 texture zoom</title>
+  <style>
+    canvas {
+      width: 640px;
+      height: 320px;
+      border: 1px solid #333;
+      display: block;
+      margin: 1rem auto;
+    }
+
+    .bar {
+      max-width: 720px;
+      margin: 0 auto 0.5rem;
+      font: 14px/1.2 system-ui;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <h1 style="text-align:center;">Worksheet 3 · Part 4 </h1>
+
+  <div class="bar">
+    <label for="gammaSlider"><b>Gamma</b>:</label>
+    <input id="gammaSlider" type="range" min="0.8" max="3.0" step="0.03" value="2.2" style="width: 320px;">
+    <span id="gammaValue">1.20</span>
+  </div>
+  <div class="bar">
+    <label><b>Addressing</b>:</label>
+    <select id="addrMode">
+      <option value="0" selected>Clamp-to-edge</option>
+      <option value="1">Repeat</option>
+    </select>
+    &nbsp;&nbsp;&nbsp;
+    <label><b>Filtering</b>:</label>
+    <select id="filterMode">
+      <option value="0" selected>Nearest</option>
+      <option value="1">Linear</option>
+    </select>
+    &nbsp;&nbsp;&nbsp;
+    <label><b>Texturing</b>:</label>
+    <select id="texOn">
+      <option value="1" selected>On</option>
+      <option value="0">Off</option>
+    </select>
+  </div>
+  <div class="bar">
+    <label><b>AA (subdiv)</b>:</label>
+    <button id="aaMinus">−</button>
+    <span id="aaValue">1×1</span>
+    <button id="aaPlus">+</button>
+  </div>
+
+
+  <canvas id="gfx" width="639" height="320"></canvas>
+
+  <script defer src="../../common/MV.js"></script>
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>
