@@ -94,7 +94,7 @@ async function init() {
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         const notches = (e.deltaMode === WheelEvent.DOM_DELTA_LINE) ? e.deltaY : e.deltaY / 100;
-        const d = Math.sign(notches) * Math.min(Math.abs(notches), 4) * 0.15;
+        const d = Math.sign(notches) * Math.min(Math.abs(notches), 4) * 5;
         eye[0] += d * W[0];
         eye[1] += d * W[1];
         eye[2] += d * W[2];
@@ -198,9 +198,6 @@ async function init() {
     // Materials buffer
     const numMaterials = di.materials.length;
     const materialsData = new Float32Array(numMaterials * 8);
-
-    console.log('Number of materials:', numMaterials);
-
     for (let i = 0; i < numMaterials; i++) {
         const mat = di.materials[i];
         const offset = i * 8;
@@ -215,21 +212,28 @@ async function init() {
         materialsData[offset + 5] = mat.emission.g;
         materialsData[offset + 6] = mat.emission.b;
         materialsData[offset + 7] = 0.0;  // alpha
-
-        console.log(`Material ${i} (${mat.name.trim()}):`, {
-            color: [mat.color.r, mat.color.g, mat.color.b],
-            emission: [mat.emission.r, mat.emission.g, mat.emission.b]
-        });
     }
-
-    console.log('First 32 floats:', Array.from(materialsData.slice(0, 32)));
 
     const materialsBuffer = device.createBuffer({
         size: materialsData.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(materialsBuffer, 0, materialsData.buffer, materialsData.byteOffset, materialsData.byteLength);
+    const lightIndices = new Uint32Array(di.light_indices);
+    console.log('Number of light triangles:', lightIndices.length);
 
+    const lightIndicesBuffer = device.createBuffer({
+        size: Math.max(lightIndices.byteLength, 16),
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+    device.queue.writeBuffer(lightIndicesBuffer, 0, lightIndices.buffer, lightIndices.byteOffset, lightIndices.byteLength);
+
+    // Light info uniform
+    const lightInfoBuf = device.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+    device.queue.writeBuffer(lightInfoBuf, 0, new Uint32Array([lightIndices.length, 0, 0, 0]));
     // Pipeline
     const pipeline = await device.createRenderPipelineAsync({
         layout: 'auto',
@@ -248,14 +252,10 @@ async function init() {
             { binding: 3, resource: { buffer: indexBuffer } },
             { binding: 4, resource: { buffer: meshInfoBuf } },
             { binding: 5, resource: { buffer: normalsBuffer } },
-        ],
-    });
-
-    const bindGroup1 = device.createBindGroup({
-        layout: pipeline.getBindGroupLayout(1),
-        entries: [
-            { binding: 0, resource: { buffer: matIndexBuffer } },
-            { binding: 1, resource: { buffer: materialsBuffer } },
+            { binding: 6, resource: { buffer: matIndexBuffer } },
+            { binding: 7, resource: { buffer: materialsBuffer } },
+            { binding: 8, resource: { buffer: lightIndicesBuffer } },
+            { binding: 9, resource: { buffer: lightInfoBuf } },
         ],
     });
 
@@ -272,8 +272,7 @@ async function init() {
             }],
         });
         pass.setPipeline(pipeline);
-        pass.setBindGroup(0, bindGroup0);  // Set group 0
-        pass.setBindGroup(1, bindGroup1);  // Set group 1
+        pass.setBindGroup(0, bindGroup0);
         pass.draw(4, 1, 0, 0);
         pass.end();
         device.queue.submit([encoder.finish()]);
