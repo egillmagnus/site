@@ -9,7 +9,11 @@ async function init() {
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) { alert('No GPU adapter'); return; }
 
-    const device = await adapter.requestDevice();
+    const requiredFeatures = [];
+    if (adapter.features && adapter.features.has('timestamp-query')) {
+        requiredFeatures.push('timestamp-query');
+    }
+    const device = await adapter.requestDevice({ requiredFeatures });
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'opaque' });
 
@@ -31,14 +35,13 @@ async function init() {
     }
     gammaSlider.addEventListener('input', () => setGamma(parseFloat(gammaSlider.value)));
 
-    // Camera for Cornell box (millimeters)
-    let eye = vec3(277.0, 275.0, -570.0);
-    const at = vec3(277.0, 275.0, 0.0);
+    let eye = vec3(-0.02, 0.11, 0.6);
+    const at = vec3(-0.02, 0.11, 0.0);
     const up = vec3(0.0, 1.0, 0.0);
     const W = normalize(subtract(at, eye));
     const U = normalize(cross(W, up));
     const V = normalize(cross(U, W));
-    const zoom = 1.0;
+    const zoom = 3.5;
 
     // Jitter AA UI
     const aaMinus = document.getElementById('aaMinus');
@@ -98,7 +101,7 @@ async function init() {
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         const notches = (e.deltaMode === WheelEvent.DOM_DELTA_LINE) ? e.deltaY : e.deltaY / 100;
-        const d = Math.sign(notches) * Math.min(Math.abs(notches), 4) * 5;
+        const d = Math.sign(notches) * Math.min(Math.abs(notches), 4) * 0.01;
         eye[0] += d * W[0];
         eye[1] += d * W[1];
         eye[2] += d * W[2];
@@ -144,25 +147,44 @@ async function init() {
     if (info.messages.some(m => m.type === 'error')) {
         throw new Error('WGSL compilation failed');
     }
+    const di = await readOBJFile('../../common/objects/bunny.obj', 1.0, false);
 
-    // Load Cornell box
-    console.log('Loading Cornell box...');
-    const di = await readOBJFile('../../common/objects/CornellBoxWithBlocks.obj', 1.0, false);
-    if (!di) throw new Error('Failed to load OBJ');
-
-    // Build BSP tree - creates positions, normals, colors, indices, treeIds, bspTree, bspPlanes, aabb buffers
+    // Build BSP tree with INTERLEAVED data (attribs = pos+norm interleaved)
     console.log('Building BSP tree...');
     let buffers = {};
     buffers = build_bsp_tree(di, device, buffers);
     console.log('BSP tree built!');
 
-    // Material indices
-    const matIndices = new Uint32Array(di.mat_indices);
-    buffers.matIndices = device.createBuffer({
-        size: matIndices.byteLength,
+    // Combine indices with material indices (4 u32 per triangle: i0, i1, i2, matIdx)
+    const faceCount = di.indices.length / 4;  // 4 u32 per face in indices buffer
+
+    // Extract or create material indices array
+    let matIndices;
+    if (di.mat_indices) {
+        matIndices = new Uint32Array(di.mat_indices);
+    } else {
+        // Material indices might be the 4th component of each face in indices
+        matIndices = new Uint32Array(faceCount);
+        for (let f = 0; f < faceCount; f++) {
+            matIndices[f] = di.indices[f * 4 + 3] || 0;  // Default to 0 if not present
+        }
+    }
+
+    // Combine indices with material indices
+    const combinedIndices = new Uint32Array(faceCount * 4);
+    for (let f = 0; f < faceCount; f++) {
+        combinedIndices[f * 4 + 0] = di.indices[f * 4 + 0];
+        combinedIndices[f * 4 + 1] = di.indices[f * 4 + 1];
+        combinedIndices[f * 4 + 2] = di.indices[f * 4 + 2];
+        combinedIndices[f * 4 + 3] = matIndices[f];
+    }
+
+    // Overwrite indices buffer with combined data
+    buffers.indices = device.createBuffer({
+        size: combinedIndices.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
-    device.queue.writeBuffer(buffers.matIndices, 0, matIndices.buffer, matIndices.byteOffset, matIndices.byteLength);
+    device.queue.writeBuffer(buffers.indices, 0, combinedIndices.buffer, combinedIndices.byteOffset, combinedIndices.byteLength);
 
     // Materials buffer
     const numMaterials = di.materials.length;
@@ -201,7 +223,6 @@ async function init() {
     device.queue.writeBuffer(buffers.lightInfo, 0, new Uint32Array([lightIndices.length, 0, 0, 0]));
 
     // Mesh info
-    const faceCount = di.mat_indices.length;
     buffers.meshInfo = device.createBuffer({
         size: 16,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -215,32 +236,27 @@ async function init() {
         fragment: { module, entryPoint: 'fsMain', targets: [{ format }] },
         primitive: { topology: 'triangle-strip' },
     });
-
-    // Single bind group with all buffers
     const bindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [
-            { binding: 0, resource: { buffer: uniformBuffer } },
-            { binding: 1, resource: { buffer: jitterBuffer } },
-            { binding: 2, resource: { buffer: buffers.positions } },    // From BSP
-            { binding: 3, resource: { buffer: buffers.indices } },      // From BSP
-            { binding: 4, resource: { buffer: buffers.meshInfo } },
-            { binding: 5, resource: { buffer: buffers.normals } },      // From BSP
-            { binding: 6, resource: { buffer: buffers.matIndices } },
-            { binding: 7, resource: { buffer: buffers.materials } },
-            { binding: 8, resource: { buffer: buffers.lightIndices } },
-            { binding: 9, resource: { buffer: buffers.lightInfo } },
-            { binding: 10, resource: { buffer: buffers.aabb } },        // NEW: Bounding box
-            { binding: 11, resource: { buffer: buffers.treeIds } },     // NEW: BSP tree IDs
-            { binding: 12, resource: { buffer: buffers.bspTree } },     // NEW: BSP nodes
-            { binding: 13, resource: { buffer: buffers.bspPlanes } },   // NEW: BSP planes
+            { binding: 0, resource: { buffer: uniformBuffer } },        // uniform
+            { binding: 1, resource: { buffer: jitterBuffer } },         // storage 1
+            { binding: 2, resource: { buffer: buffers.attribs } },      // storage 2 (interleaved pos+norm)
+            { binding: 3, resource: { buffer: buffers.indices } },      // storage 3 (includes mat idx)
+            { binding: 4, resource: { buffer: buffers.materials } },    // storage 4
+            { binding: 5, resource: { buffer: buffers.lightIndices } }, // storage 5
+            { binding: 6, resource: { buffer: buffers.lightInfo } },    // uniform
+            { binding: 7, resource: { buffer: buffers.aabb } },         // uniform
+            { binding: 8, resource: { buffer: buffers.treeIds } },      // storage 6
+            { binding: 9, resource: { buffer: buffers.bspTree } },     // storage 7
+            { binding: 10, resource: { buffer: buffers.bspPlanes } },   // storage 8
         ],
     });
 
     function render() {
         writeUniforms();
         const encoder = device.createCommandEncoder();
-        
+
         const pass = timingHelper.beginRenderPass(encoder, {
             colorAttachments: [{
                 view: context.getCurrentTexture().createView(),
@@ -249,13 +265,13 @@ async function init() {
                 storeOp: 'store',
             }],
         });
-        
+
         pass.setPipeline(pipeline);
         pass.setBindGroup(0, bindGroup);
         pass.draw(4, 1, 0, 0);
         pass.end();
         device.queue.submit([encoder.finish()]);
-        
+
         // Get timing
         timingHelper.getResult().then(duration => {
             if (frameTimeDisplay) {
