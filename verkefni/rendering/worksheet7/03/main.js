@@ -49,8 +49,6 @@ async function init() {
         bgToggle.addEventListener('change', () => {
             blueBackground = bgToggle.checked;
             frame = 0;
-            updateFrameCounter();
-            render();
         });
     }
 
@@ -58,16 +56,12 @@ async function init() {
         accumulateToggle.checked = accumulate;
         accumulateToggle.addEventListener('change', () => {
             accumulate = accumulateToggle.checked;
-            updateFrameCounter();
-            render();
         });
     }
 
     if (resetButton) {
         resetButton.addEventListener('click', () => {
             frame = 0;
-            updateFrameCounter();
-            render();
         });
     }
 
@@ -159,7 +153,7 @@ async function init() {
 
     function writeUniforms() {
         const aspect = canvas.width / canvas.height;
-        const invW = 1.0 / canvas.width;
+        var invW = 1.0 / canvas.width;
 
         if (blueBackground) {
             invW = -invW;

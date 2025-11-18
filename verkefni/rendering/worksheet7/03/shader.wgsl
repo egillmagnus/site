@@ -1,6 +1,7 @@
 const EPS_DIV : f32 = 0.00000001;
 const EPS_PARALLEL : f32 = 0.000001;
 const EPS_RAY : f32 = 0.001;
+const PI : f32 = 3.14159265359;
 
 fn tea(val0: u32, val1: u32) -> u32 {
     const N = 16u;
@@ -21,6 +22,26 @@ fn mcg31(prev: ptr<function, u32>) -> u32 {
 
 fn rnd(prev: ptr<function, u32>) -> f32 {
     return f32(mcg31(prev)) / f32(0x80000000u); // [0,1)
+}
+
+// === Cosine hemisphere helpers (from slides) ===
+
+fn spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32) -> vec3<f32> {
+    return vec3<f32>(
+        sin_theta * cos(phi),
+        sin_theta * sin(phi),
+        cos_theta
+    );
+}
+
+// Rotate a direction sampled around the +z axis to be sampled around normal n
+fn rotate_to_normal(n: vec3<f32>, v: vec3<f32>) -> vec3<f32> {
+    let s = sign(n.z + 1.0e-16);
+    let a = -1.0 / (1.0 + abs(n.z));
+    let b = n.x * n.y * a;
+    return vec3<f32>(1.0 + n.x * n.x * a, b, -s * n.x) * v.x +
+           vec3<f32>(s * b, s * (1.0 + n.y * n.y * a), -n.y) * v.y +
+           n * v.z;
 }
 
 struct VSOut {
@@ -51,11 +72,11 @@ struct Camera {
     aspect: f32,
     zoom: f32,
     gamma: f32,
-    _pad0: f32,
-    addrMode: u32,
-    filterMode: u32,
-    _pad1: u32,
-    _pad2: u32,
+    _pad0: f32,   // used as invW (with sign encoding blue/black background)
+    addrMode: u32, // width
+    filterMode: u32, // height
+    _pad1: u32,   // frame
+    _pad2: u32,   // N (no. of jitters)
 };
 
 struct Jitters {
@@ -134,7 +155,6 @@ struct SpheresUBO {
 @group(0) @binding(10) var<uniform> SPH : SpheresUBO;
 @group(0) @binding(11) var renderTexture : texture_2d<f32>;
 
-
 struct Ray {
     origin: vec3<f32>,
     dir: vec3<f32>,
@@ -156,16 +176,17 @@ struct Material {
     ior: f32,
 };
 
+// UPDATED: add throughput and emit flag to HitInfo
 struct HitInfo {
     hit: bool,
     t: f32,
     n: vec3<f32>,
     mat: Material,
     shaderId: u32,
-    _padH: u32,
     relEta: f32,
     uv: vec2<f32>,
-    _padUV: vec2<f32>,
+    throughput: vec3<f32>, // RGB throughput (path weight)
+    emit: bool,            // true if this is an emitting surface
 };
 
 fn makeMaterial(emission: vec3<f32>, diffuse: vec3<f32>, spec_rgb: vec3<f32>, shininess: f32, ior: f32) -> Material {
@@ -176,16 +197,48 @@ fn missMat() -> Material {
     return makeMaterial(vec3<f32>(0.0), vec3<f32>(0.0), vec3<f32>(0.0), 1.0, 1.0);
 }
 
+// UPDATED: initialize throughput and emit
 fn missHit(tmax: f32) -> HitInfo {
-    return HitInfo(false, tmax, vec3<f32>(0.0), missMat(), 0u, 0u, 1.0, vec2<f32>(0.0), vec2<f32>(0.0));
+    return HitInfo(
+        false,
+        tmax,
+        vec3<f32>(0.0),
+        missMat(),
+        0u,
+        1.0,
+        vec2<f32>(0.0),
+        vec3<f32>(1.0),
+        false
+    );
 }
 
 fn okHit(t: f32, n: vec3<f32>, mat: Material, shaderId: u32, uv: vec2<f32>) -> HitInfo {
-    return HitInfo(true, t, normalize(n), mat, shaderId, 0u, 1.0, uv, vec2<f32>(0.0));
+    let isEmit = any(mat.emission > vec3<f32>(0.0));
+    return HitInfo(
+        true,
+        t,
+        normalize(n),
+        mat,
+        shaderId,
+        1.0,
+        uv,
+        vec3<f32>(1.0),
+        isEmit
+    );
 }
 
 fn addRelEta(h: HitInfo, rel: f32) -> HitInfo {
-    return HitInfo(h.hit, h.t, h.n, h.mat, h.shaderId, h._padH, rel, h.uv, h._padUV);
+    return HitInfo(
+        h.hit,
+        h.t,
+        h.n,
+        h.mat,
+        h.shaderId,
+        rel,
+        h.uv,
+        h.throughput,
+        h.emit
+    );
 }
 
 fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
@@ -213,7 +266,6 @@ fn intersectAabb(ray: Ray) -> bool {
     // Caller will clamp ray.tmin/tmax after this returns true
     return true;
 }
-
 
 fn intersectSphere(ray: Ray, center: vec3<f32>, radius: f32, typeFlag: u32, ior: f32) -> HitInfo {
     let oc = ray.origin - center;
@@ -380,7 +432,6 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     // --- Also test the two analytic spheres and return the closest overall ---
     var bestHit = hit;
 
-
     var sphereRay = ray_in;
     if bestHit.hit {
         sphereRay.tmax = bestHit.t; 
@@ -400,9 +451,6 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     return bestHit;
 }
 
-
-
-
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     let eps = EPS_RAY;
     let ray = Ray(P + eps * wi, wi, eps, maxDist - eps);
@@ -412,8 +460,12 @@ fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     return true;
 }
 
-fn background(dir: vec3<f32>) -> vec3<f32> {
-    return vec3<f32>(0.1, 0.3, 0.6);
+// UPDATED: blue/black background controlled by a flag
+fn background(dir: vec3<f32>, blueBg: bool) -> vec3<f32> {
+    if blueBg {
+        return vec3<f32>(0.1, 0.3, 0.6);
+    }
+    return vec3<f32>(0.0, 0.0, 0.0);
 }
 
 // NEW: Monte Carlo area light sampling with random position
@@ -509,15 +561,13 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Ligh
     let wi = L / max(dist, EPS_DIV);
     
     // Compute radiance at the shading point
-    // L_i = L_e * A * cos(theta) / (dist^2 * pdf)
-    // pdf = 1/A for uniform sampling over area
-    // So: L_i = L_e * A * cos(theta) / dist^2 * A = L_e * cos(theta) / dist^2
     let cosTheta = max(0.0, -dot(wi, selectedNormal));
     let Li = selectedEmission * cosTheta * totalArea / max(dist * dist, EPS_DIV);
     
     return Light(Li, wi, dist);
 }
 
+// Direct illumination (area light) + emission (for first-hit / direct view)
 fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     var N = hit.n;
     if dot(N, ray.dir) > 0.0 { N = -N; }
@@ -525,12 +575,13 @@ fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     let P = ray.origin + hit.t * ray.dir;
     let L = sampleAreaLight(P, N, seed);  // Pass seed for Monte Carlo sampling
 
+    // If occluded, only local emission
     if occluded_from(P, L.wi, L.dist) {
         return hit.mat.emission;
     }
 
-    let PI = 3.1415926535;
-    let fr = hit.mat.diffuse / PI;
+    let PI_loc = 3.1415926535;
+    let fr = hit.mat.diffuse / PI_loc;
     let cosTheta = max(0.0, dot(N, L.wi));
     let Lo = hit.mat.emission + fr * L.Li * cosTheta;
 
@@ -539,21 +590,34 @@ fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
 
 const MAX_BOUNCES : i32 = 4;
 
-fn trace(ray0: Ray, seed: ptr<function, u32>) -> vec3<f32> {
+// UPDATED: path-traced indirect for Lambertian, + blueBg flag
+fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
     var ray = ray0;
     var eta: f32 = 1.0;
     var acc = vec3<f32>(0.0);
+    var throughput = vec3<f32>(1.0, 1.0, 1.0);
 
     for (var depth: i32 = 0; depth < MAX_BOUNCES; depth = depth + 1) {
         let h = intersect_scene_bsp(ray);
-        if !h.hit { return background(ray.dir); }
+        if !h.hit {
+            let bg = background(ray.dir, blueBg);
+            return acc + throughput * bg;
+        }
 
         let hRel = addRelEta(h, computeRelEta(h, ray, eta));
-        let c = shade_once(ray, hRel, seed);  // Pass seed through
+
+        // If this is an emissive surface hit by the path, just add Le and stop
+        if hRel.emit {
+            acc += throughput * hRel.mat.emission;
+            return acc;
+        }
+
+        // Direct illumination (area light) + possible local emission (for non-indirect)
+        let c = shade_once(ray, hRel, seed);
 
         // Perfect mirror
         if hRel.shaderId == 1u {
-            acc += c; // (usually 0; keeps same structure)
+            acc += throughput * c; // mostly 0 except if mirror is emissive/diffuse
             let P = ray.origin + hRel.t * ray.dir;
             var N = hRel.n;
             if dot(N, ray.dir) > 0.0 { N = -N; }
@@ -565,7 +629,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>) -> vec3<f32> {
 
         // Glass
         if hRel.shaderId == 2u {
-            acc += c; // (usually 0; spheres have no emission/diffuse)
+            acc += throughput * c; // again, usually 0 in your setup
             let P = ray.origin + hRel.t * ray.dir;
             var N = hRel.n;
             var entering = true;
@@ -589,9 +653,44 @@ fn trace(ray0: Ray, seed: ptr<function, u32>) -> vec3<f32> {
             continue;
         }
 
-        return acc + c;
+        // Lambertian / general diffuse: add direct and then sample indirect
+        acc += throughput * c;
+
+        let albedo = hRel.mat.diffuse;
+        if all(albedo == vec3<f32>(0.0)) {
+            // No diffuse component => stop the path
+            return acc;
+        }
+
+        // Russian roulette on diffuse reflection probability
+        let Pd = (albedo.x + albedo.y + albedo.z) / 3.0;
+        let xi = rnd(seed);
+        if xi > Pd {
+            // Absorbed
+            return acc;
+        }
+
+        // Update throughput: T := T * (rho_d / Pd)
+        throughput = throughput * (albedo / max(Pd, 1.0e-6));
+
+        // Cosine-weighted hemisphere sampling around the surface normal
+        var N = hRel.n;
+        if dot(N, ray.dir) > 0.0 { N = -N; }
+
+        let xi1 = rnd(seed);
+        let xi2 = rnd(seed);
+        let cos_theta = sqrt(xi1);
+        let sin_theta = sqrt(max(0.0, 1.0 - xi1));
+        let phi = 2.0 * PI * xi2;
+        let local_dir = spherical_direction(sin_theta, cos_theta, phi);
+        let wi = rotate_to_normal(N, local_dir);
+
+        let P = ray.origin + hRel.t * ray.dir;
+        let eps = EPS_RAY;
+        ray = Ray(P + eps * wi, wi, eps, 1e30);
+        // Continue the loop with updated ray and throughput
     }
-    return vec3<f32>(0.0);
+    return acc;
 }
 
 struct FSOut {
@@ -607,16 +706,19 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let frame: u32 = cam._pad1;
     let N: u32 = cam._pad2;
 
+    // Decode invW and blue-background flag from _pad0
+    let invWraw = cam._pad0;
+    let blueBg = invWraw < 0.0;
+    let invW = abs(invWraw);
+    let invH = invW * cam.aspect;
+    let dpx = 2.0 * invW;
+    let dpy = 2.0 * invH;
+
     // Seed PRNG uniquely per pixel + frame
     let pixId = u32(fragcoord.y) * width + u32(fragcoord.x);
     var seed = tea(pixId, frame);
 
     // Subpixel jitter (one random sample per frame)
-    let invW = cam._pad0;
-    let invH = invW * cam.aspect;
-    let dpx = 2.0 * invW;
-    let dpy = 2.0 * invH;
-
     let jx = rnd(&seed) - 0.5;
     let jy = rnd(&seed) - 0.5;
     let img_j = img + vec2<f32>(jx * dpx, jy * dpy);
@@ -625,7 +727,7 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
     let Pimg = center + img_j.x * cam.U.xyz + (img_j.y / cam.aspect) * cam.V.xyz;
     let dir = normalize(Pimg - cam.eye.xyz);
-    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, 1e30), &seed);  // Pass seed to trace
+    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, 1e30), &seed, blueBg);
 
     // Progressive average: accum = (prevSum + new) / (frame+1)
     let prevAccum = textureLoad(renderTexture, vec2<u32>(fragcoord.xy), 0).rgb;
