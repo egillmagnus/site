@@ -41,6 +41,18 @@ async function init() {
     const frameCounter = document.getElementById('frameCounter');
     const accumulateToggle = document.getElementById('accumulateToggle');
     const resetButton = document.getElementById('resetButton');
+    const bgToggle = document.getElementById('bgToggle');
+    let blueBackground = false;
+
+    if (bgToggle) {
+        bgToggle.checked = blueBackground;
+        bgToggle.addEventListener('change', () => {
+            blueBackground = bgToggle.checked;
+            frame = 0;
+            updateFrameCounter();
+            render();
+        });
+    }
 
     if (accumulateToggle) {
         accumulateToggle.checked = accumulate;
@@ -148,6 +160,10 @@ async function init() {
     function writeUniforms() {
         const aspect = canvas.width / canvas.height;
         const invW = 1.0 / canvas.width;
+
+        if (blueBackground) {
+            invW = -invW;
+        }
 
         // Camera buffer is 96 bytes float section + 4 u32s at the end in your layout.
         const buf = new ArrayBuffer(96);
@@ -381,7 +397,7 @@ async function init() {
         // Advance frame if progressive; otherwise keep re-rendering a single-sample frame
         if (accumulate) {
             frame++;
-        } 
+        }
         updateFrameCounter();
     }
     function animate() {

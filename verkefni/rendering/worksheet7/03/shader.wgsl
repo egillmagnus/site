@@ -274,12 +274,14 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let n0 = ATTRIB.data[i0 * 2u + 1u].xyz;
     let n1 = ATTRIB.data[i1 * 2u + 1u].xyz;
     let n2 = ATTRIB.data[i2 * 2u + 1u].xyz;
-    let interpolated_normal = normalize(alpha * n0 + beta * n1 + gamma * n2);
+    let normal = normalize(alpha * n0 + beta * n1 + gamma * n2);
+
+    let uv = vec2<f32>(beta, gamma);
 
     let matData = MATERIALS.data[matIdx];
     let mat = makeMaterial(matData.emission.rgb, matData.color.rgb, vec3<f32>(0.0), 1.0, 1.0);
 
-    return okHit(t, interpolated_normal, mat, 0u, vec2<f32>(beta, gamma));
+    return okHit(t, normal, mat, 0u, uv);
 }
 
 const MAX_LEVEL : u32 = 20u;
@@ -379,10 +381,9 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var bestHit = hit;
 
 
-    // Create a ray for sphere testing that respects current best hit
     var sphereRay = ray_in;
     if bestHit.hit {
-        sphereRay.tmax = bestHit.t;  // Don't accept hits farther than current best
+        sphereRay.tmax = bestHit.t; 
     }
     // Left mirror sphere (type=1)
     let s0_type = u32(SPH.p0.x);
@@ -415,14 +416,14 @@ fn background(dir: vec3<f32>) -> vec3<f32> {
     return vec3<f32>(0.1, 0.3, 0.6);
 }
 
-fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>) -> Light {
+// NEW: Monte Carlo area light sampling with random position
+fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Light {
     if LIGHT_INFO.lightCount == 0u {
         return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
     }
 
-    var lightCenter = vec3<f32>(0.0);
-    var vertexCount = 0.0;
-
+    // First, compute total area of all light triangles for probability weighting
+    var totalArea = 0.0;
     for (var i = 0u; i < LIGHT_INFO.lightCount; i = i + 1u) {
         let faceIdx = LIGHT_IDX.data[i];
         let base = 4u * faceIdx;
@@ -430,18 +431,32 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>) -> Light {
         let i1 = IND.data[base + 1u];
         let i2 = IND.data[base + 2u];
 
-        lightCenter += ATTRIB.data[i0 * 2u + 0u].xyz;
-        lightCenter += ATTRIB.data[i1 * 2u + 0u].xyz;
-        lightCenter += ATTRIB.data[i2 * 2u + 0u].xyz;
-        vertexCount += 3.0;
+        let v0 = ATTRIB.data[i0 * 2u + 0u].xyz;
+        let v1 = ATTRIB.data[i1 * 2u + 0u].xyz;
+        let v2 = ATTRIB.data[i2 * 2u + 0u].xyz;
+
+        let e0 = v1 - v0;
+        let e1 = v2 - v0;
+        let cross_e = cross(e0, e1);
+        let area = length(cross_e) * 0.5;
+        
+        totalArea += area;
     }
-    lightCenter = lightCenter / vertexCount;
 
-    let L = lightCenter - P;
-    let dist = length(L);
-    let wi = L / max(dist, EPS_DIV);
+    if totalArea < EPS_DIV {
+        return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
+    }
 
-    var Ie = vec3<f32>(0.0);
+    // Sample a random triangle weighted by area
+    let r1 = rnd(seed) * totalArea;
+    var accumulatedArea = 0.0;
+    var selectedFaceIdx = 0u;
+    var selectedArea = 0.0;
+    var selectedNormal = vec3<f32>(0.0);
+    var selectedEmission = vec3<f32>(0.0);
+    var selectedV0 = vec3<f32>(0.0);
+    var selectedV1 = vec3<f32>(0.0);
+    var selectedV2 = vec3<f32>(0.0);
 
     for (var i = 0u; i < LIGHT_INFO.lightCount; i = i + 1u) {
         let faceIdx = LIGHT_IDX.data[i];
@@ -459,27 +474,56 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>) -> Light {
         let e1 = v2 - v0;
         let cross_e = cross(e0, e1);
         let area = length(cross_e) * 0.5;
+        
+        accumulatedArea += area;
 
-        if area < EPS_DIV { continue; }
-
-        let ne = normalize(cross_e);
-        let matData = MATERIALS.data[matIdx];
-        let Le = matData.emission.rgb;
-
-        let cosTheta = max(0.0, -dot(wi, ne));
-        Ie += cosTheta * Le * area;
+        if r1 <= accumulatedArea {
+            selectedFaceIdx = faceIdx;
+            selectedArea = area;
+            selectedNormal = normalize(cross_e);
+            let matData = MATERIALS.data[matIdx];
+            selectedEmission = matData.emission.rgb;
+            selectedV0 = v0;
+            selectedV1 = v1;
+            selectedV2 = v2;
+            break;
+        }
     }
 
-    let Li = Ie / max(dist * dist, EPS_DIV);
+    // Sample a random point on the selected triangle using barycentric coordinates
+    let r2 = rnd(seed);
+    let r3 = rnd(seed);
+    
+    // Convert uniform random samples to barycentric coordinates
+    let sqrt_r2 = sqrt(r2);
+    let beta = 1.0 - sqrt_r2;
+    let gamma = r3 * sqrt_r2;
+    let alpha = 1.0 - beta - gamma;
+    
+    // Random point on the triangle
+    let lightPoint = alpha * selectedV0 + beta * selectedV1 + gamma * selectedV2;
+    
+    // Direction and distance from shading point to light sample
+    let L = lightPoint - P;
+    let dist = length(L);
+    let wi = L / max(dist, EPS_DIV);
+    
+    // Compute radiance at the shading point
+    // L_i = L_e * A * cos(theta) / (dist^2 * pdf)
+    // pdf = 1/A for uniform sampling over area
+    // So: L_i = L_e * A * cos(theta) / dist^2 * A = L_e * cos(theta) / dist^2
+    let cosTheta = max(0.0, -dot(wi, selectedNormal));
+    let Li = selectedEmission * cosTheta * totalArea / max(dist * dist, EPS_DIV);
+    
     return Light(Li, wi, dist);
 }
 
-fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
+fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     var N = hit.n;
     if dot(N, ray.dir) > 0.0 { N = -N; }
 
     let P = ray.origin + hit.t * ray.dir;
-    let L = sampleAreaLight(P, N);
+    let L = sampleAreaLight(P, N, seed);  // Pass seed for Monte Carlo sampling
 
     if occluded_from(P, L.wi, L.dist) {
         return hit.mat.emission;
@@ -495,7 +539,7 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
 
 const MAX_BOUNCES : i32 = 4;
 
-fn trace(ray0: Ray) -> vec3<f32> {
+fn trace(ray0: Ray, seed: ptr<function, u32>) -> vec3<f32> {
     var ray = ray0;
     var eta: f32 = 1.0;
     var acc = vec3<f32>(0.0);
@@ -505,7 +549,7 @@ fn trace(ray0: Ray) -> vec3<f32> {
         if !h.hit { return background(ray.dir); }
 
         let hRel = addRelEta(h, computeRelEta(h, ray, eta));
-        let c = shade_once(ray, hRel);
+        let c = shade_once(ray, hRel, seed);  // Pass seed through
 
         // Perfect mirror
         if hRel.shaderId == 1u {
@@ -549,19 +593,15 @@ fn trace(ray0: Ray) -> vec3<f32> {
     }
     return vec3<f32>(0.0);
 }
+
 struct FSOut {
     @location(0) frame: vec4<f32>,  // gamma-corrected for the screen
     @location(1) accum: vec4<f32>,  // linear accumulated color (rgba32float)
 };
+
 @fragment
 fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) -> FSOut {
     // Pull needed uniforms from Camera:
-    // cam._pad0 = invW (already used)
-    // cam.aspect used as usual
-    // u32(cam.addrMode)  = width
-    // u32(cam.filterMode)= height
-    // u32(cam._pad1)     = frame number (0-based)
-    // u32(cam._pad2)     = jitter count per frame (subdiv*subdiv)
     let width: u32 = cam.addrMode;
     let height: u32 = cam.filterMode;
     let frame: u32 = cam._pad1;
@@ -585,10 +625,9 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
     let Pimg = center + img_j.x * cam.U.xyz + (img_j.y / cam.aspect) * cam.V.xyz;
     let dir = normalize(Pimg - cam.eye.xyz);
-    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, 1e30));
+    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, 1e30), &seed);  // Pass seed to trace
 
     // Progressive average: accum = (prevSum + new) / (frame+1)
-    // prevSum = prevAccum * frame
     let prevAccum = textureLoad(renderTexture, vec2<u32>(fragcoord.xy), 0).rgb;
     let prevSum = prevAccum * f32(frame);
     let accumRGB = (prevSum + sampleRGB) / f32(frame + 1u);
