@@ -9,7 +9,7 @@ torus {
 }
 
 torus {
-    center = 278, 220, 300
+    center = 278, 240, 300
     R = 110
     r = 35
     ior = 1.5
@@ -19,7 +19,7 @@ torus {
 }
 
 torus {
-    center = 278, 280, 300
+    center = 278, 300, 300
     R = 80
     r = 30
     ior = 1.5
@@ -29,7 +29,7 @@ torus {
 }
 
 torus {
-    center = 278, 335, 300
+    center = 278, 355, 300
     R = 50
     r = 25
     ior = 1.5
@@ -39,7 +39,7 @@ torus {
 }
 
 torus {
-    center = 278, 385, 300
+    center = 278, 400, 300
     R = 25
     r = 18
     ior = 1.5
@@ -53,7 +53,7 @@ torus {
     R = 25
     r = 18
     ior = 1.5
-    extinction = 0.0075, 0.0030, 0.0046
+    extinction = 0.075, 0.5, 0.046
     axis = 
     angle =
 }
@@ -63,7 +63,7 @@ torus {
     R = 25
     r = 18
     ior = 1.5
-    extinction = 0.075, 0.030, 0.046
+    extinction = 0.075, 0.5, 0.046
     axis = 
     angle =
 }

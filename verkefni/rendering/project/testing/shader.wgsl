@@ -1,6 +1,6 @@
 const EPS_DIV : f32 = 0.00000001;
 const EPS_PARALLEL : f32 = 0.000001;
-const EPS_RAY : f32 = 0.001;
+const EPS_RAY : f32 = 0.1;
 const PI : f32 = 3.14159265359;
 const SCENE_TMAX : f32 = 1200.0;
 
@@ -234,6 +234,10 @@ fn missMat() -> Material {
     return makeMaterial(vec3<f32>(0.0), vec3<f32>(0.0), vec3<f32>(0.0), 1.0, 1.0);
 }
 
+fn luminance(c: vec3<f32>) -> f32 {
+    return 0.2126 * c.x + 0.7152 * c.y + 0.0722 * c.z;
+}
+
 fn fresnel_R(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) -> f32 {
     let denom_s = eta_i * cos_i + eta_t * cos_t;
     let denom_p = eta_t * cos_i + eta_i * cos_t;
@@ -389,8 +393,8 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
         min(segTmax, box_tmax)
     );
 
-    let MAX_STEPS = 128u;
-    let MAX_BISECT = 10u;
+    let MAX_STEPS = 64u;
+    let MAX_BISECT = 6u;
 
     var t0 = ray.tmin;
     var P0 = ray.origin + t0 * ray.dir;
@@ -573,7 +577,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     return okHit(t, normal, mat, 0u, uv, vec3<f32>(0.0));
 }
 
-fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
+fn intersect_scene_bsp(ray_in: Ray, includeTori: bool) -> HitInfo {
     var r = ray_in;
 
     if !intersectAabb(r) {
@@ -677,10 +681,12 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     //    bestHit = h1;
     //}
 
-    for (var i = 0u; i < TORUS_INFO.count; i = i + 1u) {
-        let ht = intersectTorusInstance(ray_in, i);
-        if ht.hit && ht.t < bestHit.t {
-            bestHit = ht;
+    if includeTori {
+        for (var i = 0u; i < TORUS_INFO.count; i = i + 1u) {
+            let ht = intersectTorusInstance(ray_in, i);
+            if ht.hit && ht.t < bestHit.t {
+                bestHit = ht;
+            }
         }
     }
 
@@ -692,7 +698,7 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     let eps = EPS_RAY;
     let ray = Ray(P + eps * wi, wi, eps, maxDist - eps);
-    let h = intersect_scene_bsp(ray);
+    let h = intersect_scene_bsp(ray, false);
     if !h.hit {
         return false;
     }
@@ -820,7 +826,15 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
     var throughput = vec3<f32>(1.0, 1.0, 1.0);
 
     for (var depth: i32 = 0; depth < MAX_BOUNCES; depth = depth + 1) {
-        let h = intersect_scene_bsp(ray);
+        if depth >= 3 {
+            let p = clamp(luminance(throughput), 0.1, 0.95);
+            let xi = rnd(seed);
+            if xi > p {
+                return acc;    // terminate path
+            }
+            throughput = throughput / p;
+        }
+        let h = intersect_scene_bsp(ray, true);
         if !h.hit {
             let bg = background(ray.dir, blueBg);
             return acc + throughput * bg;
@@ -833,8 +847,10 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             return acc;
         }
 
-        let c = shade_once(ray, hRel, seed);
-
+        var c = vec3<f32>(0.0);
+            if hRel.shaderId == 0u && depth <= 6 {
+        c = shade_once(ray, hRel, seed);
+        }
         // Mirror
         if hRel.shaderId == 1u {
             acc += throughput * c;
@@ -978,6 +994,7 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let pixId = u32(fragcoord.y) * width + u32(fragcoord.x);
     var seed = tea(pixId, frame);
 
+    // Jittered camera sample
     let jx = rnd(&seed) - 0.5;
     let jy = rnd(&seed) - 0.5;
     let img_j = img + vec2<f32>(jx * dpx, jy * dpy);
@@ -985,11 +1002,22 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
     let Pimg = center + img_j.x * cam.U.xyz + (img_j.y / cam.aspect) * cam.V.xyz;
     let dir = normalize(Pimg - cam.eye.xyz);
-    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, SCENE_TMAX), &seed, blueBg);
 
+    // === One sample per pixel per frame ===
+    var sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, SCENE_TMAX), &seed, blueBg);
+
+    // === Firefly clamp by luminance ===
+    let L    = luminance(sampleRGB);
+    let Lmax = 20.0; // tweak 5–20
+
+    if L > Lmax {
+        sampleRGB *= Lmax / max(L, EPS_DIV);
+    }
+
+    // === Accumulate over frames ===
     let prevAccum = textureLoad(renderTexture, vec2<u32>(fragcoord.xy), 0).rgb;
-    let prevSum = prevAccum * f32(frame);
-    let accumRGB = (prevSum + sampleRGB) / f32(frame + 1u);
+    let prevSum   = prevAccum * f32(frame);
+    let accumRGB  = (prevSum + sampleRGB) / f32(frame + 1u);
 
     let outRGB = pow(max(accumRGB, vec3<f32>(0.0)), vec3<f32>(1.0 / cam.gamma));
 
