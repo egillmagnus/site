@@ -1,0 +1,49 @@
+torus {
+    center = 278, 110, 300
+    R = 140
+    r = 40
+    ior = 1.5
+    extinction = 0, 0, 0
+    axis =
+    angle =
+}
+
+torus {
+    center = 278, 170, 300
+    R = 110
+    r = 35
+    ior = 1.5
+    extinction = 0, 0, 0
+    axis = 
+    angle = 
+}
+
+torus {
+    center = 278, 230, 300
+    R = 80
+    r = 30
+    ior = 1.5
+    extinction = 0, 0, 0
+    axis = 
+    angle = 
+}
+
+torus {
+    center = 278, 285, 300
+    R = 50
+    r = 25
+    ior = 1.5
+    extinction = 0, 0, 0
+    axis =
+    angle =
+}
+
+torus {
+    center = 278, 335, 300
+    R = 25
+    r = 18
+    ior = 1.5
+    extinction = 0, 0, 0
+    axis = 
+    angle =
+}

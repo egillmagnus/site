@@ -39,22 +39,15 @@
     <input id="gammaSlider" type="range" min="0.2" max="3.0" step="0.03" value="2.2" style="width: 320px;">
     <span id="gammaValue">1.20</span>
   </div>
-  <div class="bar">
-    <label><b>AA (subdiv)</b>:</label>
-    <button id="aaMinus">−</button>
-    <span id="aaValue">1×1</span>
-    <button id="aaPlus">+</button>
-  </div>
-  <div class="bar">
-    <label><input type="checkbox" id="bgToggle"> Blue background</label>
-  </div>
   <canvas id="gfx" width="512" height="512"></canvas>
   <script src="../../common/bsptree/Aabb.js"></script>
   <script src="../../common/bsptree/BspTree_interleaved.js"></script>
   <script src="../../common/bsptree/TimingHelper.js"></script>
   <script src="../../common/bsptree/OBJParser_interleaved.js"></script>
   <script defer src="../../common/MV.js"></script>
-  <script type="module" src="main.js"></script>
+  <script src="../../common/toriParser.js"></script>
+<script type="module" src="main.js"></script>
+
 </body>
 
 </html>

@@ -3,11 +3,6 @@ const EPS_PARALLEL : f32 = 0.000001;
 const EPS_RAY : f32 = 0.001;
 const PI : f32 = 3.14159265359;
 
-// === Torus parameters (circular torus, axis-aligned around y, centered in box) ===
-const TORUS_R : f32 = 120.0; // major radius
-const TORUS_r : f32 = 40.0;  // minor radius
-const TORUS_CENTER : vec3<f32> = vec3<f32>(278.0, 160.0, 300.0);
-
 // --- RNG helpers ---
 
 fn tea(val0: u32, val1: u32) -> u32 {
@@ -93,6 +88,27 @@ struct Camera {
     _pad2: u32,     // N (unused here)
 };
 
+struct Torus {
+    centerR: vec4<f32>,     // xyz = center, w = major radius R
+    rIorPad: vec4<f32>,     // x = minor radius r, y = ior, z,w unused
+    rot0: vec4<f32>,        // row 0 of 3x3 rotation
+    rot1: vec4<f32>,        // row 1
+    rot2: vec4<f32>,        // row 2
+    extinction: vec4<f32>,  // xyz = sigma_t (absorption), w unused
+};
+
+struct TorusBuf {
+    data: array<Torus>
+};
+
+struct TorusInfo {
+    count: u32,
+    _pad0: u32,
+    _pad1: u32,
+    _pad2: u32,
+};
+
+
 struct Jitters {
     data: array<vec2<f32>>
 };
@@ -168,6 +184,9 @@ struct SpheresUBO {
 @group(0) @binding(9)  var<storage, read> BSP_PLANES : BspPlanesBuf;
 @group(0) @binding(10) var<uniform>      SPH         : SpheresUBO;
 @group(0) @binding(11) var               renderTexture : texture_2d<f32>;
+@group(0) @binding(12) var<storage, read> TORI : TorusBuf;
+@group(0) @binding(13) var<uniform>      TORUS_INFO : TorusInfo;
+
 
 // === Core structs ===
 
@@ -285,60 +304,75 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
 // === Torus implicit + normal ===
 // F(P) = (x^2 + y^2 + z^2 + R^2 - r^2)^2 - 4 R^2 (x^2 + z^2)
 
-fn torusF(P: vec3<f32>) -> f32 {
-    let pc = P - TORUS_CENTER;
-    let x = pc.x;
-    let y = pc.y;
-    let z = pc.z;
+// Torus implicit in local coords (centered at origin)
+fn torusF_local(P: vec3<f32>, R: f32, r: f32) -> f32 {
+    let x = P.x;
+    let y = P.y;
+    let z = P.z;
 
-    let sum = x * x + y * y + z * z + TORUS_R * TORUS_R - TORUS_r * TORUS_r;
+    let sum = x * x + y * y + z * z + R * R - r * r;
     let xz2 = x * x + z * z;
 
-    return sum * sum - 4.0 * TORUS_R * TORUS_R * xz2;
+    return sum * sum - 4.0 * R * R * xz2;
 }
 
-fn torusNormal(P: vec3<f32>) -> vec3<f32> {
-    let pc = P - TORUS_CENTER;
-    let x = pc.x;
-    let y = pc.y;
-    let z = pc.z;
+fn torusNormal_local(P: vec3<f32>, R: f32, r: f32) -> vec3<f32> {
+    let x = P.x;
+    let y = P.y;
+    let z = P.z;
 
-    let B0 = TORUS_R * TORUS_R - TORUS_r * TORUS_r;
+    let B0 = R * R - r * r;
     let Q = x * x + y * y + z * z + B0;
 
-    let dFx = 4.0 * x * Q - 8.0 * TORUS_R * TORUS_R * x;
+    let dFx = 4.0 * x * Q - 8.0 * R * R * x;
     let dFy = 4.0 * y * Q;
-    let dFz = 4.0 * z * Q - 8.0 * TORUS_R * TORUS_R * z;
+    let dFz = 4.0 * z * Q - 8.0 * R * R * z;
 
     return normalize(vec3<f32>(dFx, dFy, dFz));
 }
 
-// Numeric ray–torus intersection via sampling + bisection
-fn intersectTorus(ray: Ray) -> HitInfo {
-    var tmin = ray.tmin;
-    var tmax = ray.tmax;
 
-    // clamp max distance
-    if tmax > 2000.0 {
-        tmax = 2000.0;
-    }
+fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
+    let T = TORI.data[idx];
+
+    let center = T.centerR.xyz;
+    let R = T.centerR.w;
+    let r = T.rIorPad.x;
+    let ior = T.rIorPad.y;
+    let sigma = T.extinction.xyz;
+
+    // transform ray origin to local space (inverse rotation = transpose of R)
+    let oWorld = rayWorld.origin - center;
+    let oL = vec3<f32>(
+        dot(T.rot0.xyz, oWorld),
+        dot(T.rot1.xyz, oWorld),
+        dot(T.rot2.xyz, oWorld)
+    );
+    let dL = vec3<f32>(
+        dot(T.rot0.xyz, rayWorld.dir),
+        dot(T.rot1.xyz, rayWorld.dir),
+        dot(T.rot2.xyz, rayWorld.dir)
+    );
+
+    // local ray, same t range
+    var ray = Ray(oL, dL, rayWorld.tmin, min(rayWorld.tmax, 2000.0));
 
     let MAX_STEPS = 128u;
     let MAX_BISECT = 10u;
 
-    var t0 = tmin;
+    var t0 = ray.tmin;
     var P0 = ray.origin + t0 * ray.dir;
-    var f0 = torusF(P0);
+    var f0 = torusF_local(P0, R, r);
 
     var bestT = ray.tmax;
     var found = false;
 
-    let step = (tmax - tmin) / f32(MAX_STEPS);
+    let step = (ray.tmax - ray.tmin) / f32(MAX_STEPS);
 
     for (var i = 1u; i <= MAX_STEPS; i = i + 1u) {
-        let t1 = tmin + f32(i) * step;
+        let t1 = ray.tmin + f32(i) * step;
         let P1 = ray.origin + t1 * ray.dir;
-        let f1 = torusF(P1);
+        let f1 = torusF_local(P1, R, r);
 
         if (f0 == 0.0 || f0 * f1 < 0.0) {
             var a = t0;
@@ -348,7 +382,7 @@ fn intersectTorus(ray: Ray) -> HitInfo {
             for (var j = 0u; j < MAX_BISECT; j = j + 1u) {
                 let mid = 0.5 * (a + b);
                 let Pm = ray.origin + mid * ray.dir;
-                let fm = torusF(Pm);
+                let fm = torusF_local(Pm, R, r);
 
                 if fa * fm <= 0.0 {
                     b = mid;
@@ -370,24 +404,34 @@ fn intersectTorus(ray: Ray) -> HitInfo {
     }
 
     if !found {
-        return missHit(ray.tmax);
+        return missHit(rayWorld.tmax);
     }
 
     let tHit = bestT;
-    let P = ray.origin + tHit * ray.dir;
-    let N = torusNormal(P);
+    // world-space P (use world ray for this)
+    let P_world = rayWorld.origin + tHit * rayWorld.dir;
 
-    // Glass torus (shaderId 2 = glass)
-    let torusMat = makeMaterial(
+    // local P for normal
+    let P_local = ray.origin + tHit * ray.dir;
+    let N_local = torusNormal_local(P_local, R, r);
+
+    // rotate normal back to world space (forward rotation)
+    let N_world = normalize(vec3<f32>(
+        T.rot0.x * N_local.x + T.rot1.x * N_local.y + T.rot2.x * N_local.z,
+        T.rot0.y * N_local.x + T.rot1.y * N_local.y + T.rot2.y * N_local.z,
+        T.rot0.z * N_local.x + T.rot1.z * N_local.y + T.rot2.z * N_local.z
+    ));
+
+    let mat = makeMaterial(
         vec3<f32>(0.0),
         vec3<f32>(0.0),
         vec3<f32>(0.0),
         1.0,
-        1.5
+        ior
     );
 
-    let extinction = vec3<f32>(0.0);
-    return okHit(tHit, N, torusMat, 2u, vec2<f32>(0.0), extinction);
+    // shaderId 2u = glass
+    return okHit(tHit, N_world, mat, 2u, vec2<f32>(0.0), sigma);
 }
 
 // === AABB, sphere, triangles, BSP ===
@@ -581,30 +625,31 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var bestHit = hit;
 
     // spheres
-    var sphereRay = ray_in;
-    if bestHit.hit {
-        sphereRay.tmax = bestHit.t;
-    }
+    //var sphereRay = ray_in;
+    //if bestHit.hit {
+    //    sphereRay.tmax = bestHit.t;
+    //}
+//
+    //let s0_type = u32(SPH.p0.x);
+    //let s0_ior  = SPH.p0.y;
+    //let h0 = intersectSphere(sphereRay, SPH.c0.xyz, SPH.c0.w, s0_type, s0_ior);
+    //if h0.hit && h0.t < bestHit.t {
+    //    bestHit = h0;
+    //    sphereRay.tmax = h0.t;
+    //}
+//
+    //let s1_type = u32(SPH.p1.x);
+    //let s1_ior  = SPH.p1.y;
+    //let h1 = intersectSphere(sphereRay, SPH.c1.xyz, SPH.c1.w, s1_type, s1_ior);
+    //if h1.hit && h1.t < bestHit.t {
+    //    bestHit = h1;
+    //}
 
-    let s0_type = u32(SPH.p0.x);
-    let s0_ior  = SPH.p0.y;
-    let h0 = intersectSphere(sphereRay, SPH.c0.xyz, SPH.c0.w, s0_type, s0_ior);
-    if h0.hit && h0.t < bestHit.t {
-        bestHit = h0;
-        sphereRay.tmax = h0.t;
-    }
-
-    let s1_type = u32(SPH.p1.x);
-    let s1_ior  = SPH.p1.y;
-    let h1 = intersectSphere(sphereRay, SPH.c1.xyz, SPH.c1.w, s1_type, s1_ior);
-    if h1.hit && h1.t < bestHit.t {
-        bestHit = h1;
-    }
-
-    // torus
-    let ht = intersectTorus(ray_in);
-    if ht.hit && ht.t < bestHit.t {
-        bestHit = ht;
+    for (var i = 0u; i < TORUS_INFO.count; i = i + 1u) {
+        let ht = intersectTorusInstance(ray_in, i);
+        if ht.hit && ht.t < bestHit.t {
+            bestHit = ht;
+        }
     }
 
     return bestHit;
@@ -734,7 +779,7 @@ fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     return Lo;
 }
 
-const MAX_BOUNCES : i32 = 5;
+const MAX_BOUNCES : i32 = 10;
 
 fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
     var ray = ray0;
