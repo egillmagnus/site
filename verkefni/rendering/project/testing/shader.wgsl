@@ -2,6 +2,7 @@ const EPS_DIV : f32 = 0.00000001;
 const EPS_PARALLEL : f32 = 0.000001;
 const EPS_RAY : f32 = 0.001;
 const PI : f32 = 3.14159265359;
+const SCENE_TMAX : f32 = 1200.0;
 
 // --- RNG helpers ---
 
@@ -709,7 +710,7 @@ fn background(dir: vec3<f32>, blueBg: bool) -> vec3<f32> {
 // Monte Carlo area light sampling
 fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Light {
     if LIGHT_INFO.lightCount == 0u {
-        return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
+        return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), SCENE_TMAX);
     }
 
     var totalArea = 0.0;
@@ -732,7 +733,7 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Ligh
     }
 
     if totalArea < EPS_DIV {
-        return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
+        return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), SCENE_TMAX);
     }
 
     let r1 = rnd(seed) * totalArea;
@@ -844,7 +845,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             }
             let Rdir = normalize(reflect(ray.dir, N));
             let eps = EPS_RAY;
-            ray = Ray(P + eps * Rdir, Rdir, eps, 1e30);
+            ray = Ray(P + eps * Rdir, Rdir, eps, SCENE_TMAX);
             continue;
         }
 
@@ -883,7 +884,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             if k < 0.0 {
                 let Rdir = normalize(reflect(ray.dir, N));
                 let eps = EPS_RAY;
-                ray = Ray(P + eps * Rdir, Rdir, eps, 1e30);
+                ray = Ray(P + eps * Rdir, Rdir, eps, SCENE_TMAX);
                 continue;
             }
 
@@ -902,11 +903,11 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             if xi < Rf {
                 let Rdir = normalize(reflect(ray.dir, N));
                 let eps = EPS_RAY;
-                ray = Ray(P + eps * Rdir, Rdir, eps, 1e30);
+                ray = Ray(P + eps * Rdir, Rdir, eps, SCENE_TMAX);
             } else {
                 let Tdir = normalize(rel * ray.dir + (rel * cosi - cost) * N);
                 let eps = EPS_RAY;
-                ray = Ray(P + eps * Tdir, Tdir, eps, 1e30);
+                ray = Ray(P + eps * Tdir, Tdir, eps, SCENE_TMAX);
                 if entering {
                     eta = hRel.mat.ior;
                 } else {
@@ -947,7 +948,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
 
         let P = ray.origin + hRel.t * ray.dir;
         let eps = EPS_RAY;
-        ray = Ray(P + eps * wi, wi, eps, 1e30);
+        ray = Ray(P + eps * wi, wi, eps, SCENE_TMAX);
     }
 
     return acc;
@@ -984,7 +985,7 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
     let Pimg = center + img_j.x * cam.U.xyz + (img_j.y / cam.aspect) * cam.V.xyz;
     let dir = normalize(Pimg - cam.eye.xyz);
-    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, 1e30), &seed, blueBg);
+    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, SCENE_TMAX), &seed, blueBg);
 
     let prevAccum = textureLoad(renderTexture, vec2<u32>(fragcoord.xy), 0).rgb;
     let prevSum = prevAccum * f32(frame);
