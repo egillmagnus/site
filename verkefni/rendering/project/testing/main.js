@@ -13,7 +13,7 @@ async function init() {
     if (adapter.features && adapter.features.has('timestamp-query')) {
         requiredFeatures.push('timestamp-query');
     }
-    const device = await adapter.requestDevice({ requiredFeatures });
+    const device = await navigator.gpu.requestAdapter().then(a => a.requestDevice({ requiredFeatures }));
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'opaque' });
 
@@ -45,6 +45,35 @@ async function init() {
     const bgToggle         = document.getElementById('bgToggle');
     let blueBackground     = false;
 
+    // Scene selector
+    const sceneSelect = document.getElementById('sceneSelect');
+    const SCENES = [
+        { name: "Torus tree",    file: "../scenes/tree.tori" },
+        { name: "Single torus",  file: "../scenes/o.tori" },
+    ];
+    // Populate dropdown
+    SCENES.forEach((s, idx) => {
+        const opt = document.createElement('option');
+        opt.value = s.file;
+        opt.textContent = s.name;
+        if (idx === 0) opt.selected = true;
+        sceneSelect.appendChild(opt);
+    });
+
+    const saveImageButton = document.getElementById('saveImageButton');
+
+    if (saveImageButton) {
+        saveImageButton.addEventListener('click', () => {
+            const canvas = document.getElementById('gfx');
+            const url = canvas.toDataURL('image/png');
+        
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `render_${Date.now()}.png`;
+            a.click();
+        });
+    }
+
     // Floats per torus instance:
     // centerR:      4  (cx, cy, cz, R)
     // rIorPad:      4  (r, ior, _, _)
@@ -54,6 +83,7 @@ async function init() {
     // extinction:   4  (sx, sy, sz, _)
     // total = 24 floats
     const TORUS_FLOATS = 24;
+    const MAX_TORI = 32; // capacity
 
     if (bgToggle) {
         bgToggle.checked = blueBackground;
@@ -295,10 +325,9 @@ async function init() {
     });
     device.queue.writeBuffer(sphereUBO, 0, sphereUBOData);
 
-    const txt = await (await fetch("../scenes/tree.tori")).text();
-    const torusInstances = parseToriFile(txt);
-    const maxTori  = Math.max(torusInstances.length, 1);
-    const toriData = new Float32Array(maxTori * TORUS_FLOATS);
+    // === Torus buffers ===
+    let torusInstances = [];                          // will be filled by loadScene
+    const toriData     = new Float32Array(MAX_TORI * TORUS_FLOATS);
 
     const toriBuffer = device.createBuffer({
         size: toriData.byteLength,
@@ -377,7 +406,7 @@ async function init() {
         f[base + 12] = rot[3]; f[base + 13] = rot[4]; f[base + 14] = rot[5];  f[base + 15] = 0.0;
         f[base + 16] = rot[6]; f[base + 17] = rot[7]; f[base + 18] = rot[8];  f[base + 19] = 0.0;
 
-        // extinction (all zero as requested)
+        // extinction (all zero)
         f[base + 20] = sx;
         f[base + 21] = sy;
         f[base + 22] = sz;
@@ -385,18 +414,37 @@ async function init() {
     }
 
     function uploadTori() {
-        for (let i = 0; i < torusInstances.length; ++i) {
+        const count = Math.min(torusInstances.length, MAX_TORI);
+
+        for (let i = 0; i < count; ++i) {
             writeTorusInstance(i, torusInstances[i]);
         }
-        const usedBytes = torusInstances.length * TORUS_FLOATS * 4;
-        device.queue.writeBuffer(toriBuffer, 0, toriData.buffer, 0, usedBytes);
+        const usedBytes = count * TORUS_FLOATS * 4;
+        if (usedBytes > 0) {
+            device.queue.writeBuffer(toriBuffer, 0, toriData.buffer, 0, usedBytes);
+        }
 
         const infoArr = new Uint32Array(4);
-        infoArr[0] = torusInstances.length;
+        infoArr[0] = count;
         device.queue.writeBuffer(torusInfoBuffer, 0, infoArr);
     }
 
-    uploadTori();
+    async function loadScene(scenePath) {
+        const resp = await fetch(scenePath);
+        const txt = await resp.text();
+        torusInstances = parseToriFile(txt);  // from TorusParser.js
+        uploadTori();
+        frame = 0;
+        updateFrameCounter();
+    }
+
+    // Initial scene: first option
+    await loadScene(sceneSelect.value);
+
+    // Change scene on dropdown change
+    sceneSelect.addEventListener('change', async () => {
+        await loadScene(sceneSelect.value);
+    });
 
     // === Pipeline ===
     const pipeline = await device.createRenderPipelineAsync({
@@ -426,7 +474,7 @@ async function init() {
             { binding: 7,  resource: { buffer: buffers.treeIds } },
             { binding: 8,  resource: { buffer: buffers.bspTree } },
             { binding: 9,  resource: { buffer: buffers.bspPlanes } },
-            //{ binding: 10, resource: { buffer: sphereUBO } },
+            // { binding: 10, resource: { buffer: sphereUBO } }, // if you enable spheres
             { binding: 11, resource: textures.renderDst.createView() }, // previous accum
             { binding: 12, resource: { buffer: toriBuffer } },
             { binding: 13, resource: { buffer: torusInfoBuffer } },

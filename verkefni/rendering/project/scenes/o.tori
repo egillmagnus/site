@@ -1,0 +1,9 @@
+torus {
+    center = 278, 180, 300
+    R = 140
+    r = 40
+    ior = 1.5
+    extinction = 0, 0, 0
+    axis = x
+    angle = 90
+}

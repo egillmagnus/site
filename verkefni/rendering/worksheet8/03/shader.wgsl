@@ -1,6 +1,6 @@
 const EPS_DIV : f32 = 0.00000001;
 const EPS_PARALLEL : f32 = 0.000001;
-const EPS_RAY : f32 = 0.001;
+const EPS_RAY : f32 = 0.005;
 const PI : f32 = 3.14159265359;
 
 fn tea(val0: u32, val1: u32) -> u32 {

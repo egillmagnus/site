@@ -354,8 +354,39 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
         dot(T.rot2.xyz, rayWorld.dir)
     );
 
-    // local ray, same t range
-    var ray = Ray(oL, dL, rayWorld.tmin, min(rayWorld.tmax, 2000.0));
+    // === Local-space AABB cull ===
+    // Torus is aligned with local axes: major radius in xz-plane, tube radius along y.
+    let halfXZ = R + r;
+    let halfY  = r;
+
+    let boxMin = vec3<f32>(-halfXZ, -halfY, -halfXZ);
+    let boxMax = vec3<f32>( halfXZ,  halfY,  halfXZ);
+
+    // Ray-box intersection in local space, using same style as intersectAabb()
+    let p1 = (boxMin - oL) / dL;
+    let p2 = (boxMax - oL) / dL;
+    let pmin = min(p1, p2);
+    let pmax = max(p1, p2);
+
+    // Original segment in t
+    let segTmin = rayWorld.tmin;
+    let segTmax = min(rayWorld.tmax, 2000.0);
+
+    let box_tmin = max(pmin.x, max(pmin.y, pmin.z)) - EPS_RAY;
+    let box_tmax = min(pmax.x, min(pmax.y, pmax.z)) + EPS_RAY;
+
+    // No overlap between ray segment and box → early out
+    if box_tmin > box_tmax || box_tmin > segTmax || box_tmax < segTmin {
+        return missHit(rayWorld.tmax);
+    }
+
+    // local ray, clamped to intersection with AABB
+    var ray = Ray(
+        oL,
+        dL,
+        max(segTmin, box_tmin),
+        min(segTmax, box_tmax)
+    );
 
     let MAX_STEPS = 128u;
     let MAX_BISECT = 10u;
@@ -779,7 +810,7 @@ fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     return Lo;
 }
 
-const MAX_BOUNCES : i32 = 10;
+const MAX_BOUNCES : i32 = 8;
 
 fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
     var ray = ray0;
