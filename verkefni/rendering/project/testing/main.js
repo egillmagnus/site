@@ -2,8 +2,8 @@ async function init() {
     if (!('gpu' in navigator)) { alert('WebGPU not supported'); return; }
 
     const canvas = document.getElementById('gfx');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 1024;
+    canvas.height = 1024;
 
     const context = canvas.getContext('webgpu');
     const adapter = await navigator.gpu.requestAdapter();
