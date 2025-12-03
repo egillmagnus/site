@@ -1,27 +1,19 @@
 async function init() {
     if (!('gpu' in navigator)) { alert('WebGPU not supported'); return; }
-
     const canvas = document.getElementById('gfx');
     canvas.width = 512;
     canvas.height = 512;
-
     const context = canvas.getContext('webgpu');
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) { alert('No GPU adapter'); return; }
-
     const device = await adapter.requestDevice();
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'opaque' });
-
-    // Create TimingHelper
     const timingHelper = new TimingHelper(device);
     const frameTimeDisplay = document.getElementById('frameTime');
-
-    // UI: gamma
     const gammaSlider = document.getElementById('gammaSlider');
     const gammaValue = document.getElementById('gammaValue');
     let gamma = 1.0;
-
     function setGamma(g) {
         const min = parseFloat(gammaSlider.min), max = parseFloat(gammaSlider.max);
         gamma = Math.min(max, Math.max(min, g));
@@ -30,8 +22,6 @@ async function init() {
         render();
     }
     gammaSlider.addEventListener('input', () => setGamma(parseFloat(gammaSlider.value)));
-
-    // Camera for Cornell box (millimeters)
     let eye = vec3(277.0, 275.0, -570.0);
     const at = vec3(277.0, 275.0, 0.0);
     const up = vec3(0.0, 1.0, 0.0);
@@ -39,17 +29,13 @@ async function init() {
     const U = normalize(cross(W, up));
     const V = normalize(cross(U, W));
     const zoom = 1.0;
-
-    // Jitter AA UI
     const aaMinus = document.getElementById('aaMinus');
     const aaPlus = document.getElementById('aaPlus');
     const aaValue = document.getElementById('aaValue');
     let subdiv = 1;
     const S_MAX = 8;
-
     function updateAAUI() { aaValue.textContent = `${subdiv}×${subdiv}`; }
     updateAAUI();
-
     if (aaMinus) aaMinus.addEventListener('click', () => {
         subdiv = Math.max(1, subdiv - 1);
         uploadJitters();
@@ -62,15 +48,12 @@ async function init() {
         updateAAUI();
         render();
     });
-
-    // Jitter buffer
     const MAX_SAMPLES = S_MAX * S_MAX;
     const JITTER_BYTES = MAX_SAMPLES * 2 * 4;
     const jitterBuffer = device.createBuffer({
         size: Math.ceil(JITTER_BYTES / 256) * 256,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     });
-
     function compute_jitters(S) {
         const N = S * S;
         const out = new Float32Array(2 * N);
@@ -87,14 +70,11 @@ async function init() {
         }
         return out;
     }
-
     function uploadJitters() {
         const arr = compute_jitters(subdiv);
         device.queue.writeBuffer(jitterBuffer, 0, arr.buffer, arr.byteOffset, arr.byteLength);
     }
     uploadJitters();
-
-    // Dolly with mouse wheel
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         const notches = (e.deltaMode === WheelEvent.DOM_DELTA_LINE) ? e.deltaY : e.deltaY / 100;
@@ -104,20 +84,16 @@ async function init() {
         eye[2] += d * W[2];
         render();
     }, { passive: false });
-
-    // Uniforms
     const uniformBuffer = device.createBuffer({
         size: 512,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
-
     function writeUniforms() {
         const aspect = canvas.width / canvas.height;
         const invW = 1.0 / canvas.width;
         const buf = new ArrayBuffer(96);
         const f32 = new Float32Array(buf);
         const u32 = new Uint32Array(buf);
-
         f32.set([eye[0], eye[1], eye[2], 1.0], 0);
         f32.set([U[0], U[1], U[2], 1.0], 4);
         f32.set([V[0], V[1], V[2], 0.0], 8);
@@ -127,16 +103,11 @@ async function init() {
         u32[21] = 0;
         u32[22] = 0;
         u32[23] = (subdiv * subdiv) >>> 0;
-
         device.queue.writeBuffer(uniformBuffer, 0, buf);
     }
-
-    // Load shader
     const resp = await fetch('shader.wgsl');
     const wgsl = await resp.text();
     const module = device.createShaderModule({ code: wgsl });
-
-    // Check for shader compilation errors
     const info = await module.getCompilationInfo();
     for (const m of info.messages) {
         console[m.type === 'error' ? 'error' : 'warn'](`${m.lineNum}:${m.linePos} ${m.message}`);
@@ -144,27 +115,19 @@ async function init() {
     if (info.messages.some(m => m.type === 'error')) {
         throw new Error('WGSL compilation failed');
     }
-
-    // Load Cornell box
     console.log('Loading Cornell box...');
     const di = await readOBJFile('../../common/objects/CornellBoxWithBlocks.obj', 1.0, false);
     if (!di) throw new Error('Failed to load OBJ');
-
-    // Build BSP tree - creates positions, normals, colors, indices, treeIds, bspTree, bspPlanes, aabb buffers
     console.log('Building BSP tree...');
     let buffers = {};
     buffers = build_bsp_tree(di, device, buffers);
     console.log('BSP tree built!');
-
-    // Material indices
     const matIndices = new Uint32Array(di.mat_indices);
     buffers.matIndices = device.createBuffer({
         size: matIndices.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(buffers.matIndices, 0, matIndices.buffer, matIndices.byteOffset, matIndices.byteLength);
-
-    // Materials buffer
     const numMaterials = di.materials.length;
     const materialsData = new Float32Array(numMaterials * 8);
     for (let i = 0; i < numMaterials; i++) {
@@ -184,63 +147,51 @@ async function init() {
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(buffers.materials, 0, materialsData.buffer, materialsData.byteOffset, materialsData.byteLength);
-
-    // Light indices
     const lightIndices = new Uint32Array(di.light_indices);
     buffers.lightIndices = device.createBuffer({
         size: Math.max(lightIndices.byteLength, 16),
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(buffers.lightIndices, 0, lightIndices.buffer, lightIndices.byteOffset, lightIndices.byteLength);
-
-    // Light info
     buffers.lightInfo = device.createBuffer({
         size: 16,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(buffers.lightInfo, 0, new Uint32Array([lightIndices.length, 0, 0, 0]));
-
-    // Mesh info
     const faceCount = di.mat_indices.length;
     buffers.meshInfo = device.createBuffer({
         size: 16,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(buffers.meshInfo, 0, new Uint32Array([faceCount, 0, 0, 0]));
-
-    // Pipeline
     const pipeline = await device.createRenderPipelineAsync({
         layout: 'auto',
         vertex: { module, entryPoint: 'vsMain' },
         fragment: { module, entryPoint: 'fsMain', targets: [{ format }] },
         primitive: { topology: 'triangle-strip' },
     });
-
-    // Single bind group with all buffers
     const bindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [
             { binding: 0, resource: { buffer: uniformBuffer } },
             { binding: 1, resource: { buffer: jitterBuffer } },
-            { binding: 2, resource: { buffer: buffers.positions } },    // From BSP
-            { binding: 3, resource: { buffer: buffers.indices } },      // From BSP
+            { binding: 2, resource: { buffer: buffers.positions } },    
+            { binding: 3, resource: { buffer: buffers.indices } },      
             { binding: 4, resource: { buffer: buffers.meshInfo } },
-            { binding: 5, resource: { buffer: buffers.normals } },      // From BSP
+            { binding: 5, resource: { buffer: buffers.normals } },      
             { binding: 6, resource: { buffer: buffers.matIndices } },
             { binding: 7, resource: { buffer: buffers.materials } },
             { binding: 8, resource: { buffer: buffers.lightIndices } },
             { binding: 9, resource: { buffer: buffers.lightInfo } },
-            { binding: 10, resource: { buffer: buffers.aabb } },        // NEW: Bounding box
-            { binding: 11, resource: { buffer: buffers.treeIds } },     // NEW: BSP tree IDs
-            { binding: 12, resource: { buffer: buffers.bspTree } },     // NEW: BSP nodes
-            { binding: 13, resource: { buffer: buffers.bspPlanes } },   // NEW: BSP planes
+            { binding: 10, resource: { buffer: buffers.aabb } },        
+            { binding: 11, resource: { buffer: buffers.treeIds } },     
+            { binding: 12, resource: { buffer: buffers.bspTree } },     
+            { binding: 13, resource: { buffer: buffers.bspPlanes } },   
         ],
     });
-
     function render() {
         writeUniforms();
         const encoder = device.createCommandEncoder();
-        
         const pass = timingHelper.beginRenderPass(encoder, {
             colorAttachments: [{
                 view: context.getCurrentTexture().createView(),
@@ -249,22 +200,17 @@ async function init() {
                 storeOp: 'store',
             }],
         });
-        
         pass.setPipeline(pipeline);
         pass.setBindGroup(0, bindGroup);
         pass.draw(4, 1, 0, 0);
         pass.end();
         device.queue.submit([encoder.finish()]);
-        
-        // Get timing
         timingHelper.getResult().then(duration => {
             if (frameTimeDisplay) {
                 frameTimeDisplay.textContent = (duration / 1000000).toFixed(2) + ' ms';
             }
         });
     }
-
     setGamma(parseFloat(gammaSlider.value));
 }
-
 init();

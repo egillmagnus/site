@@ -1,19 +1,15 @@
 async function init() {
     if (!('gpu' in navigator)) { alert('WebGPU not supported'); return; }
-
     const canvas = document.getElementById('gfx');
     const context = canvas.getContext('webgpu');
-
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) { alert('No GPU adapter'); return; }
     const device = await adapter.requestDevice();
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'opaque' });
-
     const gammaSlider = document.getElementById('gammaSlider');
     const gammaValue = document.getElementById('gammaValue');
     let gamma = 2.2;
-
     function setGamma(g) {
         const min = parseFloat(gammaSlider.min), max = parseFloat(gammaSlider.max);
         gamma = Math.min(max, Math.max(min, g));
@@ -22,7 +18,6 @@ async function init() {
         render();
     }
     gammaSlider.addEventListener('input', () => setGamma(parseFloat(gammaSlider.value)));
-
     let eye = vec3(2.0, 1.5, 2.0);
     const at = vec3(0.0, 0.5, 0.0);
     const up = vec3(0.0, 1.0, 0.0);
@@ -30,12 +25,10 @@ async function init() {
     const U = normalize(cross(W, up));
     const V = normalize(cross(U, W));
     const zoom = 1.0;
-
     const uniformBuffer = device.createBuffer({
         size: 80,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
-
     function writeUniforms() {
         const aspect = canvas.width / canvas.height;
         const data = new Float32Array(20);
@@ -46,10 +39,9 @@ async function init() {
         data[16] = aspect;
         data[17] = zoom;
         data[18] = gamma;
-        data[19] = 0.0; // pad
+        data[19] = 0.0; 
         device.queue.writeBuffer(uniformBuffer, 0, data);
     }
-
     const wgsl = document.getElementById('shader-rays').textContent.trim();
     const module = device.createShaderModule({ code: wgsl });
     const pipeline = await device.createRenderPipelineAsync({
@@ -62,7 +54,6 @@ async function init() {
         layout: pipeline.getBindGroupLayout(0),
         entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
     });
-
     function render() {
         writeUniforms();
         const encoder = device.createCommandEncoder();
@@ -80,7 +71,6 @@ async function init() {
         pass.end();
         device.queue.submit([encoder.finish()]);
     }
-
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         const notches = (e.deltaMode === WheelEvent.DOM_DELTA_LINE) ? e.deltaY : e.deltaY / 100;
@@ -90,8 +80,6 @@ async function init() {
         eye[2] += d * W[2];
         render();
     }, { passive: false });
-
     setGamma(parseFloat(gammaSlider.value));
 }
-
 init();

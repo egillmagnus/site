@@ -1,25 +1,19 @@
 async function init() {
     if (!('gpu' in navigator)) { alert('WebGPU not supported'); return; }
-
     const canvas = document.getElementById('gfx');
     const context = canvas.getContext('webgpu');
-
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) { alert('No GPU adapter'); return; }
     const device = await adapter.requestDevice();
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'opaque' });
-
-    // --- UI: gamma + shader selects ---
     const gammaSlider = document.getElementById('gammaSlider');
     const gammaValue = document.getElementById('gammaValue');
-    const matteSel = document.getElementById('matteMode');   // 0=base, 1=Lambert
-    const sphereSel = document.getElementById('sphereMode');  // 0=base, 1=Lambert+Phong, 2=mirror
-
+    const matteSel = document.getElementById('matteMode');
+    const sphereSel = document.getElementById('sphereMode');
     let gamma = 2.2;
     let matteMode = matteSel ? parseInt(matteSel.value, 10) : 1;
     let sphereMode = sphereSel ? parseInt(sphereSel.value, 10) : 2;
-
     function setGamma(g) {
         const min = parseFloat(gammaSlider.min), max = parseFloat(gammaSlider.max);
         gamma = Math.min(max, Math.max(min, g));
@@ -30,8 +24,6 @@ async function init() {
     gammaSlider.addEventListener('input', () => setGamma(parseFloat(gammaSlider.value)));
     if (matteSel) matteSel.addEventListener('change', () => { matteMode = parseInt(matteSel.value, 10); render(); });
     if (sphereSel) sphereSel.addEventListener('change', () => { sphereMode = parseInt(sphereSel.value, 10); render(); });
-
-    // --- Camera ---
     let eye = vec3(2.0, 1.5, 2.0);
     const at = vec3(0.0, 0.5, 0.0);
     const up = vec3(0.0, 1.0, 0.0);
@@ -39,8 +31,6 @@ async function init() {
     const U = normalize(cross(W, up));
     const V = normalize(cross(U, W));
     const zoom = 1.0;
-
-    // Dolly along look direction with scroll
     canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         const notches = (e.deltaMode === WheelEvent.DOM_DELTA_LINE) ? e.deltaY : e.deltaY / 100;
@@ -50,41 +40,26 @@ async function init() {
         eye[2] += d * W[2];
         render();
     }, { passive: false });
-
-    // --- Uniforms ---
-    // Layout (matches WGSL):
-    // vec4 eye, vec4 U, vec4 V, vec4 W, (aspect, zoom, gamma, _pad0), (matteMode, sphereMode, _pad1, _pad2)
-    // = 16 floats + 4 floats + 4 u32 = 96 bytes total
     const uniformBuffer = device.createBuffer({
         size: 96,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
-
     function writeUniforms() {
         const aspect = canvas.width / canvas.height;
-
-        // Use one ArrayBuffer; Float32 view for floats, Uint32 view for mode flags.
         const buf = new ArrayBuffer(96);
         const f32 = new Float32Array(buf);
         const u32 = new Uint32Array(buf);
-
-        // Floats
-        f32.set([eye[0], eye[1], eye[2], 1.0], 0);  // eye
-        f32.set([U[0], U[1], U[2], 0.0], 4);  // U
-        f32.set([V[0], V[1], V[2], 0.0], 8);  // V
-        f32.set([W[0], W[1], W[2], 0.0], 12);  // W
-        f32.set([aspect, zoom, gamma, 0.0], 16);  // aspect, zoom, gamma, pad
-
-        // Modes as u32 (indices 20..23 are 32-bit words)
+        f32.set([eye[0], eye[1], eye[2], 1.0], 0);
+        f32.set([U[0], U[1], U[2], 0.0], 4);
+        f32.set([V[0], V[1], V[2], 0.0], 8);
+        f32.set([W[0], W[1], W[2], 0.0], 12);
+        f32.set([aspect, zoom, gamma, 0.0], 16);
         u32[20] = (matteMode >>> 0);
         u32[21] = (sphereMode >>> 0);
         u32[22] = 0;
         u32[23] = 0;
-
         device.queue.writeBuffer(uniformBuffer, 0, buf);
     }
-
-    // --- Pipeline ---
     const wgsl = document.getElementById('shader-rays').textContent.trim();
     const module = device.createShaderModule({ code: wgsl });
     const pipeline = await device.createRenderPipelineAsync({
@@ -97,7 +72,6 @@ async function init() {
         layout: pipeline.getBindGroupLayout(0),
         entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
     });
-
     function render() {
         writeUniforms();
         const encoder = device.createCommandEncoder();
@@ -115,8 +89,6 @@ async function init() {
         pass.end();
         device.queue.submit([encoder.finish()]);
     }
-
-    setGamma(parseFloat(gammaSlider.value)); // also triggers first render
+    setGamma(parseFloat(gammaSlider.value)); 
 }
-
 init();

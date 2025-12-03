@@ -1,20 +1,14 @@
 async function init() {
     if (!('gpu' in navigator)) { alert('WebGPU not supported'); return; }
-
     const canvas = document.getElementById('gfx');
     const context = canvas.getContext('webgpu');
-
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) { alert('No GPU adapter'); return; }
     const device = await adapter.requestDevice();
     const format = navigator.gpu.getPreferredCanvasFormat();
-
     context.configure({ device, format, alphaMode: 'opaque' });
-
-    // Get WGSL source from the script tag
     const wgsl = document.getElementById('shader-rect').textContent.trim();
     const module = device.createShaderModule({ code: wgsl });
-
     const pipeline = await device.createRenderPipelineAsync({
         layout: 'auto',
         vertex: { module, entryPoint: 'vsMain' },
@@ -25,7 +19,6 @@ async function init() {
         },
         primitive: { topology: 'triangle-strip' },
     });
-
     const encoder = device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
         colorAttachments: [{
@@ -38,8 +31,6 @@ async function init() {
     pass.setPipeline(pipeline);
     pass.draw(4, 1, 0, 0);
     pass.end();
-
     device.queue.submit([encoder.finish()]);
 }
-
 init();
