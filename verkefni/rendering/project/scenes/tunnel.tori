@@ -3,7 +3,7 @@ torus {
     R = 110
     r = 20
     ior = 1.5
-    extinction = 0.1, 0, 0.1
+    extinction = 0.05, 0, 0.05
     rotation = x:90
 }
 
@@ -13,7 +13,7 @@ torus {
     R = 120
     r = 20
     ior = 1.5
-    extinction = 0, 0.1, 0.1
+    extinction = 0, 0.05, 0.05
     rotation = x:90
 }
 
