@@ -4,31 +4,17 @@
 <head>
   <meta charset="utf-8" />
   <title>Worksheet 5, Part 1</title>
-  <style>
-    canvas {
-      width: 800px;
-      height: 450px;
-      border: 1px solid #333;
-      display: block;
-      margin: 1rem auto;
-    }
-
-    .bar {
-      max-width: 720px;
-      margin: 0 auto 0.5rem;
-      font: 14px/1.2 system-ui;
-      text-align: center;
-    }
-  </style>
+  <link rel="stylesheet" href="../../css/main.css">
 </head>
 
 <body>
-  <a href="../" style="display:inline-block;margin:1rem;color:#666;text-decoration:none;">← Back to Worksheet 5</a>
-  <h1 style="text-align:center;">Worksheet 5 · Part 1 </h1>
+  <div class="container">
+  <a href="../" class="back-link">← Back to Worksheet 5</a>
+  <h1>Worksheet 5 · Part 1 </h1>
 
   <div class="bar">
     <label for="gammaSlider"><b>Gamma</b>:</label>
-    <input id="gammaSlider" type="range" min="0.8" max="3.0" step="0.03" value="2.2" style="width: 320px;">
+    <input id="gammaSlider" type="range" min="0.8" max="3.0" step="0.03" value="2.2">
     <span id="gammaValue">1.20</span>
   </div>
   <div class="bar">
@@ -63,6 +49,8 @@
   </div>
 
   <canvas id="gfx" width="639" height="320"></canvas>
+  </div>
+
   <script src="../../common/OBJParser.js"></script>
   <script defer src="../../common/MV.js"></script>
   </script>
