@@ -817,7 +817,7 @@ fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     return Lo;
 }
 
-const MAX_BOUNCES : i32 = 8;
+const MAX_BOUNCES : i32 = 10;
 
 fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
     var ray = ray0;
@@ -827,11 +827,11 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
 
     for (var depth: i32 = 0; depth < MAX_BOUNCES; depth = depth + 1) {
         if depth >= 3 {
-            let p = clamp(luminance(throughput), 0.1, 0.95);
+            let p = clamp(luminance(throughput), 0.2, 0.95);
             let xi = rnd(seed);
-            if xi > p {
-                return acc;    // terminate path
-            }
+            //if xi > p {
+            //    return acc;    // terminate path
+            //}
             throughput = throughput / p;
         }
         let h = intersect_scene_bsp(ray, true);

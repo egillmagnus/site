@@ -37,6 +37,12 @@ async function init() {
     const SCENES = [
         { name: "Torus tree",    file: "../scenes/tree.tori" },
         { name: "Single torus",  file: "../scenes/o.tori" },
+        { name: "Chain",         file: "../scenes/chain.tori" },
+        { name: "Spiral",        file: "../scenes/spiral.tori" },
+        { name: "Orbit",         file: "../scenes/orbit.tori" },
+        { name: "Tilted pair",   file: "../scenes/tilted.tori" },
+        { name: "Nested rings",  file: "../scenes/nested.tori" },
+        { name: "Tunnel",        file: "../scenes/tunnel.tori" },
     ];
     SCENES.forEach((s, idx) => {
         const opt = document.createElement('option');
@@ -52,8 +58,37 @@ async function init() {
             const url = canvas.toDataURL('image/png');
             const a = document.createElement('a');
             a.href = url;
-            a.download = `render_${Date.now()}.png`;
+            const sceneName = sceneSelect.options[sceneSelect.selectedIndex].textContent.replace(/\s+/g, '-').toLowerCase();
+            const resolution = canvas.width;
+            const date = new Date().toISOString().slice(0, 10);
+            a.download = `${sceneName}_${resolution}px_${frame}frames_${date}.png`;
             a.click();
+        });
+    }
+    const canvasSizeSelect = document.getElementById('canvasSizeSelect');
+    if (canvasSizeSelect) {
+        canvasSizeSelect.addEventListener('change', () => {
+            const size = parseInt(canvasSizeSelect.value);
+            canvas.width = size;
+            canvas.height = size;
+            textures.width = size;
+            textures.height = size;
+            textures.renderSrc.destroy();
+            textures.renderDst.destroy();
+            textures.renderSrc = device.createTexture({
+                size: [size, size],
+                format: 'rgba32float',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+            });
+            textures.renderDst = device.createTexture({
+                size: [size, size],
+                format: 'rgba32float',
+                usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+            });
+            rebuildBindGroup();
+            frame = 0;
+            updateFrameCounter();
+            render();
         });
     }
     const TORUS_FLOATS = 24;
@@ -79,7 +114,7 @@ async function init() {
     function updateFrameCounter() {
         if (frameCounter) frameCounter.textContent = `Frame: ${frame}`;
     }
-    let eye = vec3(277.0, 275.0, -500.0);
+    let eye = vec3(277.0, 275.0, -550.0);
     const at  = vec3(277.0, 275.0, 0.0);
     const up  = vec3(0.0, 1.0, 0.0);
     const W   = normalize(subtract(at, eye));
@@ -287,6 +322,33 @@ async function init() {
                 ];
         }
     }
+    function multiplyMat3(a, b) {
+        // Multiply two 3x3 matrices (row-major)
+        return [
+            a[0]*b[0] + a[1]*b[3] + a[2]*b[6],
+            a[0]*b[1] + a[1]*b[4] + a[2]*b[7],
+            a[0]*b[2] + a[1]*b[5] + a[2]*b[8],
+            
+            a[3]*b[0] + a[4]*b[3] + a[5]*b[6],
+            a[3]*b[1] + a[4]*b[4] + a[5]*b[7],
+            a[3]*b[2] + a[4]*b[5] + a[5]*b[8],
+            
+            a[6]*b[0] + a[7]*b[3] + a[8]*b[6],
+            a[6]*b[1] + a[7]*b[4] + a[8]*b[7],
+            a[6]*b[2] + a[7]*b[5] + a[8]*b[8],
+        ];
+    }
+    function buildCombinedRotationMatrix(rotations) {
+        let result = [1, 0, 0, 0, 1, 0, 0, 0, 1]; // Identity
+        if (!rotations || rotations.length === 0) {
+            return result;
+        }
+        for (const rot of rotations) {
+            const m = buildRotationMatrix(rot.axis, rot.angle);
+            result = multiplyMat3(m, result);
+        }
+        return result;
+    }
     function writeTorusInstance(i, inst) {
         const base = i * TORUS_FLOATS;
         const f = toriData;
@@ -299,7 +361,7 @@ async function init() {
         const sx = inst.extinction[0];
         const sy = inst.extinction[1];
         const sz = inst.extinction[2];
-        const rot = buildRotationMatrix(inst.axis, inst.angle);
+        const rot = buildCombinedRotationMatrix(inst.rotations);
         f[base + 0] = cx;
         f[base + 1] = cy;
         f[base + 2] = cz;
@@ -354,24 +416,30 @@ async function init() {
         },
         primitive: { topology: 'triangle-strip' },
     });
-    const bindGroup = device.createBindGroup({
-        layout: pipeline.getBindGroupLayout(0),
-        entries: [
-            { binding: 0,  resource: { buffer: uniformBuffer } },
-            { binding: 1,  resource: { buffer: buffers.attribs } },
-            { binding: 2,  resource: { buffer: buffers.indices } },
-            { binding: 3,  resource: { buffer: buffers.materials } },
-            { binding: 4,  resource: { buffer: buffers.lightIndices } },
-            { binding: 5,  resource: { buffer: buffers.lightInfo } },
-            { binding: 6,  resource: { buffer: buffers.aabb } },
-            { binding: 7,  resource: { buffer: buffers.treeIds } },
-            { binding: 8,  resource: { buffer: buffers.bspTree } },
-            { binding: 9,  resource: { buffer: buffers.bspPlanes } },
-            { binding: 11, resource: textures.renderDst.createView() }, 
-            { binding: 12, resource: { buffer: toriBuffer } },
-            { binding: 13, resource: { buffer: torusInfoBuffer } },
-        ],
-    });
+    function createBindGroup() {
+        return device.createBindGroup({
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0,  resource: { buffer: uniformBuffer } },
+                { binding: 1,  resource: { buffer: buffers.attribs } },
+                { binding: 2,  resource: { buffer: buffers.indices } },
+                { binding: 3,  resource: { buffer: buffers.materials } },
+                { binding: 4,  resource: { buffer: buffers.lightIndices } },
+                { binding: 5,  resource: { buffer: buffers.lightInfo } },
+                { binding: 6,  resource: { buffer: buffers.aabb } },
+                { binding: 7,  resource: { buffer: buffers.treeIds } },
+                { binding: 8,  resource: { buffer: buffers.bspTree } },
+                { binding: 9,  resource: { buffer: buffers.bspPlanes } },
+                { binding: 11, resource: textures.renderDst.createView() }, 
+                { binding: 12, resource: { buffer: toriBuffer } },
+                { binding: 13, resource: { buffer: torusInfoBuffer } },
+            ],
+        });
+    }
+    let bindGroup = createBindGroup();
+    function rebuildBindGroup() {
+        bindGroup = createBindGroup();
+    }
     function render() {
         writeUniforms();
         const encoder = device.createCommandEncoder();

@@ -4,8 +4,6 @@ torus {
     r = 40
     ior = 1.5
     extinction = 0.01, 0, 0.01
-    axis = 
-    angle = 
 }
 
 torus {
@@ -14,8 +12,6 @@ torus {
     r = 35
     ior = 1.5
     extinction = 0.01, 0, 0.01
-    axis = 
-    angle = 
 }
 
 torus {
@@ -24,8 +20,6 @@ torus {
     r = 30
     ior = 1.5
     extinction = 0.01, 0, 0.01
-    axis = 
-    angle = 
 }
 
 torus {
@@ -34,8 +28,6 @@ torus {
     r = 25
     ior = 1.5
     extinction = 0.01, 0, 0.01
-    axis =
-    angle =
 }
 
 torus {
@@ -44,8 +36,6 @@ torus {
     r = 18
     ior = 1.5
     extinction = 0.01, 0, 0.01
-    axis = 
-    angle =
 }
 
 torus {
@@ -54,8 +44,6 @@ torus {
     r = 18
     ior = 1.5
     extinction = 0.075, 0.5, 0.046
-    axis = 
-    angle =
 }
 
 torus {
@@ -64,7 +52,4 @@ torus {
     r = 18
     ior = 1.5
     extinction = 0.075, 0.5, 0.046
-    axis = 
-    angle =
 }
-
