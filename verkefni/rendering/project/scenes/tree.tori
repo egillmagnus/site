@@ -1,23 +1,7 @@
 torus {
-    center = 278, 160, 300
-    R = 140
-    r = 40
-    ior = 1.5
-    extinction = 0.01, 0, 0.01
-}
-
-torus {
-    center = 278, 240, 300
-    R = 110
-    r = 35
-    ior = 1.5
-    extinction = 0.01, 0, 0.01
-}
-
-torus {
-    center = 278, 300, 300
-    R = 80
-    r = 30
+    center = 278, 400, 300
+    R = 25
+    r = 18
     ior = 1.5
     extinction = 0.01, 0, 0.01
 }
@@ -31,9 +15,25 @@ torus {
 }
 
 torus {
-    center = 278, 400, 300
-    R = 25
-    r = 18
+    center = 278, 300, 300
+    R = 80
+    r = 30
+    ior = 1.5
+    extinction = 0.01, 0, 0.01
+}
+
+torus {
+    center = 278, 240, 300
+    R = 110
+    r = 35
+    ior = 1.5
+    extinction = 0.01, 0, 0.01
+}
+
+torus {
+    center = 278, 160, 300
+    R = 140
+    r = 40
     ior = 1.5
     extinction = 0.01, 0, 0.01
 }
@@ -53,3 +53,32 @@ torus {
     ior = 1.5
     extinction = 0.075, 0.5, 0.046
 }
+
+torus {
+    center = 278.000000, 300.000000, 200.000000
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90
+}
+
+torus {
+    center = 238.324495, 355.000000, 245.391353
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90, y:-36
+}
+
+torus {
+    center = 240.908796, 400.000000, 287.948337
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90, y:-76
+}
+
+

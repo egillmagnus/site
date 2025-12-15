@@ -361,6 +361,9 @@ async function init() {
         const sx = inst.extinction[0];
         const sy = inst.extinction[1];
         const sz = inst.extinction[2];
+        // `buildCombinedRotationMatrix` returns a row-major 3x3 matrix R.
+        // The WGSL shader expects `rot0/1/2` to be the *columns* of R (local axes in world space),
+        // so that: world->local uses R^T via dot(col_i, v), and normals use R via column combination.
         const rot = buildCombinedRotationMatrix(inst.rotations);
         f[base + 0] = cx;
         f[base + 1] = cy;
@@ -370,9 +373,11 @@ async function init() {
         f[base + 5] = ior;
         f[base + 6] = 0.0;
         f[base + 7] = 0.0;
-        f[base +  8] = rot[0]; f[base +  9] = rot[1]; f[base + 10] = rot[2];  f[base + 11] = 0.0;
-        f[base + 12] = rot[3]; f[base + 13] = rot[4]; f[base + 14] = rot[5];  f[base + 15] = 0.0;
-        f[base + 16] = rot[6]; f[base + 17] = rot[7]; f[base + 18] = rot[8];  f[base + 19] = 0.0;
+        // Pack columns of R into rot0/rot1/rot2
+        // col0 = (r00, r10, r20), col1 = (r01, r11, r21), col2 = (r02, r12, r22)
+        f[base +  8] = rot[0]; f[base +  9] = rot[3]; f[base + 10] = rot[6];  f[base + 11] = 0.0;
+        f[base + 12] = rot[1]; f[base + 13] = rot[4]; f[base + 14] = rot[7];  f[base + 15] = 0.0;
+        f[base + 16] = rot[2]; f[base + 17] = rot[5]; f[base + 18] = rot[8];  f[base + 19] = 0.0;
         f[base + 20] = sx;
         f[base + 21] = sy;
         f[base + 22] = sz;

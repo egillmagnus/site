@@ -92,9 +92,9 @@ struct Camera {
 struct Torus {
     centerR: vec4<f32>,     // xyz = center, w = major radius R
     rIorPad: vec4<f32>,     // x = minor radius r, y = ior, z,w unused
-    rot0: vec4<f32>,        // row 0 of 3x3 rotation
-    rot1: vec4<f32>,        // row 1
-    rot2: vec4<f32>,        // row 2
+    rot0: vec4<f32>,        // column 0 of 3x3 forward rotation R (local +X axis in world)
+    rot1: vec4<f32>,        // column 1 (local +Y axis in world)
+    rot2: vec4<f32>,        // column 2 (local +Z axis in world)
     extinction: vec4<f32>,  // xyz = sigma_t (absorption), w unused
 };
 
@@ -1008,7 +1008,7 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
 
     // === Firefly clamp by luminance ===
     let L    = luminance(sampleRGB);
-    let Lmax = 20.0; // tweak 5–20
+    let Lmax = 5.0; // tweak 5–20
 
     if L > Lmax {
         sampleRGB *= Lmax / max(L, EPS_DIV);
