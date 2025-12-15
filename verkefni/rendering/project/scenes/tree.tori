@@ -64,7 +64,25 @@ torus {
 }
 
 torus {
-    center = 238.324495, 355.000000, 245.391353
+    center = 230.977180, 355.000000, 235.278640
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90, y:36
+}
+
+torus {
+    center = 237.104570, 400.000000, 286.712269
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90, y:76
+}
+
+torus {
+    center = 372.045640, 240.000000, 170.557281
     R = 6
     r = 3
     ior = 1.5
@@ -72,13 +90,13 @@ torus {
     rotation = x:90, y:-36
 }
 
+
 torus {
-    center = 240.908796, 400.000000, 287.948337
+    center = 372.045640, 240.000000, 170.557281
     R = 6
     r = 3
     ior = 1.5
     extinction = 0, 1, 1
-    rotation = x:90, y:-76
+    rotation = x:90, y:-36
 }
-
 
