@@ -43,6 +43,7 @@ async function init() {
         { name: "Tilted pair",   file: "../scenes/tilted.tori" },
         { name: "Nested rings",  file: "../scenes/nested.tori" },
         { name: "Tunnel",        file: "../scenes/tunnel.tori" },
+        { name: "Elliptical",    file: "../scenes/elliptical.tori" },
     ];
     SCENES.forEach((s, idx) => {
         const opt = document.createElement('option');
@@ -356,7 +357,8 @@ async function init() {
         const cy  = inst.center[1];
         const cz  = inst.center[2];
         const R   = inst.R;
-        const r   = inst.r;
+        const a   = inst.a;   // semi-axis in xz-plane (defaults to r for circular)
+        const b   = inst.b;   // semi-axis in y direction (defaults to r for circular)
         const ior = inst.ior;
         const sx = inst.extinction[0];
         const sy = inst.extinction[1];
@@ -369,9 +371,9 @@ async function init() {
         f[base + 1] = cy;
         f[base + 2] = cz;
         f[base + 3] = R;
-        f[base + 4] = r;
-        f[base + 5] = ior;
-        f[base + 6] = 0.0;
+        f[base + 4] = a;
+        f[base + 5] = b;
+        f[base + 6] = ior;
         f[base + 7] = 0.0;
         // Pack columns of R into rot0/rot1/rot2
         // col0 = (r00, r10, r20), col1 = (r01, r11, r21), col2 = (r02, r12, r22)

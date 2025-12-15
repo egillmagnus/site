@@ -90,8 +90,8 @@ struct Camera {
 };
 
 struct Torus {
-    centerR: vec4<f32>,     // xyz = center, w = major radius R
-    rIorPad: vec4<f32>,     // x = minor radius r, y = ior, z,w unused
+    centerR: vec4<f32>,     // xyz = center, w = major radius R (sweep radius)
+    abIorPad: vec4<f32>,    // x = semi-axis a (xz-plane), y = semi-axis b (y-axis), z = ior, w unused
     rot0: vec4<f32>,        // column 0 of 3x3 forward rotation R (local +X axis in world)
     rot1: vec4<f32>,        // column 1 (local +Y axis in world)
     rot2: vec4<f32>,        // column 2 (local +Z axis in world)
@@ -306,32 +306,44 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     return curEta / 1.0;
 }
 
-// === Torus implicit + normal ===
-// F(P) = (x^2 + y^2 + z^2 + R^2 - r^2)^2 - 4 R^2 (x^2 + z^2)
+// === Elliptical Torus implicit + normal ===
+// Based on Cychosz "Intersecting a Ray with an Elliptical Torus" (Graphics Gems II)
+// Ellipse cross-section with semi-axes a (in xz-plane) and b (in y direction)
+// F(P) = (x² + z² + p*y² + B0)² - A0*(x² + z²) = 0
+// where: p = a²/b², A0 = 4*R², B0 = R² - a²
 
-// Torus implicit in local coords (centered at origin)
-fn torusF_local(P: vec3<f32>, R: f32, r: f32) -> f32 {
+// Elliptical torus implicit in local coords (centered at origin, swept around Y)
+fn torusF_local(P: vec3<f32>, R: f32, a: f32, b: f32) -> f32 {
     let x = P.x;
     let y = P.y;
     let z = P.z;
 
-    let sum = x * x + y * y + z * z + R * R - r * r;
-    let xz2 = x * x + z * z;
+    let p = (a * a) / max(b * b, EPS_DIV);
+    let A0 = 4.0 * R * R;
+    let B0 = R * R - a * a;
 
-    return sum * sum - 4.0 * R * R * xz2;
+    let xz2 = x * x + z * z;
+    let sum = xz2 + p * y * y + B0;
+
+    return sum * sum - A0 * xz2;
 }
 
-fn torusNormal_local(P: vec3<f32>, R: f32, r: f32) -> vec3<f32> {
+fn torusNormal_local(P: vec3<f32>, R: f32, a: f32, b: f32) -> vec3<f32> {
     let x = P.x;
     let y = P.y;
     let z = P.z;
 
-    let B0 = R * R - r * r;
-    let Q = x * x + y * y + z * z + B0;
+    let p = (a * a) / max(b * b, EPS_DIV);
+    let A0 = 4.0 * R * R;
+    let B0 = R * R - a * a;
 
-    let dFx = 4.0 * x * Q - 8.0 * R * R * x;
-    let dFy = 4.0 * y * Q;
-    let dFz = 4.0 * z * Q - 8.0 * R * R * z;
+    let xz2 = x * x + z * z;
+    let Q = xz2 + p * y * y + B0;
+
+    // Gradient of F
+    let dFx = 4.0 * x * Q - 2.0 * A0 * x;
+    let dFy = 4.0 * p * y * Q;
+    let dFz = 4.0 * z * Q - 2.0 * A0 * z;
 
     return normalize(vec3<f32>(dFx, dFy, dFz));
 }
@@ -341,9 +353,10 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
     let T = TORI.data[idx];
 
     let center = T.centerR.xyz;
-    let R = T.centerR.w;
-    let r = T.rIorPad.x;
-    let ior = T.rIorPad.y;
+    let R = T.centerR.w;           // major (sweep) radius
+    let a = T.abIorPad.x;          // semi-axis in xz-plane
+    let b = T.abIorPad.y;          // semi-axis in y direction
+    let ior = T.abIorPad.z;
     let sigma = T.extinction.xyz;
 
     // transform ray origin to local space (inverse rotation = transpose of R)
@@ -360,9 +373,9 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
     );
 
     // === Local-space AABB cull ===
-    // Torus is aligned with local axes: major radius in xz-plane, tube radius along y.
-    let halfXZ = R + r;
-    let halfY  = r;
+    // Elliptical torus: major radius in xz-plane, ellipse semi-axes a (xz) and b (y)
+    let halfXZ = R + a;
+    let halfY  = b;
 
     let boxMin = vec3<f32>(-halfXZ, -halfY, -halfXZ);
     let boxMax = vec3<f32>( halfXZ,  halfY,  halfXZ);
@@ -398,7 +411,7 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
 
     var t0 = ray.tmin;
     var P0 = ray.origin + t0 * ray.dir;
-    var f0 = torusF_local(P0, R, r);
+    var f0 = torusF_local(P0, R, a, b);
 
     var bestT = ray.tmax;
     var found = false;
@@ -408,27 +421,27 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
     for (var i = 1u; i <= MAX_STEPS; i = i + 1u) {
         let t1 = ray.tmin + f32(i) * step;
         let P1 = ray.origin + t1 * ray.dir;
-        let f1 = torusF_local(P1, R, r);
+        let f1 = torusF_local(P1, R, a, b);
 
         if (f0 == 0.0 || f0 * f1 < 0.0) {
-            var a = t0;
-            var b = t1;
-            var fa = f0;
+            var lo = t0;
+            var hi = t1;
+            var flo = f0;
 
             for (var j = 0u; j < MAX_BISECT; j = j + 1u) {
-                let mid = 0.5 * (a + b);
+                let mid = 0.5 * (lo + hi);
                 let Pm = ray.origin + mid * ray.dir;
-                let fm = torusF_local(Pm, R, r);
+                let fm = torusF_local(Pm, R, a, b);
 
-                if fa * fm <= 0.0 {
-                    b = mid;
+                if flo * fm <= 0.0 {
+                    hi = mid;
                 } else {
-                    a = mid;
-                    fa = fm;
+                    lo = mid;
+                    flo = fm;
                 }
             }
 
-            let tCandidate = 0.5 * (a + b);
+            let tCandidate = 0.5 * (lo + hi);
             if tCandidate > ray.tmin && tCandidate < bestT {
                 bestT = tCandidate;
                 found = true;
@@ -449,7 +462,7 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
 
     // local P for normal
     let P_local = ray.origin + tHit * ray.dir;
-    let N_local = torusNormal_local(P_local, R, r);
+    let N_local = torusNormal_local(P_local, R, a, b);
 
     // rotate normal back to world space (forward rotation)
     let N_world = normalize(vec3<f32>(

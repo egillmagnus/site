@@ -38,6 +38,9 @@
             if (line === "}") {
                 if (!current) throw new Error("Unexpected '}' in .tori file");
                 if (!current.extinction) current.extinction = [0,0,0];
+                // Default a and b to r for backward compatibility (circular torus)
+                if (current.a === undefined) current.a = current.r;
+                if (current.b === undefined) current.b = current.r;
                 // Convert legacy axis/angle to rotations array if needed
                 if (current.rotations.length === 0 && current.axis && !isNaN(current.angle)) {
                     current.rotations = [{ axis: current.axis, angle: current.angle }];
@@ -71,6 +74,14 @@
 
                 case "r":
                     current.r = parseFloat(val);
+                    break;
+
+                case "a":
+                    current.a = parseFloat(val);
+                    break;
+
+                case "b":
+                    current.b = parseFloat(val);
                     break;
 
                 case "ior":

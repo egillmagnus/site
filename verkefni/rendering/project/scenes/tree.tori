@@ -1,7 +1,8 @@
 torus {
     center = 278, 400, 300
     R = 25
-    r = 18
+    a = 18
+    b = 15
     ior = 1.5
     extinction = 0.01, 0, 0.01
 }
@@ -9,7 +10,8 @@ torus {
 torus {
     center = 278, 355, 300
     R = 50
-    r = 25
+    a = 25
+    b = 20
     ior = 1.5
     extinction = 0.01, 0, 0.01
 }
@@ -17,7 +19,8 @@ torus {
 torus {
     center = 278, 300, 300
     R = 80
-    r = 30
+    a = 30
+    b = 25
     ior = 1.5
     extinction = 0.01, 0, 0.01
 }
@@ -25,7 +28,8 @@ torus {
 torus {
     center = 278, 240, 300
     R = 110
-    r = 35
+    a = 35
+    b = 30
     ior = 1.5
     extinction = 0.01, 0, 0.01
 }
@@ -33,7 +37,8 @@ torus {
 torus {
     center = 278, 160, 300
     R = 140
-    r = 40
+    a = 40
+    b = 35
     ior = 1.5
     extinction = 0.01, 0, 0.01
 }
@@ -41,7 +46,8 @@ torus {
 torus {
     center = 278, 80, 300
     R = 25
-    r = 18
+    a = 18
+    b = 15
     ior = 1.5
     extinction = 0.15, 0.35, 1.2
 }
@@ -49,7 +55,8 @@ torus {
 torus {
     center = 278, 40, 300
     R = 25
-    r = 18
+    a = 18
+    b = 15
     ior = 1.5
     extinction = 0.15, 0.35, 1.2
 }
@@ -57,7 +64,8 @@ torus {
 torus {
     center = 278.000000, 300.000000, 200.000000
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90
@@ -66,7 +74,8 @@ torus {
 torus {
     center = 230.977180, 355.000000, 235.278640
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:36
@@ -75,7 +84,8 @@ torus {
 torus {
     center = 237.104570, 400.000000, 286.712269
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:76
@@ -84,7 +94,8 @@ torus {
 torus {
     center = 363.228862, 240.000000, 182.692536
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:-36
@@ -93,7 +104,8 @@ torus {
 torus {
     center = 449.190173, 160.000000, 244.376941
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:-72
@@ -102,7 +114,8 @@ torus {
 torus {
     center = 252.725234, 400.000000, 265.212269
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0.02, 0.02, 0.6
     rotation = x:90, y:36
@@ -111,7 +124,8 @@ torus {
 torus {
     center = 278.000000, 355.000000, 225.000000
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0.02, 0.02, 0.6
     rotation = x:90
@@ -120,7 +134,8 @@ torus {
 torus {
     center = 342.656378, 300.000000, 211.008131
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0.02, 0.02, 0.6
     rotation = x:90, y:-36
@@ -129,7 +144,8 @@ torus {
 torus {
     center = 415.903195, 240.000000, 255.192536
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0.02, 0.02, 0.6
     rotation = x:90, y:-72
@@ -138,7 +154,8 @@ torus {
 torus {
     center = 278.000000, 400.000000, 257.000000
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 1, 1, 0
     rotation = x:90, y:0
@@ -147,7 +164,8 @@ torus {
 torus {
     center = 322.083894, 355.000000, 239.323725
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 1, 1, 0
     rotation = x:90, y:-36
@@ -156,7 +174,8 @@ torus {
 torus {
     center = 382.616217, 300.000000, 266.008131
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 1, 1, 0
     rotation = x:90, y:-72
@@ -165,7 +184,8 @@ torus {
 torus {
     center = 278.000000, 240.000000, 155.000000
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 1, 1, 0
     rotation = x:90, y:0
@@ -174,7 +194,8 @@ torus {
 torus {
     center = 383.801345, 160.000000, 154.376941
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 1, 1, 0
     rotation = x:90, y:-36
@@ -183,7 +204,8 @@ torus {
 torus {
     center = 213.343622, 300.000000, 211.008131
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 1, 1, 0
     rotation = x:90, y:36
@@ -192,7 +214,8 @@ torus {
 torus {
     center = 206.670761, 355.000000, 276.823725
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 1, 1, 0
     rotation = x:90, y:72
@@ -201,7 +224,8 @@ torus {
 torus {
     center = 173.383783, 300.000000, 266.008131
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0.02, 0.02, 0.6
     rotation = x:90, y:72
@@ -210,7 +234,8 @@ torus {
 torus {
     center = 192.771138, 240.000000, 182.692536
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0.02, 0.02, 0.6
     rotation = x:90, y:36
@@ -219,7 +244,8 @@ torus {
 torus {
     center = 278.000000, 160.000000, 120.000000
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0.02, 0.02, 0.6
     rotation = x:90, y:0
@@ -228,7 +254,8 @@ torus {
 torus {
     center = 318.895430, 400.000000, 286.712269
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0.02, 0.02, 0.6
     rotation = x:90, y:-72
@@ -237,7 +264,8 @@ torus {
 torus {
     center = 300.786528, 400.000000, 263.533932
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:-36
@@ -246,7 +274,8 @@ torus {
 torus {
     center = 349.329239, 355.000000, 276.823725
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:-72
@@ -255,7 +284,8 @@ torus {
 torus {
     center = 140.096805, 240.000000, 255.192536
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:72
@@ -264,7 +294,8 @@ torus {
 torus {
     center = 172.198655, 160.000000, 154.376941
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:36
@@ -273,7 +304,8 @@ torus {
 torus {
     center = 106.809827, 160.000000, 244.376941
     R = 6
-    r = 3
+    a = 3
+    b = 2.5
     ior = 1.5
     extinction = 1, 1, 0
     rotation = x:90, y:72

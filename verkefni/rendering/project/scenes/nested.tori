@@ -1,7 +1,8 @@
 torus {
     center = 278, 275, 150
     R = 130
-    r = 18
+    a = 18
+    b = 15
     ior = 1.5
     extinction = 0, 0, 0
     rotation = x:90
@@ -10,7 +11,8 @@ torus {
 torus {
     center = 278, 275, 150
     R = 95
-    r = 16
+    a = 16
+    b = 13
     ior = 1.5
     extinction = 0.03, 0.01, 0
     rotation = x:90
@@ -19,7 +21,8 @@ torus {
 torus {
     center = 278, 275, 150
     R = 65
-    r = 14
+    a = 14
+    b = 11
     ior = 1.5
     extinction = 0.06, 0.02, 0
     rotation = x:90
@@ -28,7 +31,8 @@ torus {
 torus {
     center = 278, 275, 150
     R = 40
-    r = 12
+    a = 12
+    b = 9
     ior = 1.6
     extinction = 0.1, 0.05, 0
     rotation = x:90
