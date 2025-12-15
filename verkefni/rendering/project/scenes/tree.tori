@@ -43,7 +43,7 @@ torus {
     R = 25
     r = 18
     ior = 1.5
-    extinction = 0.075, 0.5, 0.046
+    extinction = 0.15, 0.35, 1.2
 }
 
 torus {
@@ -51,7 +51,7 @@ torus {
     R = 25
     r = 18
     ior = 1.5
-    extinction = 0.075, 0.5, 0.046
+    extinction = 0.15, 0.35, 1.2
 }
 
 torus {
@@ -82,17 +82,160 @@ torus {
 }
 
 torus {
-    center = 372.045640, 240.000000, 170.557281
+    center = 363.228862, 240.000000, 182.692536
     R = 6
     r = 3
     ior = 1.5
     extinction = 0, 1, 1
     rotation = x:90, y:-36
 }
-
 
 torus {
-    center = 372.045640, 240.000000, 170.557281
+    center = 449.190173, 160.000000, 244.376941
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90, y:-72
+}
+
+torus {
+    center = 252.725234, 400.000000, 265.212269
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0.02, 0.02, 0.6
+    rotation = x:90, y:36
+}
+
+torus {
+    center = 278.000000, 355.000000, 225.000000
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0.02, 0.02, 0.6
+    rotation = x:90
+}
+
+torus {
+    center = 342.656378, 300.000000, 211.008131
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0.02, 0.02, 0.6
+    rotation = x:90, y:-36
+}
+
+torus {
+    center = 415.903195, 240.000000, 255.192536
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0.02, 0.02, 0.6
+    rotation = x:90, y:-72
+}
+
+torus {
+    center = 278.000000, 400.000000, 257.000000
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 1, 1, 0
+    rotation = x:90, y:0
+}
+
+torus {
+    center = 322.083894, 355.000000, 239.323725
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 1, 1, 0
+    rotation = x:90, y:-36
+}
+
+torus {
+    center = 382.616217, 300.000000, 266.008131
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 1, 1, 0
+    rotation = x:90, y:-72
+}
+
+torus {
+    center = 278.000000, 240.000000, 155.000000
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 1, 1, 0
+    rotation = x:90, y:0
+}
+
+torus {
+    center = 383.801345, 160.000000, 154.376941
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 1, 1, 0
+    rotation = x:90, y:-36
+}
+
+torus {
+    center = 213.343622, 300.000000, 211.008131
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 1, 1, 0
+    rotation = x:90, y:36
+}
+
+torus {
+    center = 206.670761, 355.000000, 276.823725
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 1, 1, 0
+    rotation = x:90, y:72
+}
+
+torus {
+    center = 173.383783, 300.000000, 266.008131
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0.02, 0.02, 0.6
+    rotation = x:90, y:72
+}
+
+torus {
+    center = 192.771138, 240.000000, 182.692536
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0.02, 0.02, 0.6
+    rotation = x:90, y:36
+}
+
+torus {
+    center = 278.000000, 160.000000, 120.000000
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0.02, 0.02, 0.6
+    rotation = x:90, y:0
+}
+
+torus {
+    center = 318.895430, 400.000000, 286.712269
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0.02, 0.02, 0.6
+    rotation = x:90, y:-72
+}
+
+torus {
+    center = 300.786528, 400.000000, 263.533932
     R = 6
     r = 3
     ior = 1.5
@@ -100,3 +243,38 @@ torus {
     rotation = x:90, y:-36
 }
 
+torus {
+    center = 349.329239, 355.000000, 276.823725
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90, y:-72
+}
+
+torus {
+    center = 140.096805, 240.000000, 255.192536
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90, y:72
+}
+
+torus {
+    center = 172.198655, 160.000000, 154.376941
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 0, 1, 1
+    rotation = x:90, y:36
+}
+
+torus {
+    center = 106.809827, 160.000000, 244.376941
+    R = 6
+    r = 3
+    ior = 1.5
+    extinction = 1, 1, 0
+    rotation = x:90, y:72
+}
