@@ -306,13 +306,6 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     return curEta / 1.0;
 }
 
-// === Elliptical Torus implicit + normal ===
-// Based on Cychosz "Intersecting a Ray with an Elliptical Torus" (Graphics Gems II)
-// Ellipse cross-section with semi-axes a (in xz-plane) and b (in y direction)
-// F(P) = (x² + z² + p*y² + B0)² - A0*(x² + z²) = 0
-// where: p = a²/b², A0 = 4*R², B0 = R² - a²
-
-// Elliptical torus implicit in local coords (centered at origin, swept around Y)
 fn torusF_local(P: vec3<f32>, R: f32, a: f32, b: f32) -> f32 {
     let x = P.x;
     let y = P.y;
@@ -372,7 +365,6 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
         dot(T.rot2.xyz, rayWorld.dir)
     );
 
-    // === Local-space AABB cull ===
     // Elliptical torus: major radius in xz-plane, ellipse semi-axes a (xz) and b (y)
     let halfXZ = R + a;
     let halfY  = b;
@@ -393,12 +385,10 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
     let box_tmin = max(pmin.x, max(pmin.y, pmin.z)) - EPS_RAY;
     let box_tmax = min(pmax.x, min(pmax.y, pmax.z)) + EPS_RAY;
 
-    // No overlap between ray segment and box → early out
     if box_tmin > box_tmax || box_tmin > segTmax || box_tmax < segTmin {
         return missHit(rayWorld.tmax);
     }
 
-    // local ray, clamped to intersection with AABB
     var ray = Ray(
         oL,
         dL,
@@ -483,7 +473,6 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
     return okHit(tHit, N_world, mat, 2u, vec2<f32>(0.0), sigma);
 }
 
-// === AABB, sphere, triangles, BSP ===
 
 fn intersectAabb(ray: Ray) -> bool {
     var tmin = ray.tmin;
@@ -528,7 +517,6 @@ fn intersectSphere(ray: Ray, center: vec3<f32>, radius: f32, typeFlag: u32, ior:
 
     var sigma = vec3<f32>(0.0);
     if typeFlag == 2u {
-        // tweak extinction to change glass tint
         sigma = vec3<f32>(0.1, 0.1, 0.0);
     }
 
@@ -706,8 +694,6 @@ fn intersect_scene_bsp(ray_in: Ray, includeTori: bool) -> HitInfo {
     return bestHit;
 }
 
-// === Shading & path tracing ===
-
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     let eps = EPS_RAY;
     let ray = Ray(P + eps * wi, wi, eps, maxDist - eps);
@@ -721,7 +707,6 @@ fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     return true;
 }
 
-// WS8: background OFF (black)
 fn background(dir: vec3<f32>, blueBg: bool) -> vec3<f32> {
     return vec3<f32>(0.0, 0.0, 0.0);
 }
@@ -830,7 +815,7 @@ fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     return Lo;
 }
 
-const MAX_BOUNCES : i32 = 10;
+const MAX_BOUNCES : i32 = 15;
 
 fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
     var ray = ray0;
