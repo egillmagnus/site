@@ -38,7 +38,6 @@
             if (line === "}") {
                 if (!current) throw new Error("Unexpected '}' in .tori file");
                 if (!current.extinction) current.extinction = [0,0,0];
-                // No backwards compatibility: require a and b explicitly
                 if (current.a === undefined || current.b === undefined) {
                     throw new Error("Missing 'a'/'b' in torus block");
                 }

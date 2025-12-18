@@ -18,7 +18,7 @@ fn vsMain(@builtin(vertex_index) vid: u32) -> VSOut {
     var out: VSOut;
     let p = corners[vid];
     out.pos = vec4<f32 >(p, 0.0, 1.0);
-    out.img = p; // [-1,1]
+    out.img = p; 
     return out;
 }
 
@@ -31,8 +31,8 @@ struct Camera {
     zoom: f32,
     gamma: f32,
     _pad0: f32,
-    addrMode: u32,     // 0=clamp, 1=repeat
-    filterMode: u32,   // 0=nearest, 1=linear
+    addrMode: u32,     
+    filterMode: u32,   
     _pad1: u32,
     _pad2: u32,
 };
@@ -64,10 +64,10 @@ struct HitInfo {
     t: f32,
     n: vec3<f32>,
     mat: Material,
-    shaderId: u32, // 0=matte plane/tri, 2=glossy sphere
+    shaderId: u32, 
     _padH: u32,
     relEta: f32,
-    uv: vec2<f32>, // NEW: texture coordinates
+    uv: vec2<f32>,
     _padUV: vec2<f32>,
 };
 
@@ -79,9 +79,8 @@ struct Onb {
 
 const plane_onb = Onb(vec3<f32>(-1.0, 0.0, 0.0), vec3<f32>(0.0, 0.0, 1.0), vec3<f32>(0.0, 1.0, 0.0));
 
-// ----- materials -----
 fn makeMaterial(base_rgb: vec3<f32>, spec_rgb: vec3<f32>, shininess: f32, ior: f32) -> Material {
-    // 10% ambient, 90% diffuse
+    
     return Material(0.1 * base_rgb, 0.9 * base_rgb, spec_rgb, shininess, ior);
 }
 
@@ -103,22 +102,19 @@ fn addRelEta(h: HitInfo, rel: f32) -> HitInfo {
 
 fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     if dot(h.n, ray.dir) < 0.0 {
-        return curEta / h.mat.ior; // entering
+        return curEta / h.mat.ior; 
     } else {
-        return curEta / 1.0;       // exiting to air
+        return curEta / 1.0;       
     }
 }
 
-// ----- light -----
 fn samplePointLight(P: vec3<f32>, lightPos: vec3<f32>, intensity: vec3<f32>) -> Light {
     let L = lightPos - P;
     let d = length(L);
     let wi = L / max(d, EPS_DIV);
     let Li = intensity / max(d * d, EPS_DIV);
     return Light(Li, wi, d);
-}
 
-// ----- intersections -----
 fn intersectTriangle(ray: Ray, v0: vec3<f32>, v1: vec3<f32>, v2: vec3<f32>, tmin: f32, tmax: f32) -> HitInfo {
     let e0 = v1 - v0;
     let e1 = v2 - v0;
@@ -160,7 +156,7 @@ fn intersectSphere(ray: Ray, C: vec3<f32>, r: f32, tmin: f32, tmax: f32) -> HitI
     let Phit = ray.origin + t * ray.dir;
     let n = Phit - C;
 
-    // glossy glass sphere (has specular + ior 1.5)
+    
     let mat = makeMaterial(vec3<f32 >(0.0), vec3<f32 >(0.1, 0.1, 0.1), 42.0, 1.5);
     return okHit(t, n, mat, 2u, vec2<f32>(0.0));
 }
@@ -174,14 +170,14 @@ fn intersectPlane(ray: Ray, P0: vec3<f32>, onb: Onb, tmin: f32, tmax: f32) -> Hi
 
     let Phit = ray.origin + t * ray.dir;
 
-    // inverse map onto tangent/binormal, then scale by 0.2
+    
     let uv = vec2<f32>(dot(Phit, onb.tangent), dot(Phit, onb.binormal)) * 0.2;
 
-    // Base (non-textured) plane color
+    
     var base = vec3<f32>(0.1, 0.7, 0.0);
 
-    // If texturing is ON, sample texture here (address/filter from Camera)
-    if cam._pad1 != 0u { // use _pad1 as "texturingOn"
+    
+    if cam._pad1 != 0u { 
         if cam.filterMode == 0u {
             base = sample_nearest(my_texture, uv, cam.addrMode);
         } else {
@@ -214,13 +210,12 @@ fn intersect_scene(ray: Ray, tmin: f32, tmax: f32) -> HitInfo {
     return best;
 }
 
-// ----- helpers -----
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     let eps = EPS_RAY;
     let ray = Ray(P + eps * wi, wi);
     let h = intersect_scene(ray, eps, maxDist - eps);
     if !h.hit { return false; }
-    if h.shaderId == 2u { return false; } // glossy glass lets light through
+    if h.shaderId == 2u { return false; } 
     return true;
 }
 
@@ -262,10 +257,9 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
 
 const MAX_BOUNCES : i32 = 4;
 
-// ----- tracer: glossy sphere continues via refraction; others return -----
 fn trace(ray0: Ray) -> vec3<f32> {
     var ray = ray0;
-    var eta: f32 = 1.0; // current medium eta (1.0 = air)
+    var eta: f32 = 1.0; 
     var acc = vec3<f32 >(0.0);
 
     for (var depth: i32 = 0; depth < MAX_BOUNCES; depth = depth + 1) {
@@ -288,7 +282,7 @@ fn trace(ray0: Ray) -> vec3<f32> {
             let k = 1.0 - rel * rel * (1.0 - cosi * cosi);
 
             if k < 0.0 {
-                // total internal reflection
+                
                 let R = normalize(reflect(ray.dir, N));
                 let eps = EPS_RAY;
                 ray = Ray(P + eps * R, R);
@@ -311,9 +305,9 @@ fn trace(ray0: Ray) -> vec3<f32> {
 
 fn apply_address(uv: vec2<f32>, addrMode: u32) -> vec2<f32> {
     if addrMode == 0u {
-        return clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0)); // clamp-to-edge
+        return clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0)); 
     } else {
-        return fract(uv); // repeat
+        return fract(uv); 
     }
 }
 
@@ -366,7 +360,7 @@ fn sample_linear(tex: texture_2d<f32>, uv_in: vec2<f32>, addrMode: u32) -> vec3<
 
 @fragment
 fn fsMain(@location(0) img: vec2<f32>) -> @location(0) vec4<f32> {
-    // Back to ray tracing:
+    
     let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
     let Pimg = center + img.x * cam.U.xyz + (img.y / cam.aspect) * cam.V.xyz;
     let dir = normalize(Pimg - cam.eye.xyz);

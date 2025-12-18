@@ -15,16 +15,16 @@ fn tea(val0: u32, val1: u32) -> u32 {
 }
 
 fn mcg31(prev: ptr<function, u32>) -> u32 {
-    const A = 1977654935u;              // Tang 2007
-    *prev = (A * (*prev)) & 0x7fffffffu; // mod 2^31
+    const A = 1977654935u;              
+    *prev = (A * (*prev)) & 0x7fffffffu; 
     return *prev;
 }
 
 fn rnd(prev: ptr<function, u32>) -> f32 {
-    return f32(mcg31(prev)) / f32(0x80000000u); // [0,1)
+    return f32(mcg31(prev)) / f32(0x80000000u); 
 }
 
-// === Cosine hemisphere helpers (from slides) ===
+
 
 fn spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32) -> vec3<f32> {
     return vec3<f32>(
@@ -34,7 +34,7 @@ fn spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32) -> vec3<f32> {
     );
 }
 
-// Rotate a direction sampled around the +z axis to be sampled around normal n
+
 fn rotate_to_normal(n: vec3<f32>, v: vec3<f32>) -> vec3<f32> {
     let s = sign(n.z + 1.0e-16);
     let a = -1.0 / (1.0 + abs(n.z));
@@ -72,11 +72,11 @@ struct Camera {
     aspect: f32,
     zoom: f32,
     gamma: f32,
-    _pad0: f32,   // used as invW (with sign encoding blue/black background)
-    addrMode: u32, // width
-    filterMode: u32, // height
-    _pad1: u32,   // frame
-    _pad2: u32,   // N (no. of jitters)
+    _pad0: f32,   
+    addrMode: u32, 
+    filterMode: u32, 
+    _pad1: u32,   
+    _pad2: u32,   
 };
 
 struct Jitters {
@@ -84,11 +84,11 @@ struct Jitters {
 };
 
 struct AttribBuf {
-    data: array<vec4<f32>>  // Interleaved: [pos.xyz, pos.w, norm.xyz, norm.w]
+    data: array<vec4<f32>>  
 };
 
 struct IndexBuf {
-    data: array<u32>  // 4 per triangle: [i0, i1, i2, matIdx]
+    data: array<u32>  
 };
 
 struct MeshInfo {
@@ -128,7 +128,7 @@ struct TreeIdsBuf {
 };
 
 struct BspTreeBuf {
-    data: array<vec4<u32>>  // [data, id, left_child, right_child]
+    data: array<vec4<u32>>  
 };
 
 struct BspPlanesBuf {
@@ -136,15 +136,15 @@ struct BspPlanesBuf {
 };
 
 struct SpheresUBO {
-    c0: vec4<f32>,     // xyz,r
-    c1: vec4<f32>,     // xyz,r
-    p0: vec4<f32>,     // x=type (1 mirror), y=ior, z,w unused
-    p1: vec4<f32>,     // x=type (2 glass),  y=ior, z,w unused
+    c0: vec4<f32>,     
+    c1: vec4<f32>,     
+    p0: vec4<f32>,     
+    p1: vec4<f32>,     
 };
 
 @group(0) @binding(0) var<uniform> cam : Camera;
-@group(0) @binding(1) var<storage, read> ATTRIB : AttribBuf;  // Interleaved pos+norm
-@group(0) @binding(2) var<storage, read> IND : IndexBuf;      // Includes mat index
+@group(0) @binding(1) var<storage, read> ATTRIB : AttribBuf;  
+@group(0) @binding(2) var<storage, read> IND : IndexBuf;      
 @group(0) @binding(3) var<storage, read> MATERIALS : MaterialsBuf;
 @group(0) @binding(4) var<storage, read> LIGHT_IDX : LightIndexBuf;
 @group(0) @binding(5) var<uniform> LIGHT_INFO : LightInfo;
@@ -176,7 +176,7 @@ struct Material {
     ior: f32,
 };
 
-// HitInfo with throughput + emit flag
+
 struct HitInfo {
     hit: bool,
     t: f32,
@@ -185,8 +185,8 @@ struct HitInfo {
     shaderId: u32,
     relEta: f32,
     uv: vec2<f32>,
-    throughput: vec3<f32>, // RGB throughput (path weight)
-    emit: bool,            // true if this is an emitting/special surface
+    throughput: vec3<f32>, 
+    emit: bool,            
 };
 
 fn makeMaterial(emission: vec3<f32>, diffuse: vec3<f32>, spec_rgb: vec3<f32>, shininess: f32, ior: f32) -> Material {
@@ -201,7 +201,7 @@ fn fresnel_R(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) -> f32 {
     let denom_s = eta_i * cos_i + eta_t * cos_t;
     let denom_p = eta_t * cos_i + eta_i * cos_t;
 
-    // Avoid division by zero
+    
     if abs(denom_s) < 1.0e-6 || abs(denom_p) < 1.0e-6 {
         return 1.0;
     }
@@ -212,7 +212,7 @@ fn fresnel_R(cos_i: f32, cos_t: f32, eta_i: f32, eta_t: f32) -> f32 {
     return 0.5 * (rs * rs + rp * rp);
 }
 
-// miss hit
+
 fn missHit(tmax: f32) -> HitInfo {
     return HitInfo(
         false,
@@ -227,7 +227,7 @@ fn missHit(tmax: f32) -> HitInfo {
     );
 }
 
-// okHit: lights emit, and specular (mirror=1, glass=2) also set emit=true
+
 fn okHit(t: f32, n: vec3<f32>, mat: Material, shaderId: u32, uv: vec2<f32>) -> HitInfo {
     let isLight    = any(mat.emission > vec3<f32>(0.0));
     let isSpecular = (shaderId == 1u || shaderId == 2u);
@@ -265,7 +265,7 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     return curEta / 1.0;
 }
 
-// AABB intersection test
+
 fn intersectAabb(ray: Ray) -> bool {
     var tmin = ray.tmin;
     var tmax = ray.tmax;
@@ -275,14 +275,14 @@ fn intersectAabb(ray: Ray) -> bool {
     let pmin = min(p1, p2);
     let pmax = max(p1, p2);
 
-    // Bias like the slides (avoid grazing artifacts on the box)
+    
     let box_tmin = max(pmin.x, max(pmin.y, pmin.z)) - 1.0e-3;
     let box_tmax = min(pmax.x, min(pmax.y, pmax.z)) + 1.0e-3;
 
     if box_tmin > box_tmax || box_tmin > tmax || box_tmax < tmin {
         return false;
     }
-    // Caller will clamp ray.tmin/tmax after this returns true
+    
     return true;
 }
 
@@ -302,7 +302,7 @@ fn intersectSphere(ray: Ray, center: vec3<f32>, radius: f32, typeFlag: u32, ior:
 
     let P = ray.origin + t * ray.dir;
     var N = normalize(P - center);
-    // 1u = mirror, 2u = glass, no emission for spheres
+    
     let mat = makeMaterial(vec3<f32>(0.0), vec3<f32>(0.0), vec3<f32>(0.0), 1.0, max(ior, 1.0));
     return okHit(t, N, mat, typeFlag, vec2<f32>(0.0));
 }
@@ -312,9 +312,9 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let i0 = IND.data[base + 0u];
     let i1 = IND.data[base + 1u];
     let i2 = IND.data[base + 2u];
-    let matIdx = IND.data[base + 3u];  // Material index
+    let matIdx = IND.data[base + 3u];  
 
-    // Each vertex is 2 vec4s: [pos, norm]
+    
     let v0 = ATTRIB.data[i0 * 2u + 0u].xyz;
     let v1 = ATTRIB.data[i1 * 2u + 0u].xyz;
     let v2 = ATTRIB.data[i2 * 2u + 0u].xyz;
@@ -338,7 +338,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let gamma = -dot(n_tmp, e0) * q;
     if gamma < 0.0 || beta + gamma > 1.0 { return missHit(ray.tmax); }
 
-    // Interpolate vertex normals
+    
     let alpha = 1.0 - beta - gamma;
     let n0 = ATTRIB.data[i0 * 2u + 1u].xyz;
     let n1 = ATTRIB.data[i1 * 2u + 1u].xyz;
@@ -359,14 +359,14 @@ const BSP_LEAF : u32 = 3u;
 fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var r = ray_in;
 
-    // Early out: if the ray does not touch the scene box
+    
     if !intersectAabb(r) {
         return missHit(r.tmax);
     }
 
     var hit = missHit(r.tmax);
 
-    // Traversal state
+    
     var branch_node: array<vec2<u32>, MAX_LEVEL>;
     var branch_ray: array<vec2<f32>, MAX_LEVEL>;
     var branch_lvl = 0u;
@@ -404,7 +404,7 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
             }
         }
 
-        // Internal node
+        
         let axis_dir = r.dir[node_axis_leaf];
         let axis_org = r.origin[node_axis_leaf];
 
@@ -438,7 +438,7 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
         }
     }
 
-    // Also test the two analytic spheres
+    
     var bestHit = hit;
 
     var sphereRay = ray_in;
@@ -468,7 +468,7 @@ fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     return true;
 }
 
-// WS8.2: background light OFF (always black)
+
 fn background(dir: vec3<f32>, blueBg: bool) -> vec3<f32> {
     if blueBg {
         return vec3<f32>(0.1, 0.3, 0.6);
@@ -476,7 +476,7 @@ fn background(dir: vec3<f32>, blueBg: bool) -> vec3<f32> {
     return vec3<f32>(0.0, 0.0, 0.0);
 }
 
-// Monte Carlo area light sampling with random position
+
 fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Light {
     if LIGHT_INFO.lightCount == 0u {
         return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
@@ -563,7 +563,7 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Ligh
     return Light(Li, wi, dist);
 }
 
-// Direct illumination (area light) + emission
+
 fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     var N = hit.n;
     if dot(N, ray.dir) > 0.0 { N = -N; }
@@ -585,7 +585,7 @@ fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
 
 const MAX_BOUNCES : i32 = 5;
 
-// Path tracer with Lambertian indirect + Fresnel glass, background off
+
 fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
     var ray = ray0;
     var eta: f32 = 1.0;
@@ -601,16 +601,16 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
 
         let hRel = addRelEta(h, computeRelEta(h, ray, eta));
 
-        // Only treat actual emissive lights as endpoints (not specular)
+        
         if hRel.emit && any(hRel.mat.emission > vec3<f32>(0.0)) {
             acc += throughput * hRel.mat.emission;
             return acc;
         }
 
-        // Direct illumination (area light) + possible local emission
+        
         let c = shade_once(ray, hRel, seed);
 
-        // Perfect mirror
+        
         if hRel.shaderId == 1u {
             acc += throughput * c; 
             let P = ray.origin + hRel.t * ray.dir;
@@ -622,7 +622,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             continue;
         }
 
-        // Glass with Fresnel + Russian roulette
+        
         if hRel.shaderId == 2u {
             acc += throughput * c;
 
@@ -639,7 +639,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             let sin2_t = rel * rel * (1.0 - cosi * cosi);
             let k = 1.0 - sin2_t;
 
-            // TIR
+            
             if k < 0.0 {
                 let Rdir = normalize(reflect(ray.dir, N));
                 let eps = EPS_RAY;
@@ -676,7 +676,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             continue;
         }
 
-        // Lambertian / general diffuse: direct + indirect
+        
         acc += throughput * c;
         
         let albedo = hRel.mat.diffuse;
@@ -711,8 +711,8 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
 }
 
 struct FSOut {
-    @location(0) frame: vec4<f32>,  // gamma-corrected for the screen
-    @location(1) accum: vec4<f32>,  // linear accumulated color (rgba32float)
+    @location(0) frame: vec4<f32>,  
+    @location(1) accum: vec4<f32>,  
 };
 
 @fragment
@@ -722,7 +722,7 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let frame: u32 = cam._pad1;
     let N: u32 = cam._pad2;
 
-    // Decode invW and blue-background flag from _pad0
+    
     let invWraw = cam._pad0;
     let blueBg = invWraw < 0.0;
     let invW = abs(invWraw);

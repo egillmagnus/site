@@ -87,7 +87,6 @@ fn samplePointLight(P: vec3<f32>, lightPos: vec3<f32>, intensity: vec3<f32>) -> 
   return Light(Li, wi, d);
 }
 
-// ---- intersections ----
 fn intersectTriangle(ray: Ray,
                      v0: vec3<f32>, v1: vec3<f32>, v2: vec3<f32>,
                      tmin: f32, tmax: f32) -> HitInfo {
@@ -202,7 +201,6 @@ fn intersect_scene(ray: Ray, tmin: f32, tmax: f32) -> HitInfo {
   return best;
 }
 
-// ---- shadows ----
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
   let eps = 1e-4;
   let shadowRay = Ray(P + eps * wi, wi);

@@ -324,7 +324,6 @@ async function init() {
         }
     }
     function multiplyMat3(a, b) {
-        // Multiply two 3x3 matrices (row-major)
         return [
             a[0]*b[0] + a[1]*b[3] + a[2]*b[6],
             a[0]*b[1] + a[1]*b[4] + a[2]*b[7],
@@ -340,7 +339,7 @@ async function init() {
         ];
     }
     function buildCombinedRotationMatrix(rotations) {
-        let result = [1, 0, 0, 0, 1, 0, 0, 0, 1]; // Identity
+        let result = [1, 0, 0, 0, 1, 0, 0, 0, 1]; 
         if (!rotations || rotations.length === 0) {
             return result;
         }
@@ -357,15 +356,12 @@ async function init() {
         const cy  = inst.center[1];
         const cz  = inst.center[2];
         const R   = inst.R;
-        const a   = inst.a;   // semi-axis in xz-plane (defaults to r for circular)
-        const b   = inst.b;   // semi-axis in y direction (defaults to r for circular)
+        const a   = inst.a;
+        const b   = inst.b;
         const ior = inst.ior;
         const sx = inst.extinction[0];
         const sy = inst.extinction[1];
         const sz = inst.extinction[2];
-        // `buildCombinedRotationMatrix` returns a row-major 3x3 matrix R.
-        // The WGSL shader expects `rot0/1/2` to be the *columns* of R (local axes in world space),
-        // so that: world->local uses R^T via dot(col_i, v), and normals use R via column combination.
         const rot = buildCombinedRotationMatrix(inst.rotations);
         f[base + 0] = cx;
         f[base + 1] = cy;
@@ -375,8 +371,8 @@ async function init() {
         f[base + 5] = b;
         f[base + 6] = ior;
         f[base + 7] = 0.0;
-        // Pack columns of R into rot0/rot1/rot2
-        // col0 = (r00, r10, r20), col1 = (r01, r11, r21), col2 = (r02, r12, r22)
+        
+        
         f[base +  8] = rot[0]; f[base +  9] = rot[3]; f[base + 10] = rot[6];  f[base + 11] = 0.0;
         f[base + 12] = rot[1]; f[base + 13] = rot[4]; f[base + 14] = rot[7];  f[base + 15] = 0.0;
         f[base + 16] = rot[2]; f[base + 17] = rot[5]; f[base + 18] = rot[8];  f[base + 19] = 0.0;

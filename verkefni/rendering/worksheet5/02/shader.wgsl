@@ -18,23 +18,23 @@ fn vsMain(@builtin(vertex_index) vid: u32) -> VSOut {
     var out: VSOut;
     let p = corners[vid];
     out.pos = vec4<f32>(p, 0.0, 1.0);
-    out.img = p; // [-1,1]
+    out.img = p; 
     return out;
 }
 
 struct Camera {
     eye: vec4<f32>,
-    U: vec4<f32>,   // U.w used as tex magnification divisor (1..10)
+    U: vec4<f32>,   
     V: vec4<f32>,
     W: vec4<f32>,
     aspect: f32,
     zoom: f32,
     gamma: f32,
-    _pad0: f32,     // we store invWidth here for jitter
-    addrMode: u32,  // 0=clamp, 1=repeat
-    filterMode: u32,// 0=nearest, 1=linear
-    _pad1: u32,     // used as "texturingOn" (0/1)
-    _pad2: u32,     // used as sampleCount (subdiv^2)
+    _pad0: f32,     
+    addrMode: u32,  
+    filterMode: u32,
+    _pad1: u32,     
+    _pad2: u32,     
 };
 
 struct Jitters {
@@ -45,10 +45,9 @@ struct Jitters {
 @group(0) @binding(0) var<uniform> cam : Camera;
 @group(0) @binding(1) var my_texture : texture_2d<f32>;
 
-// ---------- NEW: mesh buffers ----------
 struct VertBuf {
     data: array<vec4<f32>>
-}; // padded to vec4 for alignment
+}; 
 struct IndexBuf {
     data: array<u32>
 };
@@ -67,7 +66,6 @@ struct MeshInfo {
 };
 @group(0) @binding(5) var<uniform> MESH : MeshInfo;
 
-// --------------------------------------
 
 struct Ray {
     origin: vec3<f32>,
@@ -93,10 +91,10 @@ struct HitInfo {
     t: f32,
     n: vec3<f32>,
     mat: Material,
-    shaderId: u32, // 0=matte plane/tri, 2=glossy sphere
+    shaderId: u32, 
     _padH: u32,
     relEta: f32,
-    uv: vec2<f32>,    // texture coordinates (for plane)
+    uv: vec2<f32>,    
     _padUV: vec2<f32>,
 };
 
@@ -110,9 +108,8 @@ const plane_onb = Onb(vec3<f32>(-1.0, 0.0, 0.0),
     vec3<f32>(0.0, 0.0, 1.0),
     vec3<f32>(0.0, 1.0, 0.0));
 
-// ----- materials -----
 fn makeMaterial(base_rgb: vec3<f32>, spec_rgb: vec3<f32>, shininess: f32, ior: f32) -> Material {
-    // 10% ambient, 90% diffuse
+    
     return Material(0.1 * base_rgb, 0.9 * base_rgb, spec_rgb, shininess, ior);
 }
 
@@ -134,10 +131,9 @@ fn addRelEta(h: HitInfo, rel: f32) -> HitInfo {
 
 fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     if dot(h.n, ray.dir) < 0.0 { return curEta / h.mat.ior; }
-    return curEta / 1.0;       // exiting to air
+    return curEta / 1.0;       
 }
 
-// ----- light -----
 fn samplePointLight(P: vec3<f32>, lightPos: vec3<f32>, intensity: vec3<f32>) -> Light {
     let L = lightPos - P;
     let d = length(L);
@@ -146,8 +142,6 @@ fn samplePointLight(P: vec3<f32>, lightPos: vec3<f32>, intensity: vec3<f32>) -> 
     return Light(Li, wi, d);
 }
 
-// ----- intersections -----
-// (kept) analytic sphere
 fn intersectSphere(ray: Ray, C: vec3<f32>, r: f32, tmin: f32, tmax: f32) -> HitInfo {
     let oc = ray.origin - C;
     let b = dot(oc, ray.dir);
@@ -165,12 +159,12 @@ fn intersectSphere(ray: Ray, C: vec3<f32>, r: f32, tmin: f32, tmax: f32) -> HitI
     let Phit = ray.origin + t * ray.dir;
     let n = Phit - C;
 
-    // glossy glass sphere (specular + ior 1.5)
+    
     let mat = makeMaterial(vec3<f32>(0.0), vec3<f32>(0.1, 0.1, 0.1), 42.0, 1.5);
     return okHit(t, n, mat, 2u, vec2<f32>(0.0));
 }
 
-// plane with inverse texture mapping
+
 fn intersectPlane(ray: Ray, P0: vec3<f32>, onb: Onb, tmin: f32, tmax: f32) -> HitInfo {
     let denom = dot(onb.normal, ray.dir);
     if abs(denom) < EPS_PARALLEL { return missHit(tmax); }
@@ -180,14 +174,14 @@ fn intersectPlane(ray: Ray, P0: vec3<f32>, onb: Onb, tmin: f32, tmax: f32) -> Hi
 
     let Phit = ray.origin + t * ray.dir;
 
-    // inverse map onto tangent/binormal, then scale by 0.2
-    let magnifyDiv = max(1.0, cam.U.w); // 1..10
+    
+    let magnifyDiv = max(1.0, cam.U.w); 
     let baseScale = 0.2;
-    let scale = baseScale / magnifyDiv; // divide scale → magnify texture
+    let scale = baseScale / magnifyDiv; 
     let uv = vec2<f32>(dot(Phit, onb.tangent), dot(Phit, onb.binormal)) * scale;
 
     var base = vec3<f32>(0.1, 0.7, 0.0);
-    if cam._pad1 != 0u { // texturing on?
+    if cam._pad1 != 0u { 
         if cam.filterMode == 0u {
             base = sample_nearest(my_texture, uv, cam.addrMode);
         } else {
@@ -227,7 +221,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32, tmin: f32, tmax: f32) -> HitInf
     let gamma = -dot(n_tmp, e0) * q;
     if gamma < 0.0 || beta + gamma > 1.0 { return missHit(tmax); }
 
-    // Teapot material - constant color (0.9, 0.9, 0.9)
+    
     let mat = makeMaterial(vec3<f32>(0.9), vec3<f32>(0.0), 1.0, 1.0);
     return okHit(t, n, mat, 0u, vec2<f32>(0.0));
 }
@@ -235,30 +229,29 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32, tmin: f32, tmax: f32) -> HitInf
 fn intersect_scene(ray: Ray, tmin: f32, tmax: f32) -> HitInfo {
     var best = missHit(tmax);
 
-    // Loop over all faces in indexed face set (teapot)
+    
     for (var f: u32 = 0u; f < MESH.faceCount; f = f + 1u) {
         let h = intersectTriangleFace(ray, f, tmin, best.t);
         if h.hit && h.t < best.t { best = h; }
     }
 
-    // Remove sphere intersection - comment out or delete these lines:
-    // var h = intersectSphere(ray, vec3<f32>(0.0, 0.5, 0.0), 0.3, tmin, best.t);
-    // if h.hit && h.t < best.t { best = h; }
+    
+    
+    
 
-    // Plane (kept)
+    
     let h = intersectPlane(ray, vec3<f32>(0.0, 0.0, 0.0), plane_onb, tmin, best.t);
     if h.hit && h.t < best.t { best = h; }
 
     return best;
 }
 
-// ----- helpers -----
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     let eps = EPS_RAY;
     let ray = Ray(P + eps * wi, wi);
     let h = intersect_scene(ray, eps, maxDist - eps);
     if !h.hit { return false; }
-    if h.shaderId == 2u { return false; } // glossy glass lets light through
+    if h.shaderId == 2u { return false; } 
     return true;
 }
 
@@ -274,17 +267,17 @@ fn background(dir: vec3<f32>) -> vec3<f32> {
 }
 
 fn sampleDirectionalLight(P: vec3<f32>, lightDir: vec3<f32>, Le: vec3<f32>) -> Light {
-    let wi = normalize(-lightDir);  // Direction toward light (opposite of light direction)
-    let dist = 1e30;  // Infinite distance for directional light
+    let wi = normalize(-lightDir);  
+    let dist = 1e30;  
     return Light(Le, wi, dist);
 }
 
 fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
     let PI = 3.1415926535;
     
-    // Directional light parameters
-    let lightDir = normalize(vec3<f32>(-1.0, -1.0, -1.0));  // Light direction
-    let Le = vec3<f32>(PI, PI, PI);  // Emitted radiance
+    
+    let lightDir = normalize(vec3<f32>(-1.0, -1.0, -1.0));  
+    let Le = vec3<f32>(PI, PI, PI);  
 
     var N = hit.n;
     if dot(N, ray.dir) > 0.0 { N = -N; }
@@ -352,7 +345,6 @@ fn trace(ray0: Ray) -> vec3<f32> {
     return vec3<f32>(0.0);
 }
 
-// -------- texturing helpers (unchanged) --------
 fn apply_address(uv: vec2<f32>, addrMode: u32) -> vec2<f32> {
     if addrMode == 0u { return clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0)); }
     return fract(uv);
@@ -404,11 +396,10 @@ fn sample_linear(tex: texture_2d<f32>, uv_in: vec2<f32>, addrMode: u32) -> vec3<
     let cx1 = mix(c01, c11, f.x);
     return mix(cx0, cx1, f.y);
 }
-// ------------------------------------------------
 
 @fragment
 fn fsMain(@location(0) img: vec2<f32>) -> @location(0) vec4<f32> {
-    // per-pixel delta in image/clip space
+    
     let invW = cam._pad0;
     let invH = invW * cam.aspect;
     let dpx = 2.0 * invW;
@@ -418,14 +409,14 @@ fn fsMain(@location(0) img: vec2<f32>) -> @location(0) vec4<f32> {
 
     var acc = vec3<f32>(0.0);
     if N == 0u {
-        // single sample at center
+        
         let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
         let Pimg = center + img.x * cam.U.xyz + (img.y / cam.aspect) * cam.V.xyz;
         let dir = normalize(Pimg - cam.eye.xyz);
         acc = trace(Ray(cam.eye.xyz, dir));
     } else {
         for (var i: u32 = 0u; i < N; i = i + 1u) {
-            let j = JIT.data[i]; // jitter in [-0.5, 0.5]
+            let j = JIT.data[i]; 
             let img_j = img + vec2<f32>(j.x * dpx, j.y * dpy);
 
             let center = cam.eye.xyz + cam.zoom * cam.W.xyz;

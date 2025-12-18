@@ -42,7 +42,6 @@
 
   <script defer src="../../common/MV.js"></script>
 
-  <!-- WGSL shader -->
   <script id="shader-rays" type="x-shader/wgsl">
 struct VSOut {
   @builtin(position) pos : vec4<f32>,
@@ -137,13 +136,12 @@ fn addRelEta(h: HitInfo, rel: f32) -> HitInfo {
 
 fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
   if (dot(h.n, ray.dir) < 0.0) {
-    return curEta / h.mat.ior;   // entering
+    return curEta / h.mat.ior;
   } else {
-    return curEta / 1.0;         // exiting → air
+    return curEta / 1.0;
   }
 }
 
-// ---------- Intersections ----------
 fn intersectTriangle(ray: Ray,
                      v0: vec3<f32>, v1: vec3<f32>, v2: vec3<f32>,
                      tmin: f32, tmax: f32) -> HitInfo {
@@ -166,7 +164,6 @@ fn intersectTriangle(ray: Ray,
   let gamma = -dot(n_tmp, e0) * q;
   if (gamma < 0.0 || beta + gamma > 1.0) { return missHit(tmax); }
 
-  // matte triangle
   let mat = makeMaterial(vec3<f32>(0.4, 0.3, 0.2), vec3<f32>(0.0), 1.0, 1.0);
   return okHit(t, n, mat, 0u);
 }
@@ -190,9 +187,8 @@ fn intersectSphere(ray: Ray,
   let Phit = ray.origin + t * ray.dir;
   let n     = Phit - C;
 
-  // sphere: specular + ior
   let mat = makeMaterial(vec3<f32>(0.0), vec3<f32>(0.1, 0.1, 0.1), 42.0, 1.5);
-  return okHit(t, n, mat, 2u);  // 2u → sphere bucket
+  return okHit(t, n, mat, 2u);
 }
 
 fn intersectPlane(ray: Ray,
@@ -227,7 +223,6 @@ fn intersect_scene(ray: Ray, tmin: f32, tmax: f32) -> HitInfo {
   return best;
 }
 
-// ---------- Helpers ----------
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
   let eps = 1e-4;
   let ray = Ray(P + eps * wi, wi);
@@ -247,7 +242,6 @@ fn background(dir: vec3<f32>) -> vec3<f32> {
   return vec3<f32>(0.1, 0.3, 0.6);
 }
 
-// ---------- shade one hit ----------
 fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
   let PI    = 3.1415926535;
   let Lpos  = vec3<f32>(0.0, 1.0, 0.0);
@@ -259,7 +253,6 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
   let wo = normalize(-ray.dir);
   let L  = samplePointLight(P, Lpos, I);
 
-  // pick mode (UI overrides per-object bucket)
   var mode : u32 = hit.shaderId;
   if (hit.shaderId == 0u) {
     mode = cam.matteMode;
@@ -302,7 +295,6 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
 
 const MAX_BOUNCES : i32 = 4;
 
-// ---------- tracer ----------
 fn trace(ray0: Ray) -> vec3<f32> {
   var ray = ray0;
   var eta : f32 = 1.0;  // current medium IOR

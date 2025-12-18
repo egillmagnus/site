@@ -31,7 +31,7 @@ struct Camera {
     zoom: f32,
     gamma: f32,
     _pad0: f32,
-    matteMode: u32,//0 base, 1 lambert
+    matteMode: u32,
     sphereMode: u32,
     _pad1: u32,
     _pad2: u32,
@@ -67,7 +67,7 @@ struct HitInfo {
     relEta: f32,
 };
 
-//10% ambient, 90% diffuse
+
 fn makeMaterial(base_rgb: vec3<f32>, spec_rgb: vec3<f32>, shininess: f32, ior: f32) -> Material {
     return Material(0.1 * base_rgb, 0.9 * base_rgb, spec_rgb, shininess, ior);
 }
@@ -100,7 +100,7 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     if dot(h.n, ray.dir) < 0.0 {
         return curEta / h.mat.ior;
     } else {
-        return curEta / 1.0;    //exiting → air
+        return curEta / 1.0;    
     }
 }
 
@@ -132,7 +132,7 @@ fn intersectTriangle(ray: Ray, v0: vec3<f32>, v1: vec3<f32>, v2: vec3<f32>, tmin
         return missHit(tmax);
     }
 
-                        //matte triangle
+                        
     let mat = makeMaterial(vec3<f32 >(0.4, 0.3, 0.2), vec3<f32 >(0.0), 1.0, 1.0);
     return okHit(t, n, mat, 0u);
 }
@@ -201,7 +201,6 @@ fn intersect_scene(ray: Ray, tmin: f32, tmax: f32) -> HitInfo {
 
     return best;
 }
-//---------- Helpers ----------
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     let eps = EPS_RAY;
     let ray = Ray(P + eps * wi, wi);
@@ -211,16 +210,16 @@ fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     }
     var mode: u32 = h.shaderId;
     if h.shaderId == 0u {
-        //matte objects use the matte UI
+        
         mode = cam.matteMode;
     } else if h.shaderId == 2u {
-        //sphere uses the sphere UI
+        
         mode = cam.sphereMode;
     }
 
-    //only the glossy sphere (mode 5) should let light through
+    
     if mode == 5u {
-        return false;           //do NOT occlude
+        return false;           
     }
     return true;
 }
@@ -236,7 +235,6 @@ fn background(dir: vec3<f32>) -> vec3<f32> {
     return vec3<f32 >(0.1, 0.3, 0.6);
 }
 
-//---------- shade one hit ----------
 fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
     let PI = 3.1415926535;
     let Lpos = vec3<f32 >(0.0, 1.0, 0.0);
@@ -250,7 +248,7 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
     let wo = normalize(-ray.dir);
     let L = samplePointLight(P, Lpos, I);
 
-    //pick mode (UI overrides per-object bucket)
+    
     var mode: u32 = hit.shaderId;
     if hit.shaderId == 0u {
         mode = cam.matteMode;
@@ -258,22 +256,22 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
         mode = cam.sphereMode;
     }
 
-    //0: base
+    
     if mode == 0u {
         return hit.mat.ambient + hit.mat.diffuse;
     }
 
-    //3: mirror
+    
     if mode == 3u {
         return vec3<f32 >(-1.0, -1.0, -1.0);
     }
 
-    //4: refractive
+    
     if mode == 4u {
         return vec3<f32 >(-2.0, -2.0, -2.0);
     }
 
-    //1 or 2: need light, with shadows
+    
     if occluded_from(P, L.wi, L.dist) {
         return hit.mat.ambient;
     }
@@ -281,7 +279,7 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
     let nl = max(0.0, dot(N, L.wi));
     var Lo = hit.mat.ambient + hit.mat.diffuse * L.Li * nl;
 
-    //2: Phong
+    
     if mode == 2u {
         if any(hit.mat.specular > vec3<f32 >(0.0)) {
             Lo += phongSpecular(N, L.wi, wo, hit.mat.shininess, hit.mat.specular, L.Li);
@@ -298,7 +296,6 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
 
 const MAX_BOUNCES : i32 = 4;
 
-//---------- tracer ----------
 fn trace(ray0: Ray) -> vec3<f32> {
     var ray = ray0;
     var eta: f32 = 1.0;

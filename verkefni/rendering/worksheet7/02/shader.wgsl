@@ -14,13 +14,13 @@ fn tea(val0: u32, val1: u32) -> u32 {
 }
 
 fn mcg31(prev: ptr<function, u32>) -> u32 {
-    const A = 1977654935u;              // Tang 2007
-    *prev = (A * (*prev)) & 0x7fffffffu; // mod 2^31
+    const A = 1977654935u;              
+    *prev = (A * (*prev)) & 0x7fffffffu; 
     return *prev;
 }
 
 fn rnd(prev: ptr<function, u32>) -> f32 {
-    return f32(mcg31(prev)) / f32(0x80000000u); // [0,1)
+    return f32(mcg31(prev)) / f32(0x80000000u); 
 }
 
 struct VSOut {
@@ -63,11 +63,11 @@ struct Jitters {
 };
 
 struct AttribBuf {
-    data: array<vec4<f32>>  // Interleaved: [pos.xyz, pos.w, norm.xyz, norm.w]
+    data: array<vec4<f32>>  
 };
 
 struct IndexBuf {
-    data: array<u32>  // 4 per triangle: [i0, i1, i2, matIdx]
+    data: array<u32>  
 };
 
 struct MeshInfo {
@@ -107,7 +107,7 @@ struct TreeIdsBuf {
 };
 
 struct BspTreeBuf {
-    data: array<vec4<u32>>  // [data, id, left_child, right_child]
+    data: array<vec4<u32>>  
 };
 
 struct BspPlanesBuf {
@@ -115,15 +115,15 @@ struct BspPlanesBuf {
 };
 
 struct SpheresUBO {
-    c0: vec4<f32>,     // xyz,r
-    c1: vec4<f32>,     // xyz,r
-    p0: vec4<f32>,     // x=type (1 mirror), y=ior, z,w unused
-    p1: vec4<f32>,     // x=type (2 glass),  y=ior, z,w unused
+    c0: vec4<f32>,     
+    c1: vec4<f32>,     
+    p0: vec4<f32>,     
+    p1: vec4<f32>,     
 };
 
 @group(0) @binding(0) var<uniform> cam : Camera;
-@group(0) @binding(1) var<storage, read> ATTRIB : AttribBuf;  // Interleaved pos+norm
-@group(0) @binding(2) var<storage, read> IND : IndexBuf;      // Includes mat index
+@group(0) @binding(1) var<storage, read> ATTRIB : AttribBuf;  
+@group(0) @binding(2) var<storage, read> IND : IndexBuf;      
 @group(0) @binding(3) var<storage, read> MATERIALS : MaterialsBuf;
 @group(0) @binding(4) var<storage, read> LIGHT_IDX : LightIndexBuf;
 @group(0) @binding(5) var<uniform> LIGHT_INFO : LightInfo;
@@ -193,7 +193,7 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     return curEta / 1.0;
 }
 
-// AABB intersection test
+
 fn intersectAabb(ray: Ray) -> bool {
     var tmin = ray.tmin;
     var tmax = ray.tmax;
@@ -203,14 +203,14 @@ fn intersectAabb(ray: Ray) -> bool {
     let pmin = min(p1, p2);
     let pmax = max(p1, p2);
 
-    // Bias like the slides (avoid grazing artifacts on the box)
+    
     let box_tmin = max(pmin.x, max(pmin.y, pmin.z)) - 1.0e-3;
     let box_tmax = min(pmax.x, min(pmax.y, pmax.z)) + 1.0e-3;
 
     if box_tmin > box_tmax || box_tmin > tmax || box_tmax < tmin {
         return false;
     }
-    // Caller will clamp ray.tmin/tmax after this returns true
+    
     return true;
 }
 
@@ -231,9 +231,9 @@ fn intersectSphere(ray: Ray, center: vec3<f32>, radius: f32, typeFlag: u32, ior:
 
     let P = ray.origin + t * ray.dir;
     var N = normalize(P - center);
-    // Return material via shaderId:
-    // 1u = perfect mirror, 2u = glass
-    // Diffuse = 0; Emission = 0. Use ior for glass.
+    
+    
+    
     let mat = makeMaterial(vec3<f32>(0.0), vec3<f32>(0.0), vec3<f32>(0.0), 1.0, max(ior, 1.0));
     return okHit(t, N, mat, typeFlag, vec2<f32>(0.0));
 }
@@ -243,9 +243,9 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let i0 = IND.data[base + 0u];
     let i1 = IND.data[base + 1u];
     let i2 = IND.data[base + 2u];
-    let matIdx = IND.data[base + 3u];  // Material index from 4th component
+    let matIdx = IND.data[base + 3u];  
 
-    // Each vertex is 2 vec4s: [pos, norm]
+    
     let v0 = ATTRIB.data[i0 * 2u + 0u].xyz;
     let v1 = ATTRIB.data[i1 * 2u + 0u].xyz;
     let v2 = ATTRIB.data[i2 * 2u + 0u].xyz;
@@ -269,7 +269,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let gamma = -dot(n_tmp, e0) * q;
     if gamma < 0.0 || beta + gamma > 1.0 { return missHit(ray.tmax); }
 
-    // Interpolate vertex normals
+    
     let alpha = 1.0 - beta - gamma;
     let n0 = ATTRIB.data[i0 * 2u + 1u].xyz;
     let n1 = ATTRIB.data[i1 * 2u + 1u].xyz;
@@ -290,14 +290,12 @@ const BSP_LEAF : u32 = 3u;
 fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var r = ray_in;
 
-    // Early out: if the ray does not touch the scene box
     if !intersectAabb(r) {
         return missHit(r.tmax);
     }
 
     var hit = missHit(r.tmax);
 
-    // --- Traversal state (slides style) ---
     const MAX_LEVEL: u32 = 20u;
     const BSP_LEAF: u32 = 3u;
 
@@ -308,13 +306,11 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var node = 0u;
     var t = 0.0;
 
-    // --- Main traversal loop ---
     for (var i = 0u; i <= MAX_LEVEL; i = i + 1u) {
         let tree_node = BSP_TREE.data[node];
         let node_axis_leaf = tree_node.x & 3u;
 
         if node_axis_leaf == BSP_LEAF {
-            // Leaf: test contained triangles, shrink interval on better hit
             let node_count = tree_node.x >> 2u;
             let node_id = tree_node.y;
 
@@ -327,7 +323,6 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
                 }
             }
 
-            // Do not return early; finish traversal (pop or break if stack empty)
             if branch_lvl == 0u {
                 break;
             } else {
@@ -341,21 +336,19 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
             }
         }
 
-        // Internal node
         let axis_dir = r.dir[node_axis_leaf];
         let axis_org = r.origin[node_axis_leaf];
 
         var near_node: u32;
         var far_node: u32;
         if axis_dir >= 0.0 {
-            near_node = tree_node.z;  // left
-            far_node = tree_node.w;  // right
+            near_node = tree_node.z;  
+            far_node = tree_node.w;  
         } else {
-            near_node = tree_node.w;  // right
-            far_node = tree_node.z;  // left
+            near_node = tree_node.w;  
+            far_node = tree_node.z;  
         }
 
-        // Slides version: plane array indexed by node
         let node_plane = BSP_PLANES.data[node];
         let denom = select(axis_dir, 1.0e-8, abs(axis_dir) < 1.0e-8);
         t = (node_plane - axis_org) / denom;
@@ -365,7 +358,6 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
         } else if t < r.tmin {
             node = far_node;
         } else {
-            // Visit near first, defer far with its own interval
             branch_node[branch_lvl].x = i;
             branch_node[branch_lvl].y = far_node;
             branch_ray[branch_lvl].x = max(t, r.tmin);
@@ -377,7 +369,6 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
         }
     }
 
-    // --- Also test the two analytic spheres and return the closest overall ---
     var bestHit = hit;
 
 
@@ -385,13 +376,13 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     if bestHit.hit {
         sphereRay.tmax = bestHit.t; 
     }
-    // Left mirror sphere (type=1)
+    
     let s0_type = u32(SPH.p0.x);
     let s0_ior = SPH.p0.y;
     let h0 = intersectSphere(ray_in, SPH.c0.xyz, SPH.c0.w, s0_type, s0_ior);
     if h0.hit && h0.t < bestHit.t { bestHit = h0; }
 
-    // Right glass sphere (type=2)
+    
     let s1_type = u32(SPH.p1.x);
     let s1_ior = SPH.p1.y;
     let h1 = intersectSphere(ray_in, SPH.c1.xyz, SPH.c1.w, s1_type, s1_ior);
@@ -416,13 +407,11 @@ fn background(dir: vec3<f32>) -> vec3<f32> {
     return vec3<f32>(0.1, 0.3, 0.6);
 }
 
-// NEW: Monte Carlo area light sampling with random position
 fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Light {
     if LIGHT_INFO.lightCount == 0u {
         return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
     }
 
-    // First, compute total area of all light triangles for probability weighting
     var totalArea = 0.0;
     for (var i = 0u; i < LIGHT_INFO.lightCount; i = i + 1u) {
         let faceIdx = LIGHT_IDX.data[i];
@@ -447,7 +436,6 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Ligh
         return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
     }
 
-    // Sample a random triangle weighted by area
     let r1 = rnd(seed) * totalArea;
     var accumulatedArea = 0.0;
     var selectedFaceIdx = 0u;
@@ -490,28 +478,20 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Ligh
         }
     }
 
-    // Sample a random point on the selected triangle using barycentric coordinates
     let r2 = rnd(seed);
     let r3 = rnd(seed);
     
-    // Convert uniform random samples to barycentric coordinates
     let sqrt_r2 = sqrt(r2);
     let beta = 1.0 - sqrt_r2;
     let gamma = r3 * sqrt_r2;
     let alpha = 1.0 - beta - gamma;
     
-    // Random point on the triangle
     let lightPoint = alpha * selectedV0 + beta * selectedV1 + gamma * selectedV2;
     
-    // Direction and distance from shading point to light sample
     let L = lightPoint - P;
     let dist = length(L);
     let wi = L / max(dist, EPS_DIV);
     
-    // Compute radiance at the shading point
-    // L_i = L_e * A * cos(theta) / (dist^2 * pdf)
-    // pdf = 1/A for uniform sampling over area
-    // So: L_i = L_e * A * cos(theta) / dist^2 * A = L_e * cos(theta) / dist^2
     let cosTheta = max(0.0, -dot(wi, selectedNormal));
     let Li = selectedEmission * cosTheta * totalArea / max(dist * dist, EPS_DIV);
     
@@ -523,7 +503,7 @@ fn shade_once(ray: Ray, hit: HitInfo, seed: ptr<function, u32>) -> vec3<f32> {
     if dot(N, ray.dir) > 0.0 { N = -N; }
 
     let P = ray.origin + hit.t * ray.dir;
-    let L = sampleAreaLight(P, N, seed);  // Pass seed for Monte Carlo sampling
+    let L = sampleAreaLight(P, N, seed);  
 
     if occluded_from(P, L.wi, L.dist) {
         return hit.mat.emission;
@@ -549,11 +529,11 @@ fn trace(ray0: Ray, seed: ptr<function, u32>) -> vec3<f32> {
         if !h.hit { return background(ray.dir); }
 
         let hRel = addRelEta(h, computeRelEta(h, ray, eta));
-        let c = shade_once(ray, hRel, seed);  // Pass seed through
+        let c = shade_once(ray, hRel, seed);  
 
-        // Perfect mirror
+        
         if hRel.shaderId == 1u {
-            acc += c; // (usually 0; keeps same structure)
+            acc += c; 
             let P = ray.origin + hRel.t * ray.dir;
             var N = hRel.n;
             if dot(N, ray.dir) > 0.0 { N = -N; }
@@ -563,9 +543,9 @@ fn trace(ray0: Ray, seed: ptr<function, u32>) -> vec3<f32> {
             continue;
         }
 
-        // Glass
+        
         if hRel.shaderId == 2u {
-            acc += c; // (usually 0; spheres have no emission/diffuse)
+            acc += c; 
             let P = ray.origin + hRel.t * ray.dir;
             var N = hRel.n;
             var entering = true;
@@ -583,7 +563,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>) -> vec3<f32> {
                 let T = normalize(rel * ray.dir + (rel * cosi - sqrt(k)) * N);
                 let eps = EPS_RAY;
                 ray = Ray(P + eps * T, T, eps, 1e30);
-                // Update eta for subsequent hits
+                
                 if entering { eta = hRel.mat.ior; } else { eta = 1.0; }
             }
             continue;
@@ -595,23 +575,23 @@ fn trace(ray0: Ray, seed: ptr<function, u32>) -> vec3<f32> {
 }
 
 struct FSOut {
-    @location(0) frame: vec4<f32>,  // gamma-corrected for the screen
-    @location(1) accum: vec4<f32>,  // linear accumulated color (rgba32float)
+    @location(0) frame: vec4<f32>,  
+    @location(1) accum: vec4<f32>,  
 };
 
 @fragment
 fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) -> FSOut {
-    // Pull needed uniforms from Camera:
+    
     let width: u32 = cam.addrMode;
     let height: u32 = cam.filterMode;
     let frame: u32 = cam._pad1;
     let N: u32 = cam._pad2;
 
-    // Seed PRNG uniquely per pixel + frame
+    
     let pixId = u32(fragcoord.y) * width + u32(fragcoord.x);
     var seed = tea(pixId, frame);
 
-    // Subpixel jitter (one random sample per frame)
+    
     let invW = cam._pad0;
     let invH = invW * cam.aspect;
     let dpx = 2.0 * invW;
@@ -621,18 +601,18 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let jy = rnd(&seed) - 0.5;
     let img_j = img + vec2<f32>(jx * dpx, jy * dpy);
 
-    // Primary ray with jitter
+    
     let center = cam.eye.xyz + cam.zoom * cam.W.xyz;
     let Pimg = center + img_j.x * cam.U.xyz + (img_j.y / cam.aspect) * cam.V.xyz;
     let dir = normalize(Pimg - cam.eye.xyz);
-    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, 1e30), &seed);  // Pass seed to trace
+    let sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, 1e30), &seed);  
 
-    // Progressive average: accum = (prevSum + new) / (frame+1)
+    
     let prevAccum = textureLoad(renderTexture, vec2<u32>(fragcoord.xy), 0).rgb;
     let prevSum = prevAccum * f32(frame);
     let accumRGB = (prevSum + sampleRGB) / f32(frame + 1u);
 
-    // Output: screen (gamma) + stored linear accumulation
+    
     let outRGB = pow(max(accumRGB, vec3<f32>(0.0)), vec3<f32>(1.0 / cam.gamma));
 
     var out: FSOut;

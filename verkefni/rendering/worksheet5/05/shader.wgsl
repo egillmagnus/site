@@ -196,7 +196,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32, tmin: f32, tmax: f32) -> HitInf
     let matData = MATERIALS.data[matIdx];
     let mat = makeMaterial(matData.emission.rgb, matData.color.rgb, vec3<f32>(0.0), 1.0, 1.0);
 
-    // Use interpolated_normal instead of n
+    
     return okHit(t, interpolated_normal, mat, 0u, vec2<f32>(beta, gamma));
 }
 
@@ -212,21 +212,21 @@ fn intersect_scene(ray: Ray, tmin: f32, tmax: f32) -> HitInfo {
 }
 
 fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
-    let eps = EPS_RAY;  // Increase if needed
+    let eps = EPS_RAY;  
     let ray = Ray(P + eps * wi, wi);
     let h = intersect_scene(ray, eps, maxDist - eps);
     if !h.hit { return false; }
-    // Don't treat emissive surfaces as occluders
+    
     if any(h.mat.emission > vec3<f32>(0.0)) { return false; }
     return true;
 }
-// Sample area light as point light at center with computed intensity
+
 fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>) -> Light {
     if LIGHT_INFO.lightCount == 0u {
         return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
     }
     
-    // Compute bounding box center of all light triangles
+    
     var lightCenter = vec3<f32>(0.0);
     var vertexCount = 0.0;
 
@@ -244,12 +244,12 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>) -> Light {
     }
     lightCenter = lightCenter / vertexCount;
     
-    // Direction and distance from P to light center
+    
     let L = lightCenter - P;
     let dist = length(L);
     let wi = L / dist;
     
-    // Compute intensity: Ie = Σ (−wi · ne) * Le * Ae
+    
     var Ie = vec3<f32>(0.0);
 
     for (var i = 0u; i < LIGHT_INFO.lightCount; i = i + 1u) {
@@ -263,26 +263,26 @@ fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>) -> Light {
         let v1 = VERT.data[i1].xyz;
         let v2 = VERT.data[i2].xyz;
         
-        // Triangle normal and area
+        
         let e0 = v1 - v0;
         let e1 = v2 - v0;
         let cross_e = cross(e0, e1);
         let area = length(cross_e) * 0.5;
         let ne = normalize(cross_e);
         
-        // Get emission
+        
         let matIdx = MAT_IDX.data[faceIdx];
         let matData = MATERIALS.data[matIdx];
         let Le = matData.emission.rgb;
         
-        // Cosine term: max(0, -wi · ne)
+        
         let cosTheta = max(0.0, dot(-wi, ne));
         
-        // Accumulate: (−wi · ne) * Le * Ae
+        
         Ie += cosTheta * Le * area;
     }
     
-    // Li = Ie / r²
+    
     let Li = Ie / max(dist * dist, EPS_DIV);
 
     return Light(Li, wi, dist);
@@ -304,15 +304,15 @@ fn shade_once(ray: Ray, hit: HitInfo) -> vec3<f32> {
 
     let P = ray.origin + hit.t * ray.dir;
     
-    // No seed needed anymore
+    
     let L = sampleAreaLight(P, N);
     
-    // Check occlusion
+    
     if occluded_from(P, L.wi, L.dist) {
         return hit.mat.emission;
     }
     
-    // Lambertian BRDF
+    
     let PI = 3.1415926535;
     let fr = hit.mat.diffuse / PI;
     let cosTheta = max(0.0, dot(N, L.wi));

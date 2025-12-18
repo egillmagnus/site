@@ -4,8 +4,6 @@ const EPS_RAY : f32 = 0.1;
 const PI : f32 = 3.14159265359;
 const SCENE_TMAX : f32 = 1200.0;
 
-// --- RNG helpers ---
-
 fn tea(val0: u32, val1: u32) -> u32 {
     const N = 16u;
     var v0 = val0;
@@ -26,10 +24,10 @@ fn mcg31(prev: ptr<function, u32>) -> u32 {
 }
 
 fn rnd(prev: ptr<function, u32>) -> f32 {
-    return f32(mcg31(prev)) / f32(0x80000000u); // [0,1)
+    return f32(mcg31(prev)) / f32(0x80000000u); 
 }
 
-// === Cosine hemisphere helpers ===
+
 
 fn spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32) -> vec3<f32> {
     return vec3<f32>(
@@ -39,9 +37,9 @@ fn spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32) -> vec3<f32> {
     );
 }
 
-// Rotate a direction sampled around +z to be around normal n
+
 fn rotate_to_normal(n: vec3<f32>, v: vec3<f32>) -> vec3<f32> {
-    let eps = 0.0000000000000001; // 1e-16 without scientific notation
+    let eps = 0.0000000000000001; 
     let s = sign(n.z + eps);
     let a = -1.0 / (1.0 + abs(n.z));
     let b = n.x * n.y * a;
@@ -50,7 +48,7 @@ fn rotate_to_normal(n: vec3<f32>, v: vec3<f32>) -> vec3<f32> {
            n * v.z;
 }
 
-// === Vertex stage ===
+
 
 struct VSOut {
     @builtin(position) pos: vec4<f32>,
@@ -72,7 +70,7 @@ fn vsMain(@builtin(vertex_index) vid: u32) -> VSOut {
     return out;
 }
 
-// === Scene data ===
+
 
 struct Camera {
     eye: vec4<f32>,
@@ -82,20 +80,20 @@ struct Camera {
     aspect: f32,
     zoom: f32,
     gamma: f32,
-    _pad0: f32,     // invW, sign encodes blue/black bg (we still pass, but bg is black)
-    addrMode: u32,  // width
-    filterMode: u32,// height
-    _pad1: u32,     // frame
-    _pad2: u32,     // N (unused here)
+    _pad0: f32,     
+    addrMode: u32,  
+    filterMode: u32,
+    _pad1: u32,     
+    _pad2: u32,     
 };
 
 struct Torus {
-    centerR: vec4<f32>,     // xyz = center, w = major radius R (sweep radius)
-    abIorPad: vec4<f32>,    // x = semi-axis a (xz-plane), y = semi-axis b (y-axis), z = ior, w unused
-    rot0: vec4<f32>,        // column 0 of 3x3 forward rotation R (local +X axis in world)
-    rot1: vec4<f32>,        // column 1 (local +Y axis in world)
-    rot2: vec4<f32>,        // column 2 (local +Z axis in world)
-    extinction: vec4<f32>,  // xyz = sigma_t (absorption), w unused
+    centerR: vec4<f32>,     
+    abIorPad: vec4<f32>,    
+    rot0: vec4<f32>,        
+    rot1: vec4<f32>,        
+    rot2: vec4<f32>,        
+    extinction: vec4<f32>,  
 };
 
 struct TorusBuf {
@@ -115,11 +113,11 @@ struct Jitters {
 };
 
 struct AttribBuf {
-    data: array<vec4<f32>> // [pos, pos.w, norm, norm.w]
+    data: array<vec4<f32>> 
 };
 
 struct IndexBuf {
-    data: array<u32>// 4 per tri: [i0, i1, i2, matIdx]
+    data: array<u32>
 };
 
 struct MeshInfo {
@@ -159,7 +157,7 @@ struct TreeIdsBuf {
 };
 
 struct BspTreeBuf {
-    data: array<vec4<u32>> // [data, id, left, right]
+    data: array<vec4<u32>> 
 };
 
 struct BspPlanesBuf {
@@ -167,10 +165,10 @@ struct BspPlanesBuf {
 };
 
 struct SpheresUBO {
-    c0: vec4<f32>, // xyz, r
-    c1: vec4<f32>, // xyz, r
-    p0: vec4<f32>, // x = type (1 mirror), y = ior
-    p1: vec4<f32>, // x = type (2 glass),  y = ior
+    c0: vec4<f32>, 
+    c1: vec4<f32>, 
+    p0: vec4<f32>, 
+    p1: vec4<f32>, 
 };
 
 @group(0) @binding(0)  var<uniform> cam         : Camera;
@@ -189,7 +187,7 @@ struct SpheresUBO {
 @group(0) @binding(13) var<uniform>      TORUS_INFO : TorusInfo;
 
 
-// === Core structs ===
+
 
 struct Ray {
     origin: vec3<f32>,
@@ -212,7 +210,7 @@ struct Material {
     ior: f32,
 };
 
-// HitInfo with extinction + throughput + emit
+
 struct HitInfo {
     hit: bool,
     t: f32,
@@ -221,9 +219,9 @@ struct HitInfo {
     shaderId: u32,
     relEta: f32,
     uv: vec2<f32>,
-    extinction: vec3<f32>, // σ_t (RGB)
-    throughput: vec3<f32>, // path weight (not used heavily here, but kept)
-    emit: bool,            // treat as "emitting" for specular / light hits
+    extinction: vec3<f32>, 
+    throughput: vec3<f32>, 
+    emit: bool,            
 };
 
 fn makeMaterial(emission: vec3<f32>, diffuse: vec3<f32>, spec_rgb: vec3<f32>, shininess: f32, ior: f32) -> Material {
@@ -261,13 +259,13 @@ fn missHit(tmax: f32) -> HitInfo {
         0u,
         1.0,
         vec2<f32>(0.0),
-        vec3<f32>(0.0),    // no extinction
-        vec3<f32>(1.0),    // throughput = 1
+        vec3<f32>(0.0),    
+        vec3<f32>(1.0),    
         false
     );
 }
 
-// okHit: pass extinction coefficient
+
 fn okHit(t: f32, n: vec3<f32>, mat: Material, shaderId: u32, uv: vec2<f32>, extinction: vec3<f32>) -> HitInfo {
     let isLight = any(mat.emission > vec3<f32>(0.0));
     let isSpecular = (shaderId == 1u || shaderId == 2u);
@@ -333,7 +331,7 @@ fn torusNormal_local(P: vec3<f32>, R: f32, a: f32, b: f32) -> vec3<f32> {
     let xz2 = x * x + z * z;
     let Q = xz2 + p * y * y + B0;
 
-    // Gradient of F
+    
     let dFx = 4.0 * x * Q - 2.0 * A0 * x;
     let dFy = 4.0 * p * y * Q;
     let dFz = 4.0 * z * Q - 2.0 * A0 * z;
@@ -346,13 +344,13 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
     let T = TORI.data[idx];
 
     let center = T.centerR.xyz;
-    let R = T.centerR.w;           // major (sweep) radius
-    let a = T.abIorPad.x;          // semi-axis in xz-plane
-    let b = T.abIorPad.y;          // semi-axis in y direction
+    let R = T.centerR.w;           
+    let a = T.abIorPad.x;          
+    let b = T.abIorPad.y;          
     let ior = T.abIorPad.z;
     let sigma = T.extinction.xyz;
 
-    // transform ray origin to local space (inverse rotation = transpose of R)
+    
     let oWorld = rayWorld.origin - center;
     let oL = vec3<f32>(
         dot(T.rot0.xyz, oWorld),
@@ -365,16 +363,15 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
         dot(T.rot2.xyz, rayWorld.dir)
     );
 
-    // --- Bounding volume: sphere + y-slab ---
-    // Bounding sphere radius: r = R + max(a,b)
+    
     let rSphere = R + max(a, b);
     let r2 = rSphere * rSphere;
 
-    // Original segment in t
+    
     let segTmin = rayWorld.tmin;
     let segTmax = min(rayWorld.tmax, 2000.0);
 
-    // Ray-sphere intersection in local space (sphere centered at origin)
+    
     let oc = oL;
     let bs = dot(oc, dL);
     let cs = dot(oc, oc) - r2;
@@ -392,14 +389,14 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
         tOut = tmp;
     }
 
-    // Clamp sphere overlap to current ray segment (with small epsilon padding)
+    
     let sphTmin = max(segTmin, tIn - EPS_RAY);
     let sphTmax = min(segTmax, tOut + EPS_RAY);
     if sphTmin > sphTmax {
         return missHit(rayWorld.tmax);
     }
 
-    // y-slab: if both sphere intersection points lie above +b or below -b, no torus hit
+    
     let yIn  = oL.y + dL.y * sphTmin;
     let yOut = oL.y + dL.y * sphTmax;
     if (yIn > b && yOut > b) || (yIn < -b && yOut < -b) {
@@ -464,14 +461,14 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
     }
 
     let tHit = bestT;
-    // world-space P (use world ray for this)
+    
     let P_world = rayWorld.origin + tHit * rayWorld.dir;
 
-    // local P for normal
+    
     let P_local = ray.origin + tHit * ray.dir;
     let N_local = torusNormal_local(P_local, R, a, b);
 
-    // rotate normal back to world space (forward rotation)
+    
     let N_world = normalize(vec3<f32>(
         T.rot0.x * N_local.x + T.rot1.x * N_local.y + T.rot2.x * N_local.z,
         T.rot0.y * N_local.x + T.rot1.y * N_local.y + T.rot2.y * N_local.z,
@@ -486,7 +483,7 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
         ior
     );
 
-    // shaderId 2u = glass
+    
     return okHit(tHit, N_world, mat, 2u, vec2<f32>(0.0), sigma);
 }
 
@@ -678,26 +675,26 @@ fn intersect_scene_bsp(ray_in: Ray, includeTori: bool) -> HitInfo {
 
     var bestHit = hit;
 
-    // spheres
-    //var sphereRay = ray_in;
-    //if bestHit.hit {
-    //    sphereRay.tmax = bestHit.t;
-    //}
-//
-    //let s0_type = u32(SPH.p0.x);
-    //let s0_ior  = SPH.p0.y;
-    //let h0 = intersectSphere(sphereRay, SPH.c0.xyz, SPH.c0.w, s0_type, s0_ior);
-    //if h0.hit && h0.t < bestHit.t {
-    //    bestHit = h0;
-    //    sphereRay.tmax = h0.t;
-    //}
-//
-    //let s1_type = u32(SPH.p1.x);
-    //let s1_ior  = SPH.p1.y;
-    //let h1 = intersectSphere(sphereRay, SPH.c1.xyz, SPH.c1.w, s1_type, s1_ior);
-    //if h1.hit && h1.t < bestHit.t {
-    //    bestHit = h1;
-    //}
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
 
     if includeTori {
         for (var i = 0u; i < TORUS_INFO.count; i = i + 1u) {
@@ -728,7 +725,7 @@ fn background(dir: vec3<f32>, blueBg: bool) -> vec3<f32> {
     return vec3<f32>(0.0, 0.0, 0.0);
 }
 
-// Monte Carlo area light sampling
+
 fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Light {
     if LIGHT_INFO.lightCount == 0u {
         return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), SCENE_TMAX);
@@ -844,9 +841,9 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
         if depth >= 3 {
             let p = clamp(luminance(throughput), 0.2, 0.95);
             let xi = rnd(seed);
-            //if xi > p {
-            //    return acc;    // terminate path
-            //}
+            
+            
+            
             throughput = throughput / p;
         }
         let h = intersect_scene_bsp(ray, true);
@@ -866,7 +863,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             if hRel.shaderId == 0u && depth <= 6 {
         c = shade_once(ray, hRel, seed);
         }
-        // Mirror
+        
         if hRel.shaderId == 1u {
             acc += throughput * c;
             let P = ray.origin + hRel.t * ray.dir;
@@ -880,7 +877,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             continue;
         }
 
-        // Glass (including torus)
+        
         if hRel.shaderId == 2u {
             acc += throughput * c;
 
@@ -892,7 +889,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
                 entering = false;
             }
 
-            // Absorption when exiting medium
+            
             if !entering {
                 let sigma = hRel.extinction;
                 let s = hRel.t;
@@ -948,7 +945,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             continue;
         }
 
-        // Lambertian / diffuse
+        
         acc += throughput * c;
 
         let albedo = hRel.mat.diffuse;
@@ -985,7 +982,6 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
     return acc;
 }
 
-// === Fragment stage ===
 
 struct FSOut {
     @location(0) frame: vec4<f32>,
@@ -1009,7 +1005,7 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let pixId = u32(fragcoord.y) * width + u32(fragcoord.x);
     var seed = tea(pixId, frame);
 
-    // Jittered camera sample
+    
     let jx = rnd(&seed) - 0.5;
     let jy = rnd(&seed) - 0.5;
     let img_j = img + vec2<f32>(jx * dpx, jy * dpy);
@@ -1018,18 +1014,16 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let Pimg = center + img_j.x * cam.U.xyz + (img_j.y / cam.aspect) * cam.V.xyz;
     let dir = normalize(Pimg - cam.eye.xyz);
 
-    // === One sample per pixel per frame ===
     var sampleRGB = trace(Ray(cam.eye.xyz, dir, EPS_RAY, SCENE_TMAX), &seed, blueBg);
 
-    // === Firefly clamp by luminance ===
-    let L    = luminance(sampleRGB);
-    let Lmax = 5.0; // tweak 5–20
+    
+    let L = luminance(sampleRGB);
+    let Lmax = 5.0; 
 
     if L > Lmax {
         sampleRGB *= Lmax / max(L, EPS_DIV);
     }
 
-    // === Accumulate over frames ===
     let prevAccum = textureLoad(renderTexture, vec2<u32>(fragcoord.xy), 0).rgb;
     let prevSum   = prevAccum * f32(frame);
     let accumRGB  = (prevSum + sampleRGB) / f32(frame + 1u);

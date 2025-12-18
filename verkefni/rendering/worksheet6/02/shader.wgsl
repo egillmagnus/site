@@ -42,11 +42,11 @@ struct Jitters {
 };
 
 struct AttribBuf {
-    data: array<vec4<f32>>  // Interleaved: [pos.xyz, pos.w, norm.xyz, norm.w]
+    data: array<vec4<f32>>  
 };
 
 struct IndexBuf {
-    data: array<u32>  // 4 per triangle: [i0, i1, i2, matIdx]
+    data: array<u32>  
 };
 
 struct MeshInfo {
@@ -86,7 +86,7 @@ struct TreeIdsBuf {
 };
 
 struct BspTreeBuf {
-    data: array<vec4<u32>>  // [data, id, left_child, right_child]
+    data: array<vec4<u32>>  
 };
 
 struct BspPlanesBuf {
@@ -95,8 +95,8 @@ struct BspPlanesBuf {
 
 @group(0) @binding(0) var<uniform> cam : Camera;
 @group(0) @binding(1) var<storage, read> JIT : Jitters;
-@group(0) @binding(2) var<storage, read> ATTRIB : AttribBuf;  // Interleaved pos+norm
-@group(0) @binding(3) var<storage, read> IND : IndexBuf;      // Includes mat index
+@group(0) @binding(2) var<storage, read> ATTRIB : AttribBuf;  
+@group(0) @binding(3) var<storage, read> IND : IndexBuf;      
 @group(0) @binding(4) var<storage, read> MATERIALS : MaterialsBuf;
 @group(0) @binding(5) var<storage, read> LIGHT_IDX : LightIndexBuf;
 @group(0) @binding(6) var<uniform> LIGHT_INFO : LightInfo;
@@ -163,7 +163,7 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     return curEta / 1.0;
 }
 
-// AABB intersection test
+
 fn intersectAabb(ray: Ray) -> bool {
     var tmin = ray.tmin;
     var tmax = ray.tmax;
@@ -195,9 +195,9 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let i0 = IND.data[base + 0u];
     let i1 = IND.data[base + 1u];
     let i2 = IND.data[base + 2u];
-    let matIdx = IND.data[base + 3u];  // Material index from 4th component
+    let matIdx = IND.data[base + 3u];  
 
-    // Each vertex is 2 vec4s: [pos, norm]
+    
     let v0 = ATTRIB.data[i0 * 2u + 0u].xyz;
     let v1 = ATTRIB.data[i1 * 2u + 0u].xyz;
     let v2 = ATTRIB.data[i2 * 2u + 0u].xyz;
@@ -221,7 +221,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let gamma = -dot(n_tmp, e0) * q;
     if gamma < 0.0 || beta + gamma > 1.0 { return missHit(ray.tmax); }
 
-    // Interpolate vertex normals
+    
     let alpha = 1.0 - beta - gamma;
     let n0 = ATTRIB.data[i0 * 2u + 1u].xyz;
     let n1 = ATTRIB.data[i1 * 2u + 1u].xyz;
@@ -240,14 +240,12 @@ const BSP_LEAF : u32 = 3u;
 fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var r = ray_in;
 
-    // Clamp ray interval to the scene AABB
     if !intersectAabb(r) {
         return missHit(r.tmax);
     }
 
     var hit = missHit(r.tmax);
 
-    // --- Traversal state like in slides ---
     const MAX_LEVEL: u32 = 20u;
     const BSP_LEAF: u32 = 3u;
 
@@ -258,13 +256,11 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var node = 0u;
     var t = 0.0;
 
-    // --- Main traversal loop ---
     for (var i = 0u; i <= MAX_LEVEL; i = i + 1u) {
         let tree_node = BSP_TREE.data[node];
         let node_axis_leaf = tree_node.x & 3u;
 
         if node_axis_leaf == BSP_LEAF {
-            // --- Leaf node: intersect contained triangles ---
             let node_count = tree_node.x >> 2u;
             let node_id = tree_node.y;
 
@@ -279,7 +275,6 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
                 }
             }
 
-            // --- Exit or pop from stack ---
             if found {
                 return hit;
             } else if branch_lvl == 0u {
@@ -294,7 +289,6 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
             }
         }
 
-        // --- Internal node ---
         let axis_dir = r.dir[node_axis_leaf];
         let axis_org = r.origin[node_axis_leaf];
 
@@ -302,14 +296,14 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
         var far_node: u32;
 
         if axis_dir >= 0.0 {
-            near_node = tree_node.z;  // left
-            far_node = tree_node.w;  // right
+            near_node = tree_node.z;  
+            far_node = tree_node.w;  
         } else {
-            near_node = tree_node.w;  // right
-            far_node = tree_node.z;  // left
+            near_node = tree_node.w;  
+            far_node = tree_node.z;  
         }
 
-        let node_plane = BSP_PLANES.data[node]; // slide version uses this
+        let node_plane = BSP_PLANES.data[node];
         let denom = select(axis_dir, 1.0e-8, abs(axis_dir) < 1.0e-8);
         t = (node_plane - axis_org) / denom;
 
@@ -318,14 +312,14 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
         } else if t < r.tmin {
             node = far_node;
         } else {
-            // Push far branch
+            
             branch_node[branch_lvl].x = i;
             branch_node[branch_lvl].y = far_node;
             branch_ray[branch_lvl].x = t;
             branch_ray[branch_lvl].y = r.tmax;
             branch_lvl = branch_lvl + 1u;
 
-            // Continue with near branch
+            
             r.tmax = t;
             node = near_node;
         }

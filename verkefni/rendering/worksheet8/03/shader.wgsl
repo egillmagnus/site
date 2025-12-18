@@ -15,16 +15,16 @@ fn tea(val0: u32, val1: u32) -> u32 {
 }
 
 fn mcg31(prev: ptr<function, u32>) -> u32 {
-    const A = 1977654935u;              // Tang 2007
-    *prev = (A * (*prev)) & 0x7fffffffu; // mod 2^31
+    const A = 1977654935u;              
+    *prev = (A * (*prev)) & 0x7fffffffu; 
     return *prev;
 }
 
 fn rnd(prev: ptr<function, u32>) -> f32 {
-    return f32(mcg31(prev)) / f32(0x80000000u); // [0,1)
+    return f32(mcg31(prev)) / f32(0x80000000u); 
 }
 
-// === Cosine hemisphere helpers (from slides) ===
+
 
 fn spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32) -> vec3<f32> {
     return vec3<f32>(
@@ -34,7 +34,7 @@ fn spherical_direction(sin_theta: f32, cos_theta: f32, phi: f32) -> vec3<f32> {
     );
 }
 
-// Rotate a direction sampled around the +z axis to be sampled around normal n
+
 fn rotate_to_normal(n: vec3<f32>, v: vec3<f32>) -> vec3<f32> {
     let s = sign(n.z + 1.0e-16);
     let a = -1.0 / (1.0 + abs(n.z));
@@ -72,11 +72,11 @@ struct Camera {
     aspect: f32,
     zoom: f32,
     gamma: f32,
-    _pad0: f32,     // invW, sign encodes blue/black bg (still passed, but bg is black now)
-    addrMode: u32, // width
-    filterMode: u32, // height
-    _pad1: u32,     // frame
-    _pad2: u32,     // N (unused here, but kept)
+    _pad0: f32,     
+    addrMode: u32, 
+    filterMode: u32, 
+    _pad1: u32,     
+    _pad2: u32,     
 };
 
 struct Jitters {
@@ -84,11 +84,11 @@ struct Jitters {
 };
 
 struct AttribBuf {
-    data: array<vec4<f32>>  // [pos, pos.w, norm, norm.w]
+    data: array<vec4<f32>>  
 };
 
 struct IndexBuf {
-    data: array<u32>        // 4 per tri: [i0, i1, i2, matIdx]
+    data: array<u32>        
 };
 
 struct MeshInfo {
@@ -128,7 +128,7 @@ struct TreeIdsBuf {
 };
 
 struct BspTreeBuf {
-    data: array<vec4<u32>>  // [data, id, left, right]
+    data: array<vec4<u32>>  
 };
 
 struct BspPlanesBuf {
@@ -136,10 +136,10 @@ struct BspPlanesBuf {
 };
 
 struct SpheresUBO {
-    c0: vec4<f32>,     // xyz,r
-    c1: vec4<f32>,     // xyz,r
-    p0: vec4<f32>,     // x=type (1 mirror), y=ior
-    p1: vec4<f32>,     // x=type (2 glass), y=ior
+    c0: vec4<f32>,     
+    c1: vec4<f32>,     
+    p0: vec4<f32>,     
+    p1: vec4<f32>,     
 };
 
 @group(0) @binding(0) var<uniform> cam : Camera;
@@ -176,7 +176,7 @@ struct Material {
     ior: f32,
 };
 
-// HitInfo now has an extinction coefficient and throughput + emit
+
 struct HitInfo {
     hit: bool,
     t: f32,
@@ -185,9 +185,9 @@ struct HitInfo {
     shaderId: u32,
     relEta: f32,
     uv: vec2<f32>,
-    extinction: vec3<f32>,  // σ_t (RGB)
-    throughput: vec3<f32>,  // path weight
-    emit: bool,             // "special" surface (light or specular)
+    extinction: vec3<f32>,  
+    throughput: vec3<f32>,  
+    emit: bool,             
 };
 
 fn makeMaterial(emission: vec3<f32>, diffuse: vec3<f32>, spec_rgb: vec3<f32>, shininess: f32, ior: f32) -> Material {
@@ -221,13 +221,13 @@ fn missHit(tmax: f32) -> HitInfo {
         0u,
         1.0,
         vec2<f32>(0.0),
-        vec3<f32>(0.0),       // no extinction
-        vec3<f32>(1.0),       // throughput = 1
+        vec3<f32>(0.0),       
+        vec3<f32>(1.0),       
         false
     );
 }
 
-// okHit: you now pass an extinction coefficient
+
 fn okHit(t: f32, n: vec3<f32>, mat: Material, shaderId: u32, uv: vec2<f32>, extinction: vec3<f32>) -> HitInfo {
     let isLight    = any(mat.emission > vec3<f32>(0.0));
     let isSpecular = (shaderId == 1u || shaderId == 2u);
@@ -267,7 +267,7 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     return curEta / 1.0;
 }
 
-// AABB intersection test
+
 fn intersectAabb(ray: Ray) -> bool {
     var tmin = ray.tmin;
     var tmax = ray.tmax;
@@ -305,10 +305,10 @@ fn intersectSphere(ray: Ray, center: vec3<f32>, radius: f32, typeFlag: u32, ior:
 
     let mat = makeMaterial(vec3<f32>(0.0), vec3<f32>(0.0), vec3<f32>(0.0), 1.0, max(ior, 1.0));
 
-    // Extinction σ_t: only non-zero for the glass sphere (typeFlag == 2)
+    
     var sigma = vec3<f32>(0.0);
     if typeFlag == 2u {
-        // tweak these three numbers to change color density
+        
         sigma = vec3<f32>(0.1, 0.1, 0.0);
     }
 
@@ -359,7 +359,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let matData = MATERIALS.data[matIdx];
     let mat = makeMaterial(matData.emission.rgb, matData.color.rgb, vec3<f32>(0.0), 1.0, 1.0);
 
-    // Triangles have no volume extinction
+    
     return okHit(t, normal, mat, 0u, uv, vec3<f32>(0.0));
 }
 
@@ -471,12 +471,12 @@ fn occluded_from(P: vec3<f32>, wi: vec3<f32>, maxDist: f32) -> bool {
     return true;
 }
 
-// WS8.2/8.3: background OFF (black)
+
 fn background(dir: vec3<f32>, blueBg: bool) -> vec3<f32> {
     return vec3<f32>(0.0, 0.0, 0.0);
 }
 
-// Monte Carlo area light sampling
+
 fn sampleAreaLight(P: vec3<f32>, N: vec3<f32>, seed: ptr<function, u32>) -> Light {
     if LIGHT_INFO.lightCount == 0u {
         return Light(vec3<f32>(0.0), vec3<f32>(0.0, 1.0, 0.0), 1e30);
@@ -595,7 +595,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
 
         let hRel = addRelEta(h, computeRelEta(h, ray, eta));
 
-        // Only actual emissive materials terminate the path
+        
         if hRel.emit && any(hRel.mat.emission > vec3<f32>(0.0)) {
             acc += throughput * hRel.mat.emission;
             return acc;
@@ -603,7 +603,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
 
         let c = shade_once(ray, hRel, seed);
 
-        // Perfect mirror
+        
         if hRel.shaderId == 1u {
             acc += throughput * c;
             let P = ray.origin + hRel.t * ray.dir;
@@ -615,7 +615,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             continue;
         }
 
-        // Glass with Fresnel & absorption
+        
         if hRel.shaderId == 2u {
             acc += throughput * c;
 
@@ -627,24 +627,24 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
                 entering = false;
             }
 
-            // --- Absorption when ray is inside the glass (leaving the medium) ---
+            
             if !entering {
                 let sigma = hRel.extinction;
-                let s = hRel.t;                // distance travelled inside
-                let Tr = exp(-sigma * s);      // Bouguer's law, component-wise
+                let s = hRel.t;                
+                let Tr = exp(-sigma * s);      
                 let TrAvg = (Tr.x + Tr.y + Tr.z) / 3.0;
 
                 let xi_tr = rnd(seed);
                 if xi_tr > TrAvg {
-                    // Absorbed: terminate path
+                    
                     return acc;
                 }
 
-                // Survived: scale throughput by Tr / TrAvg
+                
                 throughput = throughput * (Tr / max(TrAvg, 1.0e-6));
             }
 
-            // Fresnel interface
+            
             let rel = hRel.relEta;
             let cosi = -dot(N, ray.dir);
             let sin2_t = rel * rel * (1.0 - cosi * cosi);
@@ -686,7 +686,7 @@ fn trace(ray0: Ray, seed: ptr<function, u32>, blueBg: bool) -> vec3<f32> {
             continue;
         }
 
-        // Lambertian: direct + indirect
+        
         acc += throughput * c;
 
         let albedo = hRel.mat.diffuse;
@@ -734,7 +734,7 @@ fn fsMain(@location(0) img: vec2<f32>, @builtin(position) fragcoord: vec4<f32>) 
     let N: u32 = cam._pad2;
 
     let invWraw = cam._pad0;
-    let blueBg = invWraw < 0.0;    // still decoded, but background() is black anyway
+    let blueBg = invWraw < 0.0;    
     let invW = abs(invWraw);
     let invH = invW * cam.aspect;
     let dpx = 2.0 * invW;

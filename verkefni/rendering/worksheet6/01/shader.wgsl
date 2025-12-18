@@ -42,11 +42,11 @@ struct Jitters {
 };
 
 struct AttribBuf {
-    data: array<vec4<f32>>  // Interleaved: [pos.xyz, pos.w, norm.xyz, norm.w]
+    data: array<vec4<f32>>  
 };
 
 struct IndexBuf {
-    data: array<u32>  // 4 per triangle: [i0, i1, i2, matIdx]
+    data: array<u32>  
 };
 
 struct MeshInfo {
@@ -86,7 +86,7 @@ struct TreeIdsBuf {
 };
 
 struct BspTreeBuf {
-    data: array<vec4<u32>>  // [data, id, left_child, right_child]
+    data: array<vec4<u32>>  
 };
 
 struct BspPlanesBuf {
@@ -95,8 +95,8 @@ struct BspPlanesBuf {
 
 @group(0) @binding(0) var<uniform> cam : Camera;
 @group(0) @binding(1) var<storage, read> JIT : Jitters;
-@group(0) @binding(2) var<storage, read> ATTRIB : AttribBuf;  // Interleaved pos+norm
-@group(0) @binding(3) var<storage, read> IND : IndexBuf;      // Includes mat index
+@group(0) @binding(2) var<storage, read> ATTRIB : AttribBuf;  
+@group(0) @binding(3) var<storage, read> IND : IndexBuf;      
 @group(0) @binding(4) var<storage, read> MATERIALS : MaterialsBuf;
 @group(0) @binding(5) var<storage, read> LIGHT_IDX : LightIndexBuf;
 @group(0) @binding(6) var<uniform> LIGHT_INFO : LightInfo;
@@ -163,7 +163,7 @@ fn computeRelEta(h: HitInfo, ray: Ray, curEta: f32) -> f32 {
     return curEta / 1.0;
 }
 
-// AABB intersection test
+
 fn intersectAabb(ray: Ray) -> bool {
     var tmin = ray.tmin;
     var tmax = ray.tmax;
@@ -195,9 +195,9 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let i0 = IND.data[base + 0u];
     let i1 = IND.data[base + 1u];
     let i2 = IND.data[base + 2u];
-    let matIdx = IND.data[base + 3u];  // Material index from 4th component
+    let matIdx = IND.data[base + 3u];  
 
-    // Each vertex is 2 vec4s: [pos, norm]
+    
     let v0 = ATTRIB.data[i0 * 2u + 0u].xyz;
     let v1 = ATTRIB.data[i1 * 2u + 0u].xyz;
     let v2 = ATTRIB.data[i2 * 2u + 0u].xyz;
@@ -221,7 +221,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32) -> HitInfo {
     let gamma = -dot(n_tmp, e0) * q;
     if gamma < 0.0 || beta + gamma > 1.0 { return missHit(ray.tmax); }
 
-    // Interpolate vertex normals
+    
     let alpha = 1.0 - beta - gamma;
     let n0 = ATTRIB.data[i0 * 2u + 1u].xyz;
     let n1 = ATTRIB.data[i1 * 2u + 1u].xyz;
@@ -240,7 +240,7 @@ const BSP_LEAF : u32 = 3u;
 fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var ray = ray_in;
     
-    // Early exit if ray doesn't hit bounding box
+    
     if !intersectAabb(ray) {
         return missHit(ray.tmax);
     }
@@ -248,7 +248,7 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
     var best = missHit(ray.tmax);
     var node_idx = 0u;
     
-    // Stack for traversal
+    
     var stack_node: array<u32, 40>;
     var stack_tmin: array<f32, 40>;
     var stack_tmax: array<f32, 40>;
@@ -260,7 +260,7 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
         let node_axis_leaf = node[0] & 3u;
         
         if node_axis_leaf == BSP_LEAF {
-            // Leaf node - test triangles
+            
             let node_count = node[0] >> 2u;
             let node_id = node[1];
             
@@ -273,7 +273,7 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
                 }
             }
             
-            // Pop from stack or finish
+            
             if stack_ptr == 0u {
                 break;
             } else {
@@ -284,7 +284,7 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
                 i = stack_level[stack_ptr];
             }
         } else {
-            // Internal node - traverse
+            
             let axis_dir = ray.dir[node_axis_leaf];
             let axis_origin = ray.origin[node_axis_leaf];
             
@@ -292,11 +292,11 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
             var far_child: u32;
             
             if axis_dir >= 0.0 {
-                near_child = node[2];  // left
-                far_child = node[3];   // right
+                near_child = node[2];  
+                far_child = node[3];   
             } else {
-                near_child = node[3];  // right
-                far_child = node[2];   // left
+                near_child = node[3];  
+                far_child = node[2];   
             }
             
             let plane = BSP_PLANES.data[node_idx];
@@ -308,7 +308,7 @@ fn intersect_scene_bsp(ray_in: Ray) -> HitInfo {
             } else if t < ray.tmin {
                 node_idx = far_child;
             } else {
-                // Need to visit both children
+                
                 stack_node[stack_ptr] = far_child;
                 stack_tmin[stack_ptr] = t;
                 stack_tmax[stack_ptr] = ray.tmax;

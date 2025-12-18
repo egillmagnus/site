@@ -73,7 +73,7 @@ struct MaterialsBuf {
     data: array<MaterialData>
 };
 
-// Group 0: Core rendering data
+
 @group(0) @binding(0) var<uniform> cam : Camera;
 @group(0) @binding(1) var<storage, read> JIT : Jitters;
 @group(0) @binding(2) var<storage, read> VERT : VertBuf;
@@ -81,7 +81,7 @@ struct MaterialsBuf {
 @group(0) @binding(4) var<uniform> MESH : MeshInfo;
 @group(0) @binding(5) var<storage, read> NORM : NormalBuf;
 
-// Group 1: Material data
+
 @group(1) @binding(0) var<storage, read> MAT_IDX : MatIndexBuf;
 @group(1) @binding(1) var<storage, read> MATERIALS : MaterialsBuf;
 
@@ -186,7 +186,7 @@ fn intersectTriangleFace(ray: Ray, faceIdx: u32, tmin: f32, tmax: f32) -> HitInf
     let matData = MATERIALS.data[matIdx];
     let mat = makeMaterial(matData.emission.rgb, matData.color.rgb, vec3<f32>(0.0), 1.0, 1.0);
 
-    // Use interpolated_normal instead of n
+    
     return okHit(t, interpolated_normal, mat, 0u, vec2<f32>(beta, gamma));
 }
 
