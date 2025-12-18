@@ -2,48 +2,48 @@ torus {
     center = 278, 404, 280
     R = 50
     a = 12
-    b = 10
+    b = 8
     ior = 1.5
     extinction = 0.02, 0.02, 0
-    rotation = y:45, z:90
+    rotation = z:90, y:30
 }
 
 torus {
     center = 278, 328, 280
     R = 50
     a = 12
-    b = 10
+    b = 8
     ior = 1.5
     extinction = 0.02, 0.02, 0
-    rotation = y:45, x:90
+    rotation = x:90, y:30
 }
 
 torus {
     center = 278, 252, 280
     R = 50
     a = 12
-    b = 10
+    b = 8
     ior = 1.5
     extinction = 0.02, 0.02, 0
-    rotation = y:45, z:90
+    rotation = z:90, y:30
 }
 
 torus {
     center = 278, 176, 280
     R = 50
     a = 12
-    b = 10
+    b = 8
     ior = 1.5
     extinction = 0.02, 0.02, 0
-    rotation = y:45, x:90
+    rotation = x:90, y:30
 }
 
 torus {
     center = 278, 100, 280
     R = 50
     a = 12
-    b = 10
+    b = 8
     ior = 1.5
     extinction = 0.02, 0.02, 0
-    rotation = y:45, z:90
+    rotation = z:90, y:30
 }

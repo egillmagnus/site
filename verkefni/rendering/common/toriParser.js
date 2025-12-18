@@ -7,7 +7,7 @@
     }
 
     function parseRotation(str) {
-        // Supports format: "x:45, y:30, z:15" or "x:45" or legacy "x" (single axis)
+        // Supports format: "x:45, y:30, z:15" or "x:45"
         const rotations = [];
         const parts = str.split(',').map(s => s.trim()).filter(s => s.length > 0);
         for (const part of parts) {
@@ -38,12 +38,9 @@
             if (line === "}") {
                 if (!current) throw new Error("Unexpected '}' in .tori file");
                 if (!current.extinction) current.extinction = [0,0,0];
-                // Default a and b to r for backward compatibility (circular torus)
-                if (current.a === undefined) current.a = current.r;
-                if (current.b === undefined) current.b = current.r;
-                // Convert legacy axis/angle to rotations array if needed
-                if (current.rotations.length === 0 && current.axis && !isNaN(current.angle)) {
-                    current.rotations = [{ axis: current.axis, angle: current.angle }];
+                // No backwards compatibility: require a and b explicitly
+                if (current.a === undefined || current.b === undefined) {
+                    throw new Error("Missing 'a'/'b' in torus block");
                 }
                 tori.push(current);
                 current = null;
@@ -59,6 +56,8 @@
             const key = m[1];
             const val = m[2];
 
+            if (!current) continue;
+
             switch (key) {
                 case "center":
                     current.center = parseVec3(val);
@@ -72,10 +71,6 @@
                     current.R = parseFloat(val);
                     break;
 
-                case "r":
-                    current.r = parseFloat(val);
-                    break;
-
                 case "a":
                     current.a = parseFloat(val);
                     break;
@@ -86,14 +81,6 @@
 
                 case "ior":
                     current.ior = parseFloat(val);
-                    break;
-
-                case "axis":
-                    current.axis = val.trim();
-                    break;
-
-                case "angle":
-                    current.angle = parseFloat(val) * Math.PI / 180;
                     break;
 
                 case "rotation":

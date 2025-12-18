@@ -365,35 +365,52 @@ fn intersectTorusInstance(rayWorld: Ray, idx: u32) -> HitInfo {
         dot(T.rot2.xyz, rayWorld.dir)
     );
 
-    // Elliptical torus: major radius in xz-plane, ellipse semi-axes a (xz) and b (y)
-    let halfXZ = R + a;
-    let halfY  = b;
-
-    let boxMin = vec3<f32>(-halfXZ, -halfY, -halfXZ);
-    let boxMax = vec3<f32>( halfXZ,  halfY,  halfXZ);
-
-    // Ray-box intersection in local space, using same style as intersectAabb()
-    let p1 = (boxMin - oL) / dL;
-    let p2 = (boxMax - oL) / dL;
-    let pmin = min(p1, p2);
-    let pmax = max(p1, p2);
+    // --- Bounding volume: sphere + y-slab ---
+    // Bounding sphere radius: r = R + max(a,b)
+    let rSphere = R + max(a, b);
+    let r2 = rSphere * rSphere;
 
     // Original segment in t
     let segTmin = rayWorld.tmin;
     let segTmax = min(rayWorld.tmax, 2000.0);
 
-    let box_tmin = max(pmin.x, max(pmin.y, pmin.z)) - EPS_RAY;
-    let box_tmax = min(pmax.x, min(pmax.y, pmax.z)) + EPS_RAY;
+    // Ray-sphere intersection in local space (sphere centered at origin)
+    let oc = oL;
+    let bs = dot(oc, dL);
+    let cs = dot(oc, oc) - r2;
+    let disc = bs * bs - cs;
+    if disc < 0.0 {
+        return missHit(rayWorld.tmax);
+    }
 
-    if box_tmin > box_tmax || box_tmin > segTmax || box_tmax < segTmin {
+    let s = sqrt(max(disc, 0.0));
+    var tIn  = -bs - s;
+    var tOut = -bs + s;
+    if tIn > tOut {
+        let tmp = tIn;
+        tIn = tOut;
+        tOut = tmp;
+    }
+
+    // Clamp sphere overlap to current ray segment (with small epsilon padding)
+    let sphTmin = max(segTmin, tIn - EPS_RAY);
+    let sphTmax = min(segTmax, tOut + EPS_RAY);
+    if sphTmin > sphTmax {
+        return missHit(rayWorld.tmax);
+    }
+
+    // y-slab: if both sphere intersection points lie above +b or below -b, no torus hit
+    let yIn  = oL.y + dL.y * sphTmin;
+    let yOut = oL.y + dL.y * sphTmax;
+    if (yIn > b && yOut > b) || (yIn < -b && yOut < -b) {
         return missHit(rayWorld.tmax);
     }
 
     var ray = Ray(
         oL,
         dL,
-        max(segTmin, box_tmin),
-        min(segTmax, box_tmax)
+        sphTmin,
+        sphTmax
     );
 
     let MAX_STEPS = 64u;
