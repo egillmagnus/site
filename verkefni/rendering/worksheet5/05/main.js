@@ -9,8 +9,6 @@ async function init() {
     const device = await adapter.requestDevice();
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'opaque' });
-    const timingHelper = new TimingHelper(device);
-    const frameTimeDisplay = document.getElementById('frameTime');
     const gammaSlider = document.getElementById('gammaSlider');
     const gammaValue = document.getElementById('gammaValue');
     let gamma = 1.0;
@@ -118,13 +116,47 @@ async function init() {
     console.log('Loading Cornell box...');
     const di = await readOBJFile('../../common/objects/CornellBoxWithBlocks.obj', 1.0, false);
     if (!di) throw new Error('Failed to load OBJ');
-    console.log('Building BSP tree...');
     let buffers = {};
-    buffers = build_bsp_tree(di, device, buffers);
-    console.log('BSP tree built!');
-    const matIndices = new Uint32Array(di.mat_indices);
+
+    const faceCount = di.mat_indices ? di.mat_indices.length : Math.floor(di.indices.length / 4);
+
+    buffers.positions = device.createBuffer({
+        size: di.vertices.byteLength,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+    device.queue.writeBuffer(buffers.positions, 0, di.vertices.buffer, di.vertices.byteOffset, di.vertices.byteLength);
+
+    buffers.normals = device.createBuffer({
+        size: di.normals.byteLength,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+    device.queue.writeBuffer(buffers.normals, 0, di.normals.buffer, di.normals.byteOffset, di.normals.byteLength);
+
+    const triIdx = new Uint32Array(faceCount * 3);
+    for (let f = 0; f < faceCount; f++) {
+        const src = 4 * f;
+        const dst = 3 * f;
+        triIdx[dst + 0] = di.indices[src + 0];
+        triIdx[dst + 1] = di.indices[src + 1];
+        triIdx[dst + 2] = di.indices[src + 2];
+    }
+    buffers.indices = device.createBuffer({
+        size: triIdx.byteLength,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+    device.queue.writeBuffer(buffers.indices, 0, triIdx.buffer, triIdx.byteOffset, triIdx.byteLength);
+
+    let matIndices;
+    if (di.mat_indices) {
+        matIndices = new Uint32Array(di.mat_indices);
+    } else {
+        matIndices = new Uint32Array(faceCount);
+        for (let f = 0; f < faceCount; f++) {
+            matIndices[f] = di.indices[4 * f + 3] || 0;
+        }
+    }
     buffers.matIndices = device.createBuffer({
-        size: matIndices.byteLength,
+        size: Math.max(matIndices.byteLength, 16),
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(buffers.matIndices, 0, matIndices.buffer, matIndices.byteOffset, matIndices.byteLength);
@@ -147,7 +179,7 @@ async function init() {
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(buffers.materials, 0, materialsData.buffer, materialsData.byteOffset, materialsData.byteLength);
-    const lightIndices = new Uint32Array(di.light_indices);
+    const lightIndices = di.light_indices ? new Uint32Array(di.light_indices) : new Uint32Array(0);
     buffers.lightIndices = device.createBuffer({
         size: Math.max(lightIndices.byteLength, 16),
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
@@ -158,7 +190,6 @@ async function init() {
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(buffers.lightInfo, 0, new Uint32Array([lightIndices.length, 0, 0, 0]));
-    const faceCount = di.mat_indices.length;
     buffers.meshInfo = device.createBuffer({
         size: 16,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -183,16 +214,12 @@ async function init() {
             { binding: 7, resource: { buffer: buffers.materials } },
             { binding: 8, resource: { buffer: buffers.lightIndices } },
             { binding: 9, resource: { buffer: buffers.lightInfo } },
-            { binding: 10, resource: { buffer: buffers.aabb } },        
-            { binding: 11, resource: { buffer: buffers.treeIds } },     
-            { binding: 12, resource: { buffer: buffers.bspTree } },     
-            { binding: 13, resource: { buffer: buffers.bspPlanes } },   
         ],
     });
     function render() {
         writeUniforms();
         const encoder = device.createCommandEncoder();
-        const pass = timingHelper.beginRenderPass(encoder, {
+        const pass = encoder.beginRenderPass({
             colorAttachments: [{
                 view: context.getCurrentTexture().createView(),
                 loadOp: 'clear',
@@ -205,11 +232,6 @@ async function init() {
         pass.draw(4, 1, 0, 0);
         pass.end();
         device.queue.submit([encoder.finish()]);
-        timingHelper.getResult().then(duration => {
-            if (frameTimeDisplay) {
-                frameTimeDisplay.textContent = (duration / 1000000).toFixed(2) + ' ms';
-            }
-        });
     }
     setGamma(parseFloat(gammaSlider.value));
 }
