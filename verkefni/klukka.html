@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISK Klukka - Earnings Clock</title>
+    <link rel="stylesheet" href="../css/klukka.css">
+</head>
+<body>
+    <div class="container">
+        <h1>ISK Earnings Clock</h1>
+        
+        <div class="clock-container">
+            <canvas id="clockCanvas"></canvas>
+            <div class="clock-labels">
+                <!-- Hour markers for 24-hour display -->
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">Time Worked:</span>
+                <span id="timeWorked" class="stat-value">00:00:00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Earned:</span>
+                <span id="totalEarned" class="stat-value">0 ISK</span>
+            </div>
+        </div>
+        
+        <div class="button-group-main">
+            <button id="startBtn" class="btn btn-primary">Start</button>
+            <button id="resetBtn" class="btn btn-secondary">Reset</button>
+            <button id="toggleControlsBtn" class="btn btn-toggle">⚙️ Settings</button>
+        </div>
+        
+        <div class="controls" id="controls">
+            <div class="input-group">
+                <label for="hourlyRate">ISK per Hour:</label>
+                <input type="number" id="hourlyRate" min="0" step="100" value="5000" placeholder="5000">
+            </div>
+            
+            <div class="input-group">
+                <label for="startTime">Start Time (24h):</label>
+                <input type="text" id="startTime" value="" placeholder="14:30" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5">
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color second-hand-color"></div>
+                <span>Second Hand: 1 ISK per tick (1000 ISK per circle)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color minute-hand-color"></div>
+                <span>Minute Hand: Thousands of ISK</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color hour-hand-color"></div>
+                <span>Hour Hand: 24-hour blocks (1000 ISK per hour)</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/klukka.js"></script>
+</body>
+</html>
